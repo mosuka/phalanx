@@ -1,0 +1,168 @@
+syntax = "proto3";
+
+package index;
+
+option go_package = "github.com/mosuka/phalanx/proto";
+
+service Index {
+    rpc LivenessCheck (LivenessCheckRequest) returns (LivenessCheckResponse) {}
+    rpc ReadinessCheck (ReadinessCheckRequest) returns (ReadinessCheckResponse) {}
+    rpc Metrics (MetricsRequest) returns (MetricsResponse) {}
+
+    rpc Cluster (ClusterRequest) returns (ClusterResponse) {}
+
+    rpc CreateIndex (CreateIndexRequest) returns (CreateIndexResponse) {}
+    rpc DeleteIndex (DeleteIndexRequest) returns (DeleteIndexResponse) {}
+
+    rpc AddDocuments (AddDocumentsRequest) returns (AddDocumentsResponse) {}
+    rpc DeleteDocuments (DeleteDocumentsRequest) returns (DeleteDocumentsResponse) {}
+
+    rpc Search (SearchRequest) returns (SearchResponse) {}
+}
+
+enum LivenessState {
+    LIVENESS_STATE_UNKNOWN = 0;
+    LIVENESS_STATE_ALIVE = 1;
+    LIVENESS_STATE_DEAD = 2;
+}
+
+enum ReadinessState {
+    READINESS_STATE_UNKNOWN = 0;
+    READINESS_STATE_READY = 1;
+    READINESS_STATE_NOT_READY = 2;
+}
+
+message LivenessCheckRequest {
+}
+
+message LivenessCheckResponse {
+    LivenessState state = 1;
+}
+
+message ReadinessCheckRequest {
+}
+
+message ReadinessCheckResponse {
+    ReadinessState state = 1;
+}
+
+message MetricsRequest {
+}
+
+message MetricsResponse {
+    bytes metrics = 1;
+}
+
+enum NodeRole {
+    NODE_ROLE_UNKNOWN = 0;
+    NODE_ROLE_INDEXER = 1;
+    NODE_ROLE_SEARCHER = 2;
+}
+
+enum NodeState {
+    NODE_STATE_UNKNOWN = 0;
+    NODE_STATE_ALIVE = 1;
+    NODE_STATE_SUSPECT = 2;
+    NODE_STATE_DEAD = 3;
+    NODE_STATE_LEFT = 4;
+}
+
+message NodeMeta {
+    uint32 grpc_port = 1;
+    uint32 http_port = 2;
+    repeated NodeRole roles = 3;
+}
+
+message Node {
+    string addr = 1;
+    uint32 port = 2;
+    NodeMeta meta = 3;
+    NodeState state = 4;
+}
+
+message ShardMetadata {
+    string shard_uri = 1;
+    string shard_lock_uri = 2;
+}
+
+message IndexMetadata {
+    string index_uri = 1;
+    string index_lock_uri = 2;
+    map<string, ShardMetadata> shards = 3;
+}
+
+message ClusterRequest {
+}
+
+message ClusterResponse {
+    map<string, Node> nodes = 1;
+    map<string, IndexMetadata> indexes = 2;
+    bytes indexer_assignment = 3;
+    bytes searcher_assignment = 4;
+}
+
+message CreateIndexRequest {
+    string index_name = 1 [json_name="index_name"];
+    string index_uri = 2 [json_name="index_uri"];
+    string lock_uri = 3 [json_name="lock_uri"];
+    bytes index_mapping = 4 [json_name="index_mapping"];
+    uint32 num_shards = 5 [json_name="num_shards"];
+}
+
+message CreateIndexResponse {
+}
+
+message DeleteIndexRequest {
+    string index_name = 1 [json_name="index_name"];
+}
+
+message DeleteIndexResponse {
+}
+
+message Document {
+    string id = 1;
+    bytes fields = 2;
+    double score = 3;
+}
+
+message AddDocumentRequest {
+    string index_name = 1 [json_name="index_name"];
+    Document document = 2;
+}
+
+message AddDocumentResponse {
+}
+
+message AddDocumentsRequest {
+    string index_name = 1 [json_name="index_name"];
+    string shard_name = 2 [json_name="shard_name"];
+    repeated Document documents = 3;
+}
+
+message AddDocumentsResponse {
+}
+
+message DeleteDocumentsRequest {
+    string index_name = 1 [json_name="index_name"];
+    string shard_name = 2 [json_name="shard_name"];
+    repeated string ids = 3;
+}
+
+message DeleteDocumentsResponse {
+}
+
+message SearchRequest {
+    string index_name = 1 [json_name="index_name"];
+    repeated string shard_names = 2 [json_name="shard_names"];
+    string query = 3;
+    string field = 4;
+    double boost = 5;
+    int32 start = 6;
+    int32 num = 7;
+}
+
+message SearchResponse {
+    string index_name = 1 [json_name="index_name"];
+    uint64 hits = 2;
+    repeated Document documents = 3;
+}

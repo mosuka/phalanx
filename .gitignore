@@ -1,0 +1,15 @@
+.DS_Store
+
+.classpath
+.project
+
+.idea/
+
+bin/
+dist/
+
+*.pem
+*.csr
+
+cover.out
+cover.html
