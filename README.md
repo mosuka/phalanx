@@ -40,8 +40,8 @@ A configuration file is available for starting on the local machine. You can sta
 
 ## Start Phalanx on local machine with MinIO and etcd
 
-To experience the features of Phalanx, let's try to start Phalanx using MinIO and etcd.  
-First of all, let's start MinIO and etcd that Phalanx depends on. You can start them yourself, but there is a docker-compose.yml in this repository. You can use this to easily run MinIO and etcd on Docker.
+To experience Phalanx functionality, let's start Phalanx with MinIO and etcd. 
+This repository has a docker-compose.yml file. With it, you can easily launch Phalanx, MinIO and etcd on Docker.
 
 ```
 % docker-compose up
@@ -54,17 +54,6 @@ http://localhost:9001/dashboard
 
 - ETCD Keeper  
 http://localhost:8080/etcdkeeper/
-
-Then, let's start Phalanx. A configuration file is available for starting on the local machine with MinIO and etcd. You can start Phalanx by using it or by specifying the contents described in it with flags in the CLI. The following command starts with a configuration file:
-
-```
-% phalanx --config-file=./examples/phalanx.yml
-% phalanx --config-file=./examples/phalanx.yml --bind-port=2001 --grpc-port=5001 --http-port=8001 --seed-addresses=0.0.0.0:2000
-% phalanx --config-file=./examples/phalanx.yml --bind-port=2002 --grpc-port=5002 --http-port=8002 --seed-addresses=0.0.0.0:2000
-```
-
-The above command overwrites the values in the configuration file with CLI flags in order to start multiple Phalanx nodes. Above example shows each Phalanx node running on the same host, so each node must listen on different ports. This would not be necessary if each node ran on a different host.  
-This instructs each new node to join an existing node, each node recognizes the joining clusters when started. So you have a 3-node cluster.
 
 
 ## Health check
