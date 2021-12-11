@@ -7,6 +7,7 @@ CGO_LDFLAGS ?=
 BUILD_TAGS ?=
 VERSION ?=
 BIN_EXT ?=
+DOCKER_REPOSITORY ?= mosuka
 
 PACKAGES = $(shell $(GO) list ./... | grep -v '/vendor/')
 
@@ -82,6 +83,32 @@ build: show-env
 	@echo ">> building binaries"
 	mkdir -p bin
 	$(GO) build $(LDFLAGS) -o bin/phalanx
+
+.PHONY: tag
+tag: show-env
+	@echo ">> tagging github"
+ifeq ($(VERSION),$(filter $(VERSION),latest master ""))
+	@echo "please specify VERSION"
+else
+	git tag -a $(VERSION) -m "Release $(VERSION)"
+	git push origin $(VERSION)
+endif
+
+.PHONY: docker-build
+docker-build: show-env
+	@echo ">> building docker container image"
+	docker build -t $(DOCKER_REPOSITORY)/phalanx:latest --build-arg VERSION=$(VERSION) .
+	docker tag $(DOCKER_REPOSITORY)/phalanx:latest $(DOCKER_REPOSITORY)/phalanx:$(VERSION)
+
+.PHONY: docker-push
+docker-push: show-env
+	@echo ">> pushing docker container image"
+	docker push $(DOCKER_REPOSITORY)/phalanx:latest
+	docker push $(DOCKER_REPOSITORY)/phalanx:$(VERSION)
+
+.PHONY: docker-clean
+docker-clean: show-env
+	docker rmi -f $(shell docker images --filter "dangling=true" -q --no-trunc)
 
 .PHONY: cert
 cert: show-env

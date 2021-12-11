@@ -6,6 +6,28 @@ Metrics for system operation can also be output in Prometheus exposition format,
 Phalanx is using object storage for the storage layer, it is only responsible for the computation layer, such as indexing and retrieval processes. Therefore, scaling is easy, and you can simply add new nodes to the cluster.  
 Currently, it is an alpha version and only supports [MinIO](https://min.io/) as the storage layer, but in the future it will support [Amazon S3](https://aws.amazon.com/s3/), [Google Cloud Storage](https://cloud.google.com/storage), and [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/).  
 
+
+## Build
+
+Building Phalanx as following:
+
+```bash
+% git clone https://github.com/mosuka/phalanx.git
+% cd phalanx
+% make build
+```
+
+
+## Binary
+
+You can see the binary file when build successful like so:
+
+```bash
+$ ls ./bin
+phalanx
+```
+
+
 ## Start Phalanx on local machine with local file system
 
 Phalanx can be started on a local machine as if it were using local storage instead of object storage.  
@@ -14,6 +36,7 @@ A configuration file is available for starting on the local machine. You can sta
 ```
 % phalanx --config-file=./examples/phalanx_local.yml
 ```
+
 
 ## Start Phalanx on local machine with MinIO and etcd
 
@@ -72,6 +95,7 @@ This instructs each new node to join an existing node, each node recognizes the 
 
 There are endpoints, but it is not yet fully implemented.
 
+
 ## Metrics exposition
 
 ```
@@ -85,6 +109,7 @@ phalanx_grpc_server_handled_total{grpc_code="Aborted",grpc_method="AddDocuments"
 phalanx_grpc_server_handled_total{grpc_code="Aborted",grpc_method="Cluster",grpc_service="index.Index",grpc_type="unary"} 0
 ...
 ```
+
 
 ## Cluster status
 
@@ -115,6 +140,7 @@ phalanx_grpc_server_handled_total{grpc_code="Aborted",grpc_method="Cluster",grpc
 }
 ```
 
+
 ## Create index
 
 ### Create index on local file system
@@ -135,11 +161,13 @@ If you have started Phalanx to use MinIO and etcd, use this command to create th
 
 The difference between the above commands is the difference between `index_uri` and `lock_uri` in the configuration file. This parameter specifies where the index and its lock file will be created.
 
+
 ## Delete index
 
 ```
 % curl -XDELETE http://localhost:8000/v1/indexes/example_en
 ```
+
 
 ## Add / Update documents
 
@@ -147,11 +175,13 @@ The difference between the above commands is the difference between `index_uri` 
 % curl -XPUT -H 'Content-type: application/x-ndjson' http://localhost:8000/v1/indexes/example_en/documents --data-binary @./examples/add_documents.ndjson
 ```
 
+
 ## Delete documents
 
 ```
 % curl -XDELETE -H 'Content-type: text/plain' http://localhost:8000/v1/indexes/example_en/documents --data-binary @./examples/delete_ids.txt
 ```
+
 
 ## Search
 
@@ -296,4 +326,43 @@ The difference between the above commands is the difference between `index_uri` 
   "hits": 10,
   "index_name": "example_en"
 }
+```
+
+
+## Docker container
+
+### Build Docker container image
+
+You can build the Docker container image like so:
+
+```
+% make docker-build
+```
+
+### Pull Docker container image from docker.io
+
+You can also use the Docker container image already registered in docker.io like so:
+
+```
+% docker pull mosuka/phalanx:latest
+```
+
+See https://hub.docker.com/r/mosuka/phalanx/tags/
+
+### Start on Docker
+
+Running a Blast data node on Docker. Start Blast node like so:
+
+```bash
+$ docker run --rm --name phalanx-node1 \
+    -p 2000:2000 \
+    -p 5000:5000 \
+    -p 8000:8000 \
+    mosuka/phalanx:latest start \
+      --host=0.0.0.0 \
+      --bind-port=2000 \
+      --grpc-port=5000 \
+      --http-port=8000 \
+      --roles=indexer,searcher \
+      --index-metastore-uri=file:///tmp/phalanx/metadata
 ```
