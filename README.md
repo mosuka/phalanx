@@ -28,14 +28,27 @@ phalanx
 ```
 
 
-## Start Phalanx on local machine with local file system
+## Start Phalanx on a local machine using a local file system
 
-Phalanx can be started on a local machine as if it were using local storage instead of object storage.  
-A configuration file is available for starting on the local machine. You can start Phalanx by using it or by specifying the contents described in it with flags in the CLI. The following command starts with a configuration file:
+Phalanx can be started on a local machine using a local file system as a metastore. The following command starts with a configuration file:
 
 ```
-% phalanx --config-file=./examples/phalanx_local.yml
+% phalanx --index-metastore-uri=file:///tmp/phalanx/metastore
 ```
+
+A metastore is a place where various information about an index is stored.  
+
+### Create index on local file system
+
+If you have started Phalanx to use the local file system, you can use this command to create an index.
+
+```
+% curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example_en --data-binary @./examples/create_index_example_en_local.json
+```
+
+In `create_index_example_en_local.json` used in the above command, the URI of the local filesystem is specified in `index_uri` and `lock_uri`.
+`index_mapping` defines what kind of fields the index has. `num_shards` specifies how many shards the index will be divided into.  
+Both of the above commands will create an index named `example_en`.
 
 
 ## Start Phalanx on local machine with MinIO and etcd
@@ -55,10 +68,24 @@ http://localhost:9001/dashboard
 - ETCD Keeper  
 http://localhost:8080/etcdkeeper/
 
+### Create index with MinIO and etcd
+
+If you have started Phalanx to use MinIO and etcd, use this command to create the index.
+
+```
+% curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example_en --data-binary @./examples/create_index_example_en.json
+```
+
+In the `create_index_example_en.json` used in the above command, `index_uri` is a MinIO URI and `lock_uri` is an etcd URI. This means that indexes will be created in MinIO, and locks for those indexes will be created in etcd. Phalanx uses etcd as a distributed lock manager.
+
 
 ## Health check
 
+These endpoints should be used for Phalanx health checks.
+
 ### Liveness check
+
+If Phalanx is running properly, it will return HTTP status 200.
 
 ```
 % curl -XGET http://localhost:8000/livez | jq .
@@ -72,6 +99,8 @@ http://localhost:8080/etcdkeeper/
 
 ### Readiness check
 
+If Phalanx is ready to accept the traffic, it will return HTTP Status 200.
+
 ```
 % curl -XGET http://localhost:8000/readyz | jq .
 ```
@@ -82,10 +111,12 @@ http://localhost:8080/etcdkeeper/
 }
 ```
 
-There are endpoints, but it is not yet fully implemented.
+But this endpoint is not yet fully implemented.
 
 
 ## Metrics exposition
+
+This endpoint returns Phalanx metrics in Prometheus exposition format.
 
 ```
 % curl -XGET http://localhost:8000/metrics
@@ -102,17 +133,83 @@ phalanx_grpc_server_handled_total{grpc_code="Aborted",grpc_method="Cluster",grpc
 
 ## Cluster status
 
+This endpoint returns the latest cluster status.  
+- `nodes`: Lists the nodes that are joining in the cluster.
+- `indexes`: Lists the indexes served by the cluster.
+- `indexer_assignment`: Lists which node is responsible for the shard in the index.
+- `searcher_assignment`: Lists which nodes are responsible for the shard in the index.
+
 ```
 % curl -XGET http://localhost:8000/cluster | jq .
 ```
 
 ```json
 {
-  "indexer_assignment": {},
-  "indexes": {},
+  "indexer_assignment": {
+    "example_en": {
+      "shard-Dyb1CXqJ": "node-YA0Zso3w",
+      "shard-OSFMC5gL": "node-YA0Zso3w",
+      "shard-TQu8fyHA": "node-YA0Zso3w",
+      "shard-UfilJ5I4": "node-YA0Zso3w",
+      "shard-WLJEezNT": "node-YA0Zso3w",
+      "shard-eH6LOGpc": "node-YA0Zso3w",
+      "shard-jWU7v3MR": "node-YA0Zso3w",
+      "shard-sng0xmKr": "node-YA0Zso3w",
+      "shard-tKKy1LdN": "node-YA0Zso3w",
+      "shard-vpI7ExL5": "node-YA0Zso3w"
+    }
+  },
+  "indexes": {
+    "example_en": {
+      "index_lock_uri": "etcd://phalanx/locks/example_en",
+      "index_uri": "minio://phalanx/indexes/example_en",
+      "shards": {
+        "shard-Dyb1CXqJ": {
+          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-Dyb1CXqJ",
+          "shard_uri": "minio://phalanx/indexes/example_en/shard-Dyb1CXqJ"
+        },
+        "shard-OSFMC5gL": {
+          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-OSFMC5gL",
+          "shard_uri": "minio://phalanx/indexes/example_en/shard-OSFMC5gL"
+        },
+        "shard-TQu8fyHA": {
+          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-TQu8fyHA",
+          "shard_uri": "minio://phalanx/indexes/example_en/shard-TQu8fyHA"
+        },
+        "shard-UfilJ5I4": {
+          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-UfilJ5I4",
+          "shard_uri": "minio://phalanx/indexes/example_en/shard-UfilJ5I4"
+        },
+        "shard-WLJEezNT": {
+          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-WLJEezNT",
+          "shard_uri": "minio://phalanx/indexes/example_en/shard-WLJEezNT"
+        },
+        "shard-eH6LOGpc": {
+          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-eH6LOGpc",
+          "shard_uri": "minio://phalanx/indexes/example_en/shard-eH6LOGpc"
+        },
+        "shard-jWU7v3MR": {
+          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-jWU7v3MR",
+          "shard_uri": "minio://phalanx/indexes/example_en/shard-jWU7v3MR"
+        },
+        "shard-sng0xmKr": {
+          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-sng0xmKr",
+          "shard_uri": "minio://phalanx/indexes/example_en/shard-sng0xmKr"
+        },
+        "shard-tKKy1LdN": {
+          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-tKKy1LdN",
+          "shard_uri": "minio://phalanx/indexes/example_en/shard-tKKy1LdN"
+        },
+        "shard-vpI7ExL5": {
+          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-vpI7ExL5",
+          "shard_uri": "minio://phalanx/indexes/example_en/shard-vpI7ExL5"
+        }
+      }
+    }
+  },
   "nodes": {
-    "node-KWkaw0jJ": {
-      "addr": "0.0.0.0",
+    "node-YA0Zso3w": {
+      "addr": "172.19.0.4",
       "meta": {
         "grpc_port": 5000,
         "http_port": 8000,
@@ -125,36 +222,41 @@ phalanx_grpc_server_handled_total{grpc_code="Aborted",grpc_method="Cluster",grpc
       "state": "alive"
     }
   },
-  "searcher_assignment": {}
+  "searcher_assignment": {
+    "example_en": {
+      "shard-Dyb1CXqJ": [
+        "node-YA0Zso3w"
+      ],
+      "shard-OSFMC5gL": [
+        "node-YA0Zso3w"
+      ],
+      "shard-TQu8fyHA": [
+        "node-YA0Zso3w"
+      ],
+      "shard-UfilJ5I4": [
+        "node-YA0Zso3w"
+      ],
+      "shard-WLJEezNT": [
+        "node-YA0Zso3w"
+      ],
+      "shard-eH6LOGpc": [
+        "node-YA0Zso3w"
+      ],
+      "shard-jWU7v3MR": [
+        "node-YA0Zso3w"
+      ],
+      "shard-sng0xmKr": [
+        "node-YA0Zso3w"
+      ],
+      "shard-tKKy1LdN": [
+        "node-YA0Zso3w"
+      ],
+      "shard-vpI7ExL5": [
+        "node-YA0Zso3w"
+      ]
+    }
+  }
 }
-```
-
-
-## Create index
-
-### Create index on local file system
-
-If you have started Phalanx to use the local file system, you can use this command to create an index.
-
-```
-% curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example_en --data-binary @./examples/create_index_example_en_local.json
-```
-
-### Create index with MinIO and etcd
-
-If you have started Phalanx to use MinIO and etcd, use this command to create the index.
-
-```
-% curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example_en --data-binary @./examples/create_index_example_en.json
-```
-
-The difference between the above commands is the difference between `index_uri` and `lock_uri` in the configuration file. This parameter specifies where the index and its lock file will be created.
-
-
-## Delete index
-
-```
-% curl -XDELETE http://localhost:8000/v1/indexes/example_en
 ```
 
 
@@ -315,6 +417,15 @@ The difference between the above commands is the difference between `index_uri` 
   "hits": 10,
   "index_name": "example_en"
 }
+```
+
+
+## Delete index
+
+The following command will delete the index `example_en` with the specified name. This command will delete the index file on the object storage and the index metadata on the metastore.
+
+```
+% curl -XDELETE http://localhost:8000/v1/indexes/example_en
 ```
 
 
