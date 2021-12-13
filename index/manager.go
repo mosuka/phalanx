@@ -14,7 +14,6 @@ import (
 	querystr "github.com/blugelabs/query_string"
 	"github.com/hashicorp/memberlist"
 	"github.com/jinzhu/copier"
-	"github.com/mosuka/phalanx/analysis/analyzer"
 	"github.com/mosuka/phalanx/clients"
 	"github.com/mosuka/phalanx/directory"
 	"github.com/mosuka/phalanx/errors"
@@ -66,7 +65,6 @@ type Manager struct {
 	indexWriters       *IndexWriters
 	indexReaders       *IndexReaders
 	stopWatching       chan bool
-	langDetector       *analyzer.AnalyzerDetector
 	shardHash          *ShardHash
 	indexerHash        *rendezvous.Ring
 	searcherHash       *rendezvous.Ring
@@ -128,11 +126,6 @@ func NewManager(node *membership.Node, metastore metastore.Metastore, certificat
 		}
 	}
 
-	langDetector, err := analyzer.NewAnalyzerDetector(logger)
-	if err != nil {
-		return nil, err
-	}
-
 	return &Manager{
 		node:               node,
 		metastore:          metastore,
@@ -143,7 +136,6 @@ func NewManager(node *membership.Node, metastore metastore.Metastore, certificat
 		indexWriters:       NewIndexWriters(managerLogger),
 		indexReaders:       NewIndexReaders(managerLogger),
 		stopWatching:       make(chan bool),
-		langDetector:       langDetector,
 		shardHash:          shardHash,
 		indexerHash:        rendezvous.New(),
 		searcherHash:       rendezvous.New(),
