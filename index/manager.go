@@ -607,6 +607,12 @@ func (m *Manager) DeleteIndex(req *proto.DeleteIndexRequest) (*proto.DeleteIndex
 }
 
 func (m *Manager) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocumentsResponse, error) {
+	if !m.ms.IndexMetadataExists(req.IndexName) {
+		err := errors.ErrIndexMetadataDoesNotExist
+		m.logger.Error("failed to add documents", zap.Error(err), zap.String("index_name", req.IndexName))
+		return nil, err
+	}
+
 	isRootRequest := req.ShardName == ""
 
 	// Assign shards to nodes.
@@ -809,6 +815,12 @@ func (m *Manager) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocume
 }
 
 func (m *Manager) DeleteDocuments(req *proto.DeleteDocumentsRequest) (*proto.DeleteDocumentsResponse, error) {
+	if !m.ms.IndexMetadataExists(req.IndexName) {
+		err := errors.ErrIndexMetadataDoesNotExist
+		m.logger.Error("failed to delete documents", zap.Error(err), zap.String("index_name", req.IndexName))
+		return nil, err
+	}
+
 	isRootRequest := req.ShardName == ""
 
 	// Assign shards to nodes.
@@ -968,6 +980,12 @@ func (m *Manager) DeleteDocuments(req *proto.DeleteDocumentsRequest) (*proto.Del
 }
 
 func (m *Manager) Search(req *proto.SearchRequest) (*proto.SearchResponse, error) {
+	if !m.ms.IndexMetadataExists(req.IndexName) {
+		err := errors.ErrIndexMetadataDoesNotExist
+		m.logger.Error("failed to search documents", zap.Error(err), zap.String("index_name", req.IndexName))
+		return nil, err
+	}
+
 	isRootRequest := len(req.ShardNames) == 0
 
 	assignedNodes := make(map[string][]string)
