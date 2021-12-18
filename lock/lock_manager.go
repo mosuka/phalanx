@@ -48,8 +48,8 @@ func NewLockManagerWithUri(uri string, logger *zap.Logger) (LockManager, error) 
 	case SchemeType_name[SchemeTypeEtcd]:
 		return NewEtcdLockManagerWithUri(uri, logger)
 	default:
-		err := errors.ErrUnsupportedMetastoreType
+		err := errors.ErrUnsupportedLockManagerType
 		lockManagerLogger.Error("unknown lock manager type", zap.Error(err), zap.String("scheme", u.Scheme))
-		return nil, errors.ErrUnsupportedLockManagerType
+		return nil, err
 	}
 }

@@ -268,7 +268,7 @@ func (d *MinioDirectory) Stats() (uint64, uint64) {
 }
 
 func (d *MinioDirectory) Sync() error {
-	d.logger.Debug("sync", zap.String("path", d.path))
+	// d.logger.Debug("sync", zap.String("path", d.path))
 	return nil
 }
 

@@ -12,7 +12,7 @@ import (
 	"github.com/mosuka/phalanx/util"
 )
 
-func TestNewFileMetastoreWithUri(t *testing.T) {
+func TestNewFileSystemStorageWithUri(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "phalanx-test")
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -24,7 +24,7 @@ func TestNewFileMetastoreWithUri(t *testing.T) {
 
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	_, err = NewFileSystemMetastoreWithUri(uri, logger)
+	_, err = NewFileSystemStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -34,7 +34,7 @@ func TestNewFileMetastoreWithUri(t *testing.T) {
 	}
 }
 
-func TestNewFileMetastoreWithPath(t *testing.T) {
+func TestNewFileSystemStorageWithPath(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "phalanx-test")
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -45,7 +45,7 @@ func TestNewFileMetastoreWithPath(t *testing.T) {
 
 	path := filepath.ToSlash(tmpDir)
 
-	_, err = NewFileSystemMetastoreWithPath(path, logger)
+	_, err = NewFileSystemStorageWithPath(path, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -55,7 +55,7 @@ func TestNewFileMetastoreWithPath(t *testing.T) {
 	}
 }
 
-func TestFileMetastorePut(t *testing.T) {
+func TestFileSystemStoragePut(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "phalanx-test")
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -66,7 +66,7 @@ func TestFileMetastorePut(t *testing.T) {
 
 	path := filepath.ToSlash(tmpDir)
 
-	metastore, err := NewFileSystemMetastoreWithPath(path, logger)
+	metastore, err := NewFileSystemStorageWithPath(path, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -76,7 +76,7 @@ func TestFileMetastorePut(t *testing.T) {
 	}
 }
 
-func TestFileMetastoreGet(t *testing.T) {
+func TestFileSystemStorageGet(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "phalanx-test")
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -87,7 +87,7 @@ func TestFileMetastoreGet(t *testing.T) {
 
 	path := filepath.ToSlash(tmpDir)
 
-	metastore, err := NewFileSystemMetastoreWithPath(path, logger)
+	metastore, err := NewFileSystemStorageWithPath(path, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -104,7 +104,7 @@ func TestFileMetastoreGet(t *testing.T) {
 	}
 }
 
-func TestFileMetastoreDelete(t *testing.T) {
+func TestFileSystemStorageDelete(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "phalanx-test")
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -115,7 +115,7 @@ func TestFileMetastoreDelete(t *testing.T) {
 
 	path := filepath.ToSlash(tmpDir)
 
-	metastore, err := NewFileSystemMetastoreWithPath(path, logger)
+	metastore, err := NewFileSystemStorageWithPath(path, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -128,7 +128,7 @@ func TestFileMetastoreDelete(t *testing.T) {
 	}
 }
 
-func TestFileMetastoreExists(t *testing.T) {
+func TestFileSystemStorageExists(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "phalanx-test")
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -139,7 +139,7 @@ func TestFileMetastoreExists(t *testing.T) {
 
 	path := filepath.ToSlash(tmpDir)
 
-	metastore, err := NewFileSystemMetastoreWithPath(path, logger)
+	metastore, err := NewFileSystemStorageWithPath(path, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -163,7 +163,7 @@ func TestFileMetastoreExists(t *testing.T) {
 	}
 }
 
-func TestFileMetastoreList(t *testing.T) {
+func TestFileSystemStorageList(t *testing.T) {
 	tmpDir, err := ioutil.TempDir("", "phalanx-test")
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -174,7 +174,7 @@ func TestFileMetastoreList(t *testing.T) {
 
 	path := filepath.ToSlash(tmpDir)
 
-	metastore, err := NewFileSystemMetastoreWithPath(path, logger)
+	metastore, err := NewFileSystemStorageWithPath(path, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
