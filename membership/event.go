@@ -96,7 +96,7 @@ func (d *NodeMetadataDelegate) LocalState(join bool) []byte {
 	return []byte{}
 }
 func (d *NodeMetadataDelegate) NotifyMsg(msg []byte) {
-	d.logger.Debug("notify msg", zap.ByteString("msg", msg))
+	// d.logger.Debug("notify msg", zap.ByteString("msg", msg))
 }
 
 func (d *NodeMetadataDelegate) GetBroadcasts(overhead, limit int) [][]byte {
@@ -104,5 +104,5 @@ func (d *NodeMetadataDelegate) GetBroadcasts(overhead, limit int) [][]byte {
 }
 
 func (d *NodeMetadataDelegate) MergeRemoteState(buf []byte, join bool) {
-	d.logger.Debug("merge remote state", zap.ByteString("buf", buf), zap.Bool("join", join))
+	// d.logger.Debug("merge remote state", zap.ByteString("buf", buf), zap.Bool("join", join))
 }

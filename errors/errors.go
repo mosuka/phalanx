@@ -19,7 +19,7 @@ var (
 
 	ErrInvalidUri = errors.New("invalid URI")
 
-	ErrUnsupportedMetastoreType  = errors.New("unsupported metastore type")
+	ErrUnsupportedStorageType    = errors.New("unsupported metastore type")
 	ErrUnsupportedMetastoreEvent = errors.New("unsupported metastore event")
 
 	ErrIndexMetadataAlreadyExists = errors.New("index metadata already exists")

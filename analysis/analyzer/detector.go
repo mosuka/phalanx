@@ -143,7 +143,7 @@ func (d *AnalyzerDetector) detectLanguage(text string) (string, bool) {
 	}
 
 	iso639_1 := strings.ToLower(language.IsoCode639_1().String())
-	d.logger.Debug("language detected", zap.String("language", language.String()), zap.String("iso639_1", iso639_1), zap.String("text", text))
+	// d.logger.Debug("language detected", zap.String("language", language.String()), zap.String("iso639_1", iso639_1), zap.String("text", text))
 	return iso639_1, exists
 }
 
@@ -154,7 +154,7 @@ func (d *AnalyzerDetector) getAnalyzer(iso639_1 string) *analysis.Analyzer {
 		return analyzer.NewStandardAnalyzer()
 	}
 
-	d.logger.Debug("analyzer found", zap.String("iso639_1", iso639_1))
+	// d.logger.Debug("analyzer found", zap.String("iso639_1", iso639_1))
 	return langAnalyzer
 }
 

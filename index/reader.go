@@ -7,6 +7,7 @@ import (
 	"github.com/mosuka/phalanx/directory"
 	"github.com/mosuka/phalanx/errors"
 	"github.com/mosuka/phalanx/lock"
+	"github.com/mosuka/phalanx/metastore"
 	"go.uber.org/zap"
 )
 
@@ -100,7 +101,7 @@ func (i *IndexReaders) Contains(indexName string, shardName string) bool {
 	return i.contains(indexName, shardName)
 }
 
-func (i *IndexReaders) open(indexName string, shardName string, indexMetadata *IndexMetadata, shardMetadata *ShardMetadata) error {
+func (i *IndexReaders) open(indexName string, shardName string, indexMetadata *metastore.IndexMetadata, shardMetadata *metastore.ShardMetadata) error {
 	// Create lock manager
 	lockManager, err := lock.NewLockManagerWithUri(shardMetadata.ShardLockUri, i.logger)
 	if err != nil {
@@ -134,7 +135,7 @@ func (i *IndexReaders) open(indexName string, shardName string, indexMetadata *I
 	return nil
 }
 
-func (i *IndexReaders) Open(indexName string, shardName string, indexMetadata *IndexMetadata, shardMetadata *ShardMetadata) error {
+func (i *IndexReaders) Open(indexName string, shardName string, indexMetadata *metastore.IndexMetadata, shardMetadata *metastore.ShardMetadata) error {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 
@@ -203,7 +204,7 @@ func (i *IndexReaders) Close(indexName string, shardName string) error {
 	return i.close(indexName, shardName)
 }
 
-func (i *IndexReaders) Reopen(indexName string, shardName string, indexMetadata *IndexMetadata, shardMetadata *ShardMetadata) error {
+func (i *IndexReaders) Reopen(indexName string, shardName string, indexMetadata *metastore.IndexMetadata, shardMetadata *metastore.ShardMetadata) error {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 

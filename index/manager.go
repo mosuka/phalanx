@@ -5,8 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"math/rand"
-	"path/filepath"
-	"strings"
+	"sync"
 	"time"
 
 	"github.com/blugelabs/bluge"
@@ -31,20 +30,8 @@ const (
 	shardNamePrefix = "shard-"
 )
 
-// Make index metadata path
-// e.g. wikipedia_en -> wikipedia_en/index.json
-func makeIndexMetadataPath(indexName string) string {
-	return filepath.Join(indexName, "index.json")
-}
-
 func generateShardName() string {
 	return fmt.Sprintf("%s%s", shardNamePrefix, randstr.String(8))
-}
-
-// Make shard metadata path
-// e.g. wikipedia_en -> wikipedia_en/shard-pb0g8d8hmvcg9hvaiol3.json
-func makeShardMetadataPath(indexName string, shardName string) string {
-	return filepath.Join(indexName, fmt.Sprintf("%s.json", shardName))
 }
 
 func shuffleNodes(nodeNames []string) {
@@ -57,92 +44,39 @@ func shuffleNodes(nodeNames []string) {
 
 type Manager struct {
 	node               *membership.Node
-	metastore          metastore.Metastore
+	ms                 *metastore.Metastore
 	certificateFile    string
 	commonName         string
 	logger             *zap.Logger
-	indexMetadataMap   *IndexMetadataMap
 	indexWriters       *IndexWriters
 	indexReaders       *IndexReaders
 	stopWatching       chan bool
-	shardHash          *ShardHash
 	indexerHash        *rendezvous.Ring
 	searcherHash       *rendezvous.Ring
 	indexerAssignment  map[string]map[string]string
 	searcherAssignment map[string]map[string][]string
 	clients            map[string]*clients.IndexClient
-	// mutex            sync.RWMutex
+	mutex              sync.RWMutex
 }
 
-func NewManager(node *membership.Node, metastore metastore.Metastore, certificateFile string, commonName string, logger *zap.Logger) (*Manager, error) {
+func NewManager(node *membership.Node, ms *metastore.Metastore, certificateFile string, commonName string, logger *zap.Logger) (*Manager, error) {
 	managerLogger := logger.Named("manager")
-
-	paths, err := metastore.List("/")
-	if err != nil {
-		return nil, err
-	}
-
-	indexMetadataMap := NewIndexMetadataMap()
-	for _, path := range paths {
-		fileName := filepath.Base(path)
-		if fileName == "index.json" {
-			value, err := metastore.Get(path)
-			if err != nil {
-				return nil, err
-			}
-
-			indexMetadata, err := NewIndexMetadataWithBytes(value)
-			if err != nil {
-				return nil, err
-			}
-
-			indexName := filepath.Base(filepath.Dir(path))
-			indexMetadataMap.SetIndexMetadata(indexName, indexMetadata)
-		}
-	}
-	for _, path := range paths {
-		fileName := filepath.Base(path)
-		if strings.HasPrefix(fileName, shardNamePrefix) && strings.HasSuffix(fileName, ".json") {
-			value, err := metastore.Get(path)
-			if err != nil {
-				return nil, err
-			}
-
-			shardMetadata, err := NewShardMetadataWithBytes(value)
-			if err != nil {
-				return nil, err
-			}
-
-			indexName := filepath.Base(filepath.Dir(path))
-			shardName := strings.TrimSuffix(filepath.Base(path), ".json")
-			indexMetadataMap.SetShardMetadata(indexName, shardName, shardMetadata)
-		}
-	}
-
-	shardHash := NewShardHashMap()
-	for _, indexMetadata := range indexMetadataMap.AllIndexMetadata() {
-		for _, shardMetadata := range indexMetadata.AllShardMetadata() {
-			shardHash.Set(indexMetadata.IndexName, shardMetadata.ShardName)
-		}
-	}
 
 	return &Manager{
 		node:               node,
-		metastore:          metastore,
+		ms:                 ms,
 		certificateFile:    certificateFile,
 		commonName:         commonName,
 		logger:             logger,
-		indexMetadataMap:   indexMetadataMap,
 		indexWriters:       NewIndexWriters(managerLogger),
 		indexReaders:       NewIndexReaders(managerLogger),
 		stopWatching:       make(chan bool),
-		shardHash:          shardHash,
 		indexerHash:        rendezvous.New(),
 		searcherHash:       rendezvous.New(),
 		indexerAssignment:  map[string]map[string]string{},
 		searcherAssignment: map[string]map[string][]string{},
 		clients:            map[string]*clients.IndexClient{},
-		// mutex:            sync.RWMutex{},
+		mutex:              sync.RWMutex{},
 	}, nil
 }
 
@@ -156,52 +90,18 @@ func (m *Manager) Start() error {
 				if cancel {
 					return
 				}
-			case event := <-m.metastore.Events():
+			case event := <-m.ms.Events():
 				switch {
-				case event.Type == metastore.EventTypePut:
-					fileName := filepath.Base(event.Path)
-					if fileName == "index.json" {
-						indexMetadata, err := NewIndexMetadataWithBytes(event.Value)
-						if err != nil {
-							m.logger.Warn("failed to make index metadata", zap.Error(err), zap.String("path", event.Path))
-							continue
-						}
-
-						indexName := filepath.Base(filepath.Dir(event.Path))
-						m.indexMetadataMap.SetIndexMetadata(indexName, indexMetadata)
-					} else if strings.HasPrefix(fileName, shardNamePrefix) && strings.HasSuffix(fileName, ".json") {
-						indexName := filepath.Base(filepath.Dir(event.Path))
-						shardName := strings.TrimSuffix(filepath.Base(event.Path), ".json")
-
-						shardMetadata, err := NewShardMetadataWithBytes(event.Value)
-						if err != nil {
-							m.logger.Warn("failed to make shard metadata", zap.Error(err), zap.String("index_name", indexName), zap.String("shard_name", shardName))
-							continue
-						}
-
-						m.indexMetadataMap.SetShardMetadata(indexName, shardName, shardMetadata)
-
-						if !m.shardHash.Contains(indexName, shardName) {
-							m.shardHash.Set(indexName, shardName)
-						}
-
-						m.assignShardsToNode()
-					}
-				case event.Type == metastore.EventTypeDelete:
-					fileName := filepath.Base(event.Path)
-					if fileName == "index.json" {
-						indexName := filepath.Base(filepath.Dir(event.Path))
-						m.indexMetadataMap.DeleteIndexMetadata(indexName)
-					} else if strings.HasPrefix(fileName, shardNamePrefix) && strings.HasSuffix(fileName, ".json") {
-						indexName := filepath.Base(filepath.Dir(event.Path))
-						shardName := strings.TrimSuffix(filepath.Base(event.Path), ".json")
-
-						m.indexMetadataMap.DeleteShardMetadata(indexName, shardName)
-
-						m.shardHash.Delete(indexName, shardName)
-
-						m.assignShardsToNode()
-					}
+				case event.Type == metastore.MetastoreEventTypePutIndex:
+					m.logger.Info("received metastore event", zap.String("type", metastore.MetastoreEventType_name[event.Type]), zap.String("index", event.Index))
+				case event.Type == metastore.MetastoreEventTypeDeleteIndex:
+					m.logger.Info("received metastore event", zap.String("type", metastore.MetastoreEventType_name[event.Type]), zap.String("index", event.Index))
+				case event.Type == metastore.MetastoreEventTypePutShard:
+					m.logger.Info("received metastore event", zap.String("type", metastore.MetastoreEventType_name[event.Type]), zap.String("index", event.Index), zap.String("shard", event.Shard))
+					m.assignShardsToNode()
+				case event.Type == metastore.MetastoreEventTypeDeleteShard:
+					m.logger.Info("received metastore event", zap.String("type", metastore.MetastoreEventType_name[event.Type]), zap.String("index", event.Index), zap.String("shard", event.Shard))
+					m.assignShardsToNode()
 				}
 			case event := <-m.node.Events():
 				m.logger.Info("received membership event", zap.String("name", event.Node.Name), zap.String("type", membership.EventType_name[event.Type]))
@@ -279,7 +179,7 @@ func (m *Manager) Stop() error {
 			m.logger.Error("failed to close index client", zap.Error(err), zap.String("address", address))
 			return err
 		}
-		m.logger.Debug("closing index client", zap.String("address", address))
+		// m.logger.Debug("closing index client", zap.String("address", address))
 	}
 
 	return nil
@@ -291,8 +191,8 @@ func (m *Manager) assignShardsToNode() error {
 	searcherAssignment := make(map[string]map[string][]string) // index/shard/nodes
 
 	// Assign shards to indexers and searchers.
-	for _, indexName := range m.shardHash.Indexes() {
-		for _, shardName := range m.shardHash.List(indexName) {
+	for _, indexName := range m.ms.GetIndexNames() {
+		for _, shardName := range m.ms.GetShardNames(indexName) {
 			// Assign indexer.
 			if _, ok := indexerAssignment[indexName]; !ok {
 				indexerAssignment[indexName] = make(map[string]string)
@@ -316,31 +216,32 @@ func (m *Manager) assignShardsToNode() error {
 			isAssigned := assignedNodeName == m.node.Name()
 			if isAssigned {
 				if !m.indexWriters.Contains(assignedIndexName, assignedShardName) {
-					// Open the index writer for the assigned shard.
-					indexMetadata := m.indexMetadataMap.GetIndexMetadata(assignedIndexName)
-					if indexMetadata == nil {
+					indexMetadata, err := m.ms.GetIndexMetadata(assignedIndexName)
+					if err != nil {
 						m.logger.Warn("failed to get index metadata", zap.String("index_name", assignedIndexName))
 						continue
 					}
-					shardMetadata := m.indexMetadataMap.GetShardMetadata(assignedIndexName, assignedShardName)
-					if shardMetadata == nil {
+
+					shardMetadata, err := m.ms.GetShardMetadata(assignedIndexName, assignedShardName)
+					if err != nil {
 						m.logger.Warn("failed to get shard metadata", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 						continue
 					}
+
+					// m.logger.Info("open index writer", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 					if err := m.indexWriters.Open(assignedIndexName, assignedShardName, indexMetadata, shardMetadata); err != nil {
 						m.logger.Warn("failed to open index writer", zap.Error(err), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 						continue
 					}
-					m.logger.Debug("index writer opened", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 				}
 			} else {
 				if m.indexWriters.Contains(assignedIndexName, assignedShardName) {
 					// Close the index writer for the shard assigned to the other node.
+					// m.logger.Info("close index writer", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 					if err := m.indexWriters.Close(assignedIndexName, assignedShardName); err != nil {
 						m.logger.Warn("failed to close index writer", zap.Error(err), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 						continue
 					}
-					m.logger.Debug("index writer closed", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 				}
 			}
 		}
@@ -352,21 +253,21 @@ func (m *Manager) assignShardsToNode() error {
 			assignedNodeName, ok := m.indexerAssignment[openedIndexName][openedShardName]
 			if !ok {
 				// Close the index writer for shard that doesn't already exist.
+				// m.logger.Info("close index writer", zap.String("index_name", openedIndexName), zap.String("shard_name", openedShardName))
 				if err := m.indexWriters.Close(openedIndexName, openedShardName); err != nil {
 					m.logger.Warn("failed to close index writer", zap.Error(err), zap.String("index_name", openedIndexName), zap.String("shard_name", openedShardName))
 					continue
 				}
-				m.logger.Debug("index writer closed", zap.String("index_name", openedIndexName), zap.String("shard_name", openedShardName))
 			}
 
 			isAssigned := assignedNodeName == m.node.Name()
 			if !isAssigned {
 				// Close the index writer for the shard assigned to the other node.
+				// m.logger.Info("close index writer", zap.String("index_name", openedIndexName), zap.String("shard_name", openedShardName))
 				if err := m.indexWriters.Close(openedIndexName, openedShardName); err != nil {
 					m.logger.Warn("failed to close index writer", zap.Error(err), zap.String("index_name", openedIndexName), zap.String("shard_name", openedShardName))
 					continue
 				}
-				m.logger.Debug("index writer closed", zap.String("index_name", openedIndexName), zap.String("shard_name", openedShardName))
 			}
 		}
 	}
@@ -382,20 +283,26 @@ func (m *Manager) assignShardsToNode() error {
 				}
 			}
 			if isAssigned {
-				indexMetadata := m.indexMetadataMap.GetIndexMetadata(assignedIndexName)
-				if indexMetadata == nil {
+				indexMetadata, err := m.ms.GetIndexMetadata(assignedIndexName)
+				if err != nil {
 					m.logger.Warn("failed to get index metadata", zap.String("index_name", assignedIndexName))
 					continue
 				}
-				shardMetadata := m.indexMetadataMap.GetShardMetadata(assignedIndexName, assignedShardName)
+
+				shardMetadata, err := m.ms.GetShardMetadata(assignedIndexName, assignedShardName)
+				if err != nil {
+					m.logger.Warn("failed to get shard metadata", zap.Error(err), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
+					continue
+				}
 				if shardMetadata == nil {
-					m.logger.Warn("failed to get shard metadata", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
+					m.logger.Warn("shard metadata already gone", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 					continue
 				}
 
 				if m.indexReaders.Contains(assignedIndexName, assignedShardName) {
 					if m.indexReaders.Version(assignedIndexName, assignedShardName) != shardMetadata.ShardVersion {
 						// Reopen the index reader for the assigned shard.
+						// m.logger.Info("reopen index reader", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 						if err := m.indexReaders.Reopen(assignedIndexName, assignedShardName, indexMetadata, shardMetadata); err != nil {
 							m.logger.Warn("failed to reopen index reader", zap.Error(err), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 							continue
@@ -403,20 +310,20 @@ func (m *Manager) assignShardsToNode() error {
 					}
 				} else {
 					// Open the index reader for the assigned shard.
+					// m.logger.Info("open index reader", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 					if err := m.indexReaders.Open(assignedIndexName, assignedShardName, indexMetadata, shardMetadata); err != nil {
-						m.logger.Warn("failed to open index writer", zap.Error(err), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
+						m.logger.Warn("failed to open index reader", zap.Error(err), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 						continue
 					}
-					m.logger.Debug("index writer opened", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 				}
 			} else {
 				// Close the index reader for the shard assigned to the other node.
 				if m.indexReaders.Contains(assignedIndexName, assignedShardName) {
+					// m.logger.Info("close index reader", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 					if err := m.indexReaders.Close(assignedIndexName, assignedShardName); err != nil {
-						m.logger.Warn("failed to close index writer", zap.Error(err), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
+						m.logger.Warn("failed to close index reader", zap.Error(err), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 						continue
 					}
-					m.logger.Debug("index writer closed", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 				}
 			}
 		}
@@ -428,11 +335,10 @@ func (m *Manager) assignShardsToNode() error {
 			assignedNodenames, ok := m.searcherAssignment[indexName][shardName]
 			if !ok {
 				// Close the index reader for shard that doesn't already exist.
+				// m.logger.Info("close index reader", zap.String("index_name", indexName), zap.String("shard_name", shardName))
 				if err := m.indexReaders.Close(indexName, shardName); err != nil {
 					m.logger.Warn("failed to close index reader", zap.Error(err), zap.String("index_name", indexName), zap.String("shard_name", shardName))
-					continue
 				}
-				m.logger.Warn("index reader closed", zap.String("index_name", indexName), zap.String("shard_name", shardName))
 				continue
 			}
 
@@ -445,11 +351,10 @@ func (m *Manager) assignShardsToNode() error {
 			}
 			if !isAssigned {
 				// Close the index reader for the shard assigned to the other node.
+				// m.logger.Info("close index reader", zap.String("index_name", indexName), zap.String("shard_name", shardName))
 				if err := m.indexReaders.Close(indexName, shardName); err != nil {
 					m.logger.Warn("failed to close index reader", zap.Error(err), zap.String("index_name", indexName), zap.String("shard_name", shardName))
-					continue
 				}
-				m.logger.Warn("index reader closed", zap.String("index_name", indexName), zap.String("shard_name", shardName))
 				continue
 			}
 		}
@@ -466,13 +371,15 @@ func (m *Manager) assignShardsToNode() error {
 			grpcAddress := fmt.Sprintf("%s:%d", member.Addr.String(), metadata.GrpcPort)
 
 			if _, ok := m.clients[grpcAddress]; !ok {
+				// m.logger.Info("open index client", zap.String("node_name", member.Name), zap.String("address", grpcAddress))
 				client, err := clients.NewIndexClientWithTLS(grpcAddress, m.certificateFile, m.commonName)
 				if err != nil {
 					m.logger.Warn("failed to open index client", zap.Error(err), zap.String("node_name", member.Name))
 					continue
 				}
-				m.logger.Debug("index client opened", zap.String("node_name", member.Name), zap.String("address", grpcAddress))
+				m.mutex.Lock()
 				m.clients[grpcAddress] = client
+				m.mutex.Unlock()
 			}
 		}
 	}
@@ -493,12 +400,14 @@ func (m *Manager) assignShardsToNode() error {
 			}
 		}
 		if notFound {
+			// m.logger.Debug("close index client", zap.String("address", address))
 			if err := client.Close(); err != nil {
 				m.logger.Warn("failed to close index client", zap.Error(err), zap.String("address", client.Address()))
 				continue
 			}
-			m.logger.Debug("index client closed", zap.String("address", address))
+			m.mutex.Lock()
 			delete(m.clients, address)
+			m.mutex.Unlock()
 		}
 	}
 
@@ -555,14 +464,25 @@ func (m *Manager) Cluster(req *proto.ClusterRequest) (*proto.ClusterResponse, er
 	}
 
 	resp.Indexes = make(map[string]*proto.IndexMetadata)
-	for indexName, indexMetadata := range m.indexMetadataMap.AllIndexMetadata() {
+	for _, indexName := range m.ms.GetIndexNames() {
+		indexMetadata, err := m.ms.GetIndexMetadata(indexName)
+		if err != nil {
+			m.logger.Warn("failed to get index metadata", zap.Error(err), zap.String("index_name", indexName))
+			continue
+		}
 		indexMeta := &proto.IndexMetadata{
 			IndexUri:     indexMetadata.IndexUri,
 			IndexLockUri: indexMetadata.IndexLockUri,
 			Shards:       make(map[string]*proto.ShardMetadata),
 		}
 
-		for shardName, shardMetadata := range indexMetadata.AllShardMetadata() {
+		for _, shardName := range m.ms.GetShardNames(indexName) {
+			shardMetadata, err := m.ms.GetShardMetadata(indexName, shardName)
+			if err != nil {
+				m.logger.Warn("failed to get shard metadata", zap.Error(err), zap.String("index_name", indexName), zap.String("shard_name", shardName))
+				continue
+			}
+
 			indexMeta.Shards[shardName] = &proto.ShardMetadata{
 				ShardUri:     shardMetadata.ShardUri,
 				ShardLockUri: shardMetadata.ShardLockUri,
@@ -590,11 +510,8 @@ func (m *Manager) Cluster(req *proto.ClusterRequest) (*proto.ClusterResponse, er
 }
 
 func (m *Manager) CreateIndex(req *proto.CreateIndexRequest) (*proto.CreateIndexResponse, error) {
-	// m.mutex.Lock()
-	// defer m.mutex.Unlock()
-
 	// Check if the index has already been opened.
-	if m.indexMetadataMap.IndexMetadataExists(req.IndexName) {
+	if m.ms.IndexMetadataExists(req.IndexName) {
 		err := errors.ErrIndexMetadataAlreadyExists
 		m.logger.Error("failed to create index", zap.Error(err), zap.String("index_name", req.IndexName))
 		return nil, err
@@ -611,13 +528,13 @@ func (m *Manager) CreateIndex(req *proto.CreateIndexRequest) (*proto.CreateIndex
 	}
 
 	// Make the index metadata.
-	indexMetadata := &IndexMetadata{
+	indexMetadata := &metastore.IndexMetadata{
 		IndexName:           req.IndexName,
 		IndexUri:            req.IndexUri,
 		IndexLockUri:        req.LockUri,
 		IndexMapping:        indexMapping,
 		IndexMappingVersion: time.Now().UTC().UnixNano(),
-		shardMetadataMap:    make(map[string]*ShardMetadata),
+		ShardMetadataMap:    make(map[string]*metastore.ShardMetadata),
 	}
 
 	// Make shards
@@ -628,7 +545,7 @@ func (m *Manager) CreateIndex(req *proto.CreateIndexRequest) (*proto.CreateIndex
 	for i := uint32(0); i < numShards; i++ {
 		// Make the shard metadata.
 		shardName := generateShardName()
-		shardMetadata := &ShardMetadata{
+		shardMetadata := &metastore.ShardMetadata{
 			ShardName:    shardName,
 			ShardUri:     fmt.Sprintf("%s/%s", req.IndexUri, shardName),
 			ShardLockUri: fmt.Sprintf("%s/%s", req.LockUri, shardName),
@@ -638,104 +555,55 @@ func (m *Manager) CreateIndex(req *proto.CreateIndexRequest) (*proto.CreateIndex
 		indexMetadata.SetShardMetadata(shardName, shardMetadata)
 	}
 
-	// Save the index metadata to the index metastore.
-	indexMetadataContent, err := json.Marshal(indexMetadata)
-	if err != nil {
-		m.logger.Error("failed to marshal index metadata", zap.Error(err), zap.String("index_name", req.IndexName))
+	if err := m.ms.SetIndexMetadata(req.IndexName, indexMetadata); err != nil {
+		m.logger.Error("failed to set index metadata", zap.Error(err), zap.String("index_name", req.IndexName))
 		return nil, err
-	}
-	indexMetadataPath := makeIndexMetadataPath(req.IndexName)
-	if err := m.metastore.Put(indexMetadataPath, indexMetadataContent); err != nil {
-		m.logger.Error("failed to save the index metadata", zap.Error(err), zap.String("index_name", req.IndexName))
-		return nil, err
-	}
-
-	for shardName, shardMetadata := range indexMetadata.AllShardMetadata() {
-		// Serialize the index metadata to JSON.
-		shardMetadataContent, err := json.Marshal(shardMetadata)
-		if err != nil {
-			m.logger.Error("failed to create index", zap.Error(err), zap.String("index_name", req.IndexName), zap.String("shard_name", shardName))
-			return nil, err
-		}
-
-		// Save the index metadata to the index metastore.
-		shardMetadataPath := makeShardMetadataPath(req.IndexName, shardName)
-		if err := m.metastore.Put(shardMetadataPath, shardMetadataContent); err != nil {
-			m.logger.Error("failed to create index", zap.Error(err), zap.String("index_name", req.IndexName), zap.String("shard_name", shardName))
-			return nil, err
-		}
 	}
 
 	return &proto.CreateIndexResponse{}, nil
 }
 
 func (m *Manager) DeleteIndex(req *proto.DeleteIndexRequest) (*proto.DeleteIndexResponse, error) {
-	// m.mutex.Lock()
-	// defer m.mutex.Unlock()
-
-	indexMetadata := m.indexMetadataMap.GetIndexMetadata(req.IndexName)
-	if indexMetadata == nil {
+	if !m.ms.IndexMetadataExists(req.IndexName) {
 		err := errors.ErrIndexMetadataDoesNotExist
 		m.logger.Error("failed to delete index", zap.Error(err), zap.String("index_name", req.IndexName))
 		return nil, err
 	}
 
+	indexMetadata, err := m.ms.GetIndexMetadata(req.IndexName)
+	if err != nil {
+		m.logger.Error("failed to delete index", zap.Error(err), zap.String("index_name", req.IndexName))
+		return nil, err
+	}
 	for shardName, shardMetadata := range indexMetadata.AllShardMetadata() {
-		// Check if an index directory has already been created.
-		exists, err := directory.DirectoryExists(shardMetadata.ShardUri)
-		if err != nil {
-			m.logger.Warn("failed to delete index", zap.Error(err), zap.String("index_name", req.IndexName), zap.String("shard_name", shardName))
-			continue
-		}
-
-		// Delete index directory from storage.
-		if exists {
-			if err := directory.DeleteDirectory(shardMetadata.ShardUri); err != nil {
-				m.logger.Warn("failed to delete index", zap.Error(err), zap.String("index_name", req.IndexName), zap.String("shard_name", shardName))
-				continue
-			}
+		// Check shard directory existence.
+		if exists, err := directory.DirectoryExists(shardMetadata.ShardUri); err != nil {
+			m.logger.Warn("failed to check index directory existence", zap.Error(err), zap.String("index_name", req.IndexName), zap.String("shard_name", shardName))
 		} else {
-			err := errors.ErrIndexDirectoryDoesNotExist
-			m.logger.Warn("failed to check directory existence", zap.Error(err), zap.String("index_name", req.IndexName), zap.String("shard_name", shardName))
-			continue
+			if exists {
+				// Delete shard directory.
+				if err := directory.DeleteDirectory(shardMetadata.ShardUri); err != nil {
+					m.logger.Warn("failed to delete shard directory", zap.Error(err), zap.String("index_name", req.IndexName), zap.String("shard_name", shardName))
+				}
+			} else {
+				err := errors.ErrIndexDirectoryDoesNotExist
+				m.logger.Warn("shard directory does not exist", zap.Error(err), zap.String("index_name", req.IndexName), zap.String("shard_name", shardName))
+			}
 		}
 
-		// Delete shard metadata from storage.
-		metadataPath := makeShardMetadataPath(req.IndexName, shardName)
-		if err := m.metastore.Delete(metadataPath); err != nil {
-			m.logger.Warn("failed to delete index", zap.Error(err), zap.String("index_name", req.IndexName), zap.String("shard_name", shardName))
-			continue
+		// Delete shard metadata.
+		if err := m.ms.DeleteShardMetadata(req.IndexName, shardName); err != nil {
+			m.logger.Error("failed to delete shard metadata", zap.Error(err), zap.String("index_name", req.IndexName), zap.String("shard_name", shardName))
+			return nil, err
 		}
 	}
-
-	metadataPath := makeIndexMetadataPath(req.IndexName)
-	if err := m.metastore.Delete(metadataPath); err != nil {
-		m.logger.Error("failed to delete index", zap.Error(err), zap.String("index_name", req.IndexName))
+	// Delete index metadata.
+	if err := m.ms.DeleteIndexMetadata(req.IndexName); err != nil {
+		m.logger.Error("failed to delete index metadata", zap.Error(err), zap.String("index_name", req.IndexName))
 		return nil, err
 	}
 
 	return &proto.DeleteIndexResponse{}, nil
-}
-
-func (m *Manager) updateShardVersion(indexName, shardName string) error {
-	// Get shard metadata.
-	shardMetadata := m.indexMetadataMap.GetShardMetadata(indexName, shardName)
-	if shardMetadata == nil {
-		return errors.ErrShardMetadataDoesNotExist
-	}
-
-	// Update shard version in shard metadata.
-	shardMetadata.ShardVersion = time.Now().UTC().UnixNano()
-
-	// Serialize the shard metadata to JSON.
-	shardMetadataContent, err := json.Marshal(shardMetadata)
-	if err != nil {
-		return err
-	}
-
-	// Save the shard metadata to the index metastore.
-	shardMetadataPath := makeShardMetadataPath(indexName, shardName)
-	return m.metastore.Put(shardMetadataPath, shardMetadataContent)
 }
 
 func (m *Manager) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocumentsResponse, error) {
@@ -758,7 +626,7 @@ func (m *Manager) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocume
 	addDocumentsRequests := make(map[string]*proto.AddDocumentsRequest)
 	if isRootRequest {
 		for _, document := range req.Documents {
-			shardName := m.shardHash.Get(req.IndexName, document.Id)
+			shardName := m.ms.GetResponsibleShard(req.IndexName, document.Id)
 			if _, ok := addDocumentsRequests[shardName]; !ok {
 				addDocumentsRequests[shardName] = &proto.AddDocumentsRequest{
 					IndexName: req.IndexName,
@@ -772,20 +640,13 @@ func (m *Manager) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocume
 		addDocumentsRequests[req.ShardName] = req
 	}
 
-	indexMetadata := m.indexMetadataMap.GetIndexMetadata(req.IndexName)
-	if indexMetadata == nil {
-		err := errors.ErrIndexMetadataDoesNotExist
-		m.logger.Error("failed to add documents", zap.Error(err), zap.String("index_name", req.IndexName))
-		return nil, err
-	}
-
 	type addDocumentsResponse struct {
 		indexName string
 		shardName string
 		err       error
 	}
 
-	responsesChan := make(chan addDocumentsResponse, indexMetadata.NumShards())
+	responsesChan := make(chan addDocumentsResponse, m.ms.NumShards(req.IndexName))
 
 	baseCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -799,7 +660,7 @@ func (m *Manager) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocume
 				continue
 			}
 
-			m.logger.Debug("adding documents", zap.String("node_name", nodeName), zap.String("index_name", request.IndexName), zap.String("shard_name", request.ShardName))
+			nodeName := nodeName
 
 			eg.Go(func() error {
 				select {
@@ -807,6 +668,8 @@ func (m *Manager) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocume
 					return ctx.Err()
 				default:
 					if nodeName == m.node.Name() {
+						m.logger.Info("adding documents", zap.String("node_name", nodeName), zap.String("index_name", request.IndexName), zap.String("shard_name", request.ShardName))
+
 						// Make batch.
 						batch := bluge.NewBatch()
 						for _, document := range request.Documents {
@@ -817,8 +680,14 @@ func (m *Manager) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocume
 								m.logger.Error("failed to unmarshal document data", zap.Error(err), zap.String("index_name", request.IndexName), zap.String("shard_name", request.ShardName))
 								return err
 							}
+							// Get mapping.
+							indexMapping, err := m.ms.GetMapping(request.IndexName)
+							if err != nil {
+								m.logger.Error("failed to get index mapping", zap.Error(err), zap.String("index_name", request.IndexName))
+								return err
+							}
 							// Create document.
-							doc, err := indexMetadata.IndexMapping.MakeDocument(document.Id, fieldMap)
+							doc, err := indexMapping.MakeDocument(document.Id, fieldMap)
 							if err != nil {
 								m.logger.Error("failed to make document", zap.Error(err), zap.String("index_name", request.IndexName), zap.String("shardTname", request.ShardName), zap.String("doc_id", document.Id))
 								return err
@@ -851,8 +720,8 @@ func (m *Manager) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocume
 						}
 
 						// Update shard version in shard metadata.
-						if err := m.updateShardVersion(request.IndexName, request.ShardName); err != nil {
-							m.logger.Error("failed to create index", zap.Error(err), zap.String("index_name", request.IndexName), zap.String("shard_name", request.ShardName))
+						if err := m.ms.TouchShardMetadata(request.IndexName, request.ShardName); err != nil {
+							m.logger.Error("failed to update shard version", zap.Error(err), zap.String("index_name", request.IndexName), zap.String("shard_name", request.ShardName))
 							responsesChan <- addDocumentsResponse{
 								indexName: request.IndexName,
 								shardName: request.ShardName,
@@ -955,19 +824,12 @@ func (m *Manager) DeleteDocuments(req *proto.DeleteDocumentsRequest) (*proto.Del
 		assignedNodes[m.node.Name()] = []string{req.ShardName}
 	}
 
-	indexMetadata := m.indexMetadataMap.GetIndexMetadata(req.IndexName)
-	if indexMetadata == nil {
-		err := errors.ErrIndexMetadataDoesNotExist
-		m.logger.Error("failed to add documents", zap.Error(err), zap.String("index_name", req.IndexName))
-		return nil, err
-	}
-
 	type deleteDocumentsResponse struct {
 		indexName string
 		shardName string
 		err       error
 	}
-	responsesChan := make(chan deleteDocumentsResponse, indexMetadata.NumShards())
+	responsesChan := make(chan deleteDocumentsResponse, m.ms.NumShards(req.IndexName))
 
 	baseCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
@@ -979,7 +841,7 @@ func (m *Manager) DeleteDocuments(req *proto.DeleteDocumentsRequest) (*proto.Del
 			copier.Copy(request, req)
 			request.ShardName = shardName
 
-			m.logger.Debug("deleting documents", zap.String("node_name", nodeName), zap.String("index_name", request.IndexName), zap.String("shard_name", request.ShardName))
+			nodeName := nodeName
 
 			eg.Go(func() error {
 				select {
@@ -987,6 +849,8 @@ func (m *Manager) DeleteDocuments(req *proto.DeleteDocumentsRequest) (*proto.Del
 					return ctx.Err()
 				default:
 					if nodeName == m.node.Name() {
+						m.logger.Debug("deleting documents", zap.String("node_name", nodeName), zap.String("index_name", request.IndexName), zap.String("shard_name", request.ShardName))
+
 						batch := bluge.NewBatch()
 						for _, id := range request.Ids {
 							// Add a document ID for deletion to the batch.
@@ -1017,8 +881,8 @@ func (m *Manager) DeleteDocuments(req *proto.DeleteDocumentsRequest) (*proto.Del
 						}
 
 						// Update shard version in shard metadata.
-						if err := m.updateShardVersion(request.IndexName, request.ShardName); err != nil {
-							m.logger.Error("failed to create index", zap.Error(err), zap.String("index_name", request.IndexName), zap.String("shard_name", request.ShardName))
+						if err := m.ms.TouchShardMetadata(request.IndexName, request.ShardName); err != nil {
+							m.logger.Error("failed to update shard version", zap.Error(err), zap.String("index_name", request.IndexName), zap.String("shard_name", request.ShardName))
 							responsesChan <- deleteDocumentsResponse{
 								indexName: request.IndexName,
 								shardName: request.ShardName,
@@ -1239,11 +1103,9 @@ func (m *Manager) Search(req *proto.SearchRequest) (*proto.SearchResponse, error
 						return err
 					}
 
-					// Get index mapping.
-					indexMetadata := m.indexMetadataMap.GetIndexMetadata(request.IndexName)
-					if indexMetadata == nil {
-						err := errors.ErrIndexMetadataDoesNotExist
-						m.logger.Error("failed to search index", zap.Error(err), zap.String("index_name", request.IndexName))
+					indexMapping, err := m.ms.GetMapping(request.IndexName)
+					if err != nil {
+						m.logger.Error("failed to get index mapping", zap.Error(err), zap.String("index_name", request.IndexName))
 						responsesChan <- searchResponse{
 							nodeName:   nodeName,
 							indexName:  request.IndexName,
@@ -1253,7 +1115,6 @@ func (m *Manager) Search(req *proto.SearchRequest) (*proto.SearchResponse, error
 						}
 						return err
 					}
-					indexMapping := indexMetadata.IndexMapping
 
 					// Make docs
 					for err == nil && docMatch != nil {

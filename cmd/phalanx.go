@@ -147,7 +147,7 @@ var (
 			}
 
 			// Create index metastore
-			indexMetastore, err := metastore.NewMetastoreWithUri(indexMetastoreUri, logger)
+			indexMetastore, err := metastore.NewMetastore(indexMetastoreUri, logger)
 			if err != nil {
 				logger.Error("failed to create index metastore", zap.Error(err), zap.Any("uri", indexMetastoreUri))
 				return err

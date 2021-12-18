@@ -12,15 +12,15 @@ import (
 	"go.uber.org/zap"
 )
 
-type FileSystemMetastore struct {
+type FileSystemStorage struct {
 	path         string
 	logger       *zap.Logger
 	fsWatcher    *fsnotify.Watcher
 	stopWatching chan bool
-	events       chan MetastoreEvent
+	events       chan StorageEvent
 }
 
-func NewFileSystemMetastoreWithUri(uri string, logger *zap.Logger) (*FileSystemMetastore, error) {
+func NewFileSystemStorageWithUri(uri string, logger *zap.Logger) (*FileSystemStorage, error) {
 	u, err := url.Parse(uri)
 	if err != nil {
 		return nil, err
@@ -32,10 +32,10 @@ func NewFileSystemMetastoreWithUri(uri string, logger *zap.Logger) (*FileSystemM
 
 	path := u.Path
 
-	return NewFileSystemMetastoreWithPath(path, logger)
+	return NewFileSystemStorageWithPath(path, logger)
 }
 
-func NewFileSystemMetastoreWithPath(path string, logger *zap.Logger) (*FileSystemMetastore, error) {
+func NewFileSystemStorageWithPath(path string, logger *zap.Logger) (*FileSystemStorage, error) {
 	fileLogger := logger.Named("file_system")
 
 	if !util.FileExists(path) {
@@ -45,16 +45,16 @@ func NewFileSystemMetastoreWithPath(path string, logger *zap.Logger) (*FileSyste
 		}
 	}
 
-	return &FileSystemMetastore{
+	return &FileSystemStorage{
 		path:         path,
 		logger:       fileLogger,
 		fsWatcher:    nil,
 		stopWatching: make(chan bool),
-		events:       make(chan MetastoreEvent, 10),
+		events:       make(chan StorageEvent, 10),
 	}, nil
 }
 
-func (m *FileSystemMetastore) convertMetastoreEvent(event *fsnotify.Event) (*MetastoreEvent, error) {
+func (m *FileSystemStorage) makeStorageEvent(event *fsnotify.Event) (*StorageEvent, error) {
 	// Load metadata.
 	var value []byte
 	var err error
@@ -67,32 +67,32 @@ func (m *FileSystemMetastore) convertMetastoreEvent(event *fsnotify.Event) (*Met
 
 	switch {
 	case event.Op&fsnotify.Create == fsnotify.Create:
-		return &MetastoreEvent{
-			Type:  EventTypePut,
+		return &StorageEvent{
+			Type:  StorageEventTypePut,
 			Path:  event.Name,
 			Value: value,
 		}, nil
 	case event.Op&fsnotify.Write == fsnotify.Write:
-		return &MetastoreEvent{
-			Type:  EventTypePut,
+		return &StorageEvent{
+			Type:  StorageEventTypePut,
 			Path:  event.Name,
 			Value: value,
 		}, nil
 	case event.Op&fsnotify.Remove == fsnotify.Remove:
-		return &MetastoreEvent{
-			Type:  EventTypeDelete,
+		return &StorageEvent{
+			Type:  StorageEventTypeDelete,
 			Path:  event.Name,
 			Value: value,
 		}, nil
 	case event.Op&fsnotify.Rename == fsnotify.Rename:
-		return &MetastoreEvent{
-			Type:  EventTypePut,
+		return &StorageEvent{
+			Type:  StorageEventTypePut,
 			Path:  event.Name,
 			Value: value,
 		}, nil
 	case event.Op&fsnotify.Chmod == fsnotify.Chmod:
-		return &MetastoreEvent{
-			Type:  EventTypePut,
+		return &StorageEvent{
+			Type:  StorageEventTypePut,
 			Path:  event.Name,
 			Value: value,
 		}, nil
@@ -101,7 +101,7 @@ func (m *FileSystemMetastore) convertMetastoreEvent(event *fsnotify.Event) (*Met
 	}
 }
 
-func (m *FileSystemMetastore) Get(path string) ([]byte, error) {
+func (m *FileSystemStorage) Get(path string) ([]byte, error) {
 	fullPath := filepath.Join(m.path, path)
 	if !util.FileExists(fullPath) {
 		return nil, errors.ErrIndexMetadataDoesNotExist
@@ -116,7 +116,7 @@ func (m *FileSystemMetastore) Get(path string) ([]byte, error) {
 	return content, nil
 }
 
-func (m *FileSystemMetastore) List(prefix string) ([]string, error) {
+func (m *FileSystemStorage) List(prefix string) ([]string, error) {
 	prefixPath := filepath.Join(m.path, prefix)
 	paths := make([]string, 0)
 	err := filepath.Walk(prefixPath, func(path string, info os.FileInfo, err error) error {
@@ -136,7 +136,7 @@ func (m *FileSystemMetastore) List(prefix string) ([]string, error) {
 	return paths, nil
 }
 
-func (m *FileSystemMetastore) Put(path string, content []byte) error {
+func (m *FileSystemStorage) Put(path string, content []byte) error {
 	fullPath := filepath.Join(m.path, path)
 
 	dir := filepath.Dir(fullPath)
@@ -158,7 +158,7 @@ func (m *FileSystemMetastore) Put(path string, content []byte) error {
 	return nil
 }
 
-func (m *FileSystemMetastore) Delete(path string) error {
+func (m *FileSystemStorage) Delete(path string) error {
 	fullPath := filepath.Join(m.path, path)
 	if err := os.Remove(fullPath); err != nil {
 		m.logger.Error("failed to remove file", zap.Error(err), zap.String("path", fullPath))
@@ -168,13 +168,13 @@ func (m *FileSystemMetastore) Delete(path string) error {
 	return nil
 }
 
-func (m *FileSystemMetastore) Exists(path string) (bool, error) {
+func (m *FileSystemStorage) Exists(path string) (bool, error) {
 	fullPath := filepath.Join(m.path, path)
 
 	return util.FileExists(fullPath), nil
 }
 
-func (m *FileSystemMetastore) Start() error {
+func (m *FileSystemStorage) Start() error {
 	if m.fsWatcher != nil {
 		return nil
 	}
@@ -184,6 +184,11 @@ func (m *FileSystemMetastore) Start() error {
 		return err
 	} else {
 		m.fsWatcher = watcher
+	}
+
+	if err := m.fsWatcher.Add(m.path); err != nil {
+		m.logger.Error("failed to start watching the file or directory", zap.Error(err), zap.String("path", m.path))
+		return err
 	}
 
 	go func() {
@@ -199,38 +204,28 @@ func (m *FileSystemMetastore) Start() error {
 					m.logger.Error("failed to receive event", zap.String("path", m.path))
 					continue
 				}
-
-				metastoreEvent, err := m.convertMetastoreEvent(&event)
+				// m.logger.Info("received file system event", zap.String("operation", event.Op.String()), zap.String("name", event.Name))
+				metastoreEvent, err := m.makeStorageEvent(&event)
 				if err != nil {
 					m.logger.Error("failed to convert event", zap.Error(err), zap.Any("event", event))
 					continue
 				}
-
-				m.logger.Info("received file system event", zap.String("path", metastoreEvent.Path), zap.String("type", EventType_name[metastoreEvent.Type]))
-
+				// m.logger.Info("received metastore storage event", zap.String("path", metastoreEvent.Path), zap.String("type", StorageEventType_name[metastoreEvent.Type]))
 				m.events <- *metastoreEvent
 			case err, ok := <-m.fsWatcher.Errors:
-				m.logger.Error("received file system error event", zap.Error(err))
-
 				if !ok {
 					m.logger.Error("failed to receive error", zap.String("path", m.path))
 					continue
 				}
-
-				m.logger.Error("receive error", zap.Error(err), zap.String("path", m.path))
+				m.logger.Error("received file system error event", zap.Error(err), zap.String("path", m.path))
 			}
 		}
 	}()
 
-	if err := m.fsWatcher.Add(m.path); err != nil {
-		m.logger.Error("failed to start watching the file or directory", zap.Error(err), zap.String("path", m.path))
-		return err
-	}
-
 	return nil
 }
 
-func (m *FileSystemMetastore) Stop() error {
+func (m *FileSystemStorage) Stop() error {
 	m.stopWatching <- true
 
 	if err := m.fsWatcher.Close(); err != nil {
@@ -241,6 +236,6 @@ func (m *FileSystemMetastore) Stop() error {
 	return nil
 }
 
-func (m *FileSystemMetastore) Events() chan MetastoreEvent {
+func (m *FileSystemStorage) Events() chan StorageEvent {
 	return m.events
 }

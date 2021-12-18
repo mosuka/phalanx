@@ -8,21 +8,21 @@ import (
 	"github.com/mosuka/phalanx/logging"
 )
 
-func TestEtcdMetastoreWithUri(t *testing.T) {
+func TestEtcdStorageWithUri(t *testing.T) {
 	uri := "etcd://phalanx-test/metastore?endpoints=localhost:2379"
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	_, err := NewEtcdMetastoreWithUri(uri, logger)
+	_, err := NewEtcdStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
 }
 
-func TestEtcdMetastorePut(t *testing.T) {
+func TestEtcdStoragePut(t *testing.T) {
 	uri := "etcd://phalanx-test/metastore?endpoints=localhost:2379"
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	metastore, err := NewEtcdMetastoreWithUri(uri, logger)
+	metastore, err := NewEtcdStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -32,11 +32,11 @@ func TestEtcdMetastorePut(t *testing.T) {
 	}
 }
 
-func TestEtcdMetastoreGet(t *testing.T) {
+func TestEtcdStorageGet(t *testing.T) {
 	uri := "etcd://phalanx-test/metastore?endpoints=localhost:2379"
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	metastore, err := NewEtcdMetastoreWithUri(uri, logger)
+	metastore, err := NewEtcdStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -53,11 +53,11 @@ func TestEtcdMetastoreGet(t *testing.T) {
 	}
 }
 
-func TestEtcdMetastoreDelete(t *testing.T) {
+func TestEtcdStorageDelete(t *testing.T) {
 	uri := "etcd://phalanx-test/metastore?endpoints=localhost:2379"
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	metastore, err := NewEtcdMetastoreWithUri(uri, logger)
+	metastore, err := NewEtcdStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -69,11 +69,11 @@ func TestEtcdMetastoreDelete(t *testing.T) {
 	}
 }
 
-func TestEtcdMetastoreExists(t *testing.T) {
+func TestEtcdStorageExists(t *testing.T) {
 	uri := "etcd://phalanx-test/metastore?endpoints=localhost:2379"
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	metastore, err := NewEtcdMetastoreWithUri(uri, logger)
+	metastore, err := NewEtcdStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -97,11 +97,11 @@ func TestEtcdMetastoreExists(t *testing.T) {
 	}
 }
 
-func TestEtcdMetastoreList(t *testing.T) {
+func TestEtcdStorageList(t *testing.T) {
 	uri := "etcd://phalanx-test/metastore?endpoints=localhost:2379"
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	metastore, err := NewEtcdMetastoreWithUri(uri, logger)
+	metastore, err := NewEtcdStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}

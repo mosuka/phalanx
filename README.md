@@ -133,7 +133,7 @@ phalanx_grpc_server_handled_total{grpc_code="Aborted",grpc_method="Cluster",grpc
 
 ## Cluster status
 
-This endpoint returns the latest cluster status.  
+This endpoint returns the latest cluster status.
 - `nodes`: Lists the nodes that are joining in the cluster.
 - `indexes`: Lists the indexes served by the cluster.
 - `indexer_assignment`: Lists which node is responsible for the shard in the index.

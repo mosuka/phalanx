@@ -68,7 +68,7 @@ func (m *FileSystemLockManager) Lock() (int64, error) {
 		return 0, fmt.Errorf("failed to lock %s", fullPath)
 	}
 
-	m.logger.Info("locked", zap.String("path", fullPath))
+	// m.logger.Info("locked", zap.String("path", fullPath))
 
 	return 0, nil
 }
@@ -87,7 +87,7 @@ func (m *FileSystemLockManager) Unlock() error {
 		return err
 	}
 
-	m.logger.Info("unlocked", zap.String("path", fullPath))
+	// m.logger.Info("unlocked", zap.String("path", fullPath))
 
 	return nil
 }

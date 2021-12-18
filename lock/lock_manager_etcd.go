@@ -66,7 +66,7 @@ func (m *EtcdLockManager) Lock() (int64, error) {
 		return 0, err
 	}
 
-	m.logger.Info("locked", zap.String("path", m.path))
+	// m.logger.Info("locked", zap.String("path", m.path))
 
 	return m.mutex.Header().Revision, nil
 }
@@ -87,7 +87,7 @@ func (m *EtcdLockManager) Unlock() error {
 		return err
 	}
 
-	m.logger.Info("unlocked", zap.String("path", m.path))
+	// m.logger.Info("unlocked", zap.String("path", m.path))
 
 	return nil
 }

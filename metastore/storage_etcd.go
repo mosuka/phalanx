@@ -13,18 +13,18 @@ import (
 	"go.uber.org/zap"
 )
 
-type EtcdMetastore struct {
+type EtcdStorage struct {
 	client         *clientv3.Client
 	kv             clientv3.KV
 	root           string
 	logger         *zap.Logger
 	ctx            context.Context
 	stopWatching   chan bool
-	events         chan MetastoreEvent
+	events         chan StorageEvent
 	requestTimeout time.Duration
 }
 
-func NewEtcdMetastoreWithUri(uri string, logger *zap.Logger) (*EtcdMetastore, error) {
+func NewEtcdStorageWithUri(uri string, logger *zap.Logger) (*EtcdStorage, error) {
 	metastorelogger := logger.Named("etcd")
 
 	client, err := clients.NewEtcdClientWithUri(uri)
@@ -43,29 +43,29 @@ func NewEtcdMetastoreWithUri(uri string, logger *zap.Logger) (*EtcdMetastore, er
 
 	root := filepath.ToSlash(filepath.Join(string(filepath.Separator), u.Host, u.Path))
 
-	return &EtcdMetastore{
+	return &EtcdStorage{
 		client:         client,
 		kv:             clientv3.NewKV(client),
 		root:           root,
 		logger:         metastorelogger,
 		ctx:            context.Background(),
 		stopWatching:   make(chan bool),
-		events:         make(chan MetastoreEvent, 10),
+		events:         make(chan StorageEvent, 10),
 		requestTimeout: 3 * time.Second,
 	}, nil
 }
 
-func (m *EtcdMetastore) convertMetastoreEvent(event *clientv3.Event) (*MetastoreEvent, error) {
+func (m *EtcdStorage) makeStorageEvent(event *clientv3.Event) (*StorageEvent, error) {
 	switch {
 	case event.Type == mvccpb.PUT:
-		return &MetastoreEvent{
-			Type:  EventTypePut,
+		return &StorageEvent{
+			Type:  StorageEventTypePut,
 			Path:  string(event.Kv.Key),
 			Value: event.Kv.Value,
 		}, nil
 	case event.Type == mvccpb.DELETE:
-		return &MetastoreEvent{
-			Type:  EventTypeDelete,
+		return &StorageEvent{
+			Type:  StorageEventTypeDelete,
 			Path:  string(event.Kv.Key),
 			Value: event.Kv.Value,
 		}, nil
@@ -75,11 +75,11 @@ func (m *EtcdMetastore) convertMetastoreEvent(event *clientv3.Event) (*Metastore
 }
 
 // Replace the path separator with '/'.
-func (m *EtcdMetastore) makePath(path string) string {
+func (m *EtcdStorage) makePath(path string) string {
 	return filepath.ToSlash(filepath.Join(filepath.FromSlash(m.root), path))
 }
 
-func (m *EtcdMetastore) Get(path string) ([]byte, error) {
+func (m *EtcdStorage) Get(path string) ([]byte, error) {
 	fullPath := m.makePath(path)
 
 	ctx, cancel := context.WithTimeout(m.ctx, m.requestTimeout)
@@ -98,7 +98,7 @@ func (m *EtcdMetastore) Get(path string) ([]byte, error) {
 	}
 }
 
-func (m *EtcdMetastore) List(prefix string) ([]string, error) {
+func (m *EtcdStorage) List(prefix string) ([]string, error) {
 	prefixPath := m.makePath(prefix)
 
 	ctx, cancel := context.WithTimeout(m.ctx, m.requestTimeout)
@@ -126,7 +126,7 @@ func (m *EtcdMetastore) List(prefix string) ([]string, error) {
 	return paths, nil
 }
 
-func (m *EtcdMetastore) Put(path string, content []byte) error {
+func (m *EtcdStorage) Put(path string, content []byte) error {
 	fullPath := m.makePath(path)
 
 	ctx, cancel := context.WithTimeout(m.ctx, m.requestTimeout)
@@ -140,7 +140,7 @@ func (m *EtcdMetastore) Put(path string, content []byte) error {
 	return nil
 }
 
-func (m *EtcdMetastore) Delete(path string) error {
+func (m *EtcdStorage) Delete(path string) error {
 	fullPath := m.makePath(path)
 
 	ctx, cancel := context.WithTimeout(m.ctx, m.requestTimeout)
@@ -154,7 +154,7 @@ func (m *EtcdMetastore) Delete(path string) error {
 	return nil
 }
 
-func (m *EtcdMetastore) Exists(path string) (bool, error) {
+func (m *EtcdStorage) Exists(path string) (bool, error) {
 	fullPath := m.makePath(path)
 
 	ctx, cancel := context.WithTimeout(m.ctx, m.requestTimeout)
@@ -173,7 +173,7 @@ func (m *EtcdMetastore) Exists(path string) (bool, error) {
 	}
 }
 
-func (m *EtcdMetastore) Start() error {
+func (m *EtcdStorage) Start() error {
 	go func() {
 		watchPath := m.root + "/"
 		opts := []clientv3.OpOption{
@@ -189,13 +189,15 @@ func (m *EtcdMetastore) Start() error {
 				}
 			case result := <-watchChan:
 				for _, event := range result.Events {
-					metastoreEvent, err := m.convertMetastoreEvent(event)
+					// m.logger.Info("received etcd event", zap.String("type", event.Type.String()), zap.String("key", string(event.Kv.Key)))
+
+					metastoreEvent, err := m.makeStorageEvent(event)
 					if err != nil {
 						m.logger.Error("failed to convert event", zap.Error(err), zap.Any("event", event))
 						continue
 					}
 
-					m.logger.Debug("received etcd event", zap.Any("path", metastoreEvent.Path), zap.String("type", EventType_name[metastoreEvent.Type]))
+					// m.logger.Info("received metastore storage event", zap.Any("path", metastoreEvent.Path), zap.String("type", StorageEventType_name[metastoreEvent.Type]))
 
 					m.events <- *metastoreEvent
 				}
@@ -206,7 +208,7 @@ func (m *EtcdMetastore) Start() error {
 	return nil
 }
 
-func (m *EtcdMetastore) Stop() error {
+func (m *EtcdStorage) Stop() error {
 	m.stopWatching <- true
 
 	if err := m.client.Close(); err != nil {
@@ -217,6 +219,6 @@ func (m *EtcdMetastore) Stop() error {
 	return nil
 }
 
-func (m *EtcdMetastore) Events() chan MetastoreEvent {
+func (m *EtcdStorage) Events() chan StorageEvent {
 	return m.events
 }
