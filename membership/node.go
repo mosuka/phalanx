@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/memberlist"
+	"github.com/mosuka/rendezvous"
 	"github.com/thanhpk/randstr"
 	"go.uber.org/zap"
 )
@@ -25,6 +26,8 @@ type Node struct {
 	nodeEvents           chan NodeEvent
 	stopWatching         chan bool
 	isSeedNode           bool
+	indexerHash          *rendezvous.Ring
+	searcherHash         *rendezvous.Ring
 }
 
 func NewNode(host string, bindPort int, nodeMetadata NodeMetadata, isSeedNode bool, logger *zap.Logger) (*Node, error) {
@@ -62,6 +65,8 @@ func NewNode(host string, bindPort int, nodeMetadata NodeMetadata, isSeedNode bo
 		nodeEvents:           make(chan NodeEvent, 10),
 		stopWatching:         make(chan bool),
 		isSeedNode:           isSeedNode,
+		indexerHash:          rendezvous.New(),
+		searcherHash:         rendezvous.New(),
 	}, nil
 }
 
@@ -138,7 +143,54 @@ func (n *Node) Start() error {
 					return
 				}
 			case nodeEvent := <-n.nodeEventDeliegate.NodeEvents:
-				nodeEvent.Members = n.memberList.Members()
+				n.logger.Info("Received node event", zap.Any("nodeEvent", nodeEvent))
+
+				// make member list
+				members := make([]string, 0)
+				for _, member := range n.Members() {
+					members = append(members, member.Name)
+				}
+				nodeEvent.Members = members
+
+				switch nodeEvent.Type {
+				case EventTypeJoin:
+					if nodeEvent.Meta.IsIndexer() {
+						if !n.indexerHash.Contains(nodeEvent.Node) {
+							n.indexerHash.AddWithWeight(nodeEvent.Node, 1.0)
+						}
+					}
+
+					if nodeEvent.Meta.IsSearcher() {
+						if !n.searcherHash.Contains(nodeEvent.Node) {
+							n.searcherHash.AddWithWeight(nodeEvent.Node, 1.0)
+						}
+					}
+				case EventTypeUpdate:
+					if nodeEvent.Meta.IsIndexer() {
+						if !n.indexerHash.Contains(nodeEvent.Node) {
+							n.indexerHash.AddWithWeight(nodeEvent.Node, 1.0)
+						}
+					}
+
+					if nodeEvent.Meta.IsSearcher() {
+						if !n.searcherHash.Contains(nodeEvent.Node) {
+							n.searcherHash.AddWithWeight(nodeEvent.Node, 1.0)
+						}
+					}
+				case EventTypeLeave:
+					if nodeEvent.Meta.IsIndexer() {
+						if n.indexerHash.Contains(nodeEvent.Node) {
+							n.indexerHash.Remove(nodeEvent.Node)
+						}
+					}
+
+					if nodeEvent.Meta.IsSearcher() {
+						if n.searcherHash.Contains(nodeEvent.Node) {
+							n.searcherHash.Remove(nodeEvent.Node)
+						}
+					}
+				}
+
 				n.nodeEvents <- nodeEvent
 			}
 		}
@@ -151,4 +203,12 @@ func (n *Node) Stop() error {
 	n.stopWatching <- true
 
 	return nil
+}
+
+func (n *Node) LookupIndexer(key string) string {
+	return n.indexerHash.Lookup(key)
+}
+
+func (n *Node) LookupSearchers(key string, numNodes int) []string {
+	return n.searcherHash.LookupTopN(key, numNodes)
 }
