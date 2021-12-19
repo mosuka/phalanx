@@ -20,7 +20,6 @@ import (
 	"github.com/mosuka/phalanx/membership"
 	"github.com/mosuka/phalanx/metastore"
 	"github.com/mosuka/phalanx/proto"
-	"github.com/mosuka/rendezvous"
 	"github.com/thanhpk/randstr"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -51,8 +50,6 @@ type Manager struct {
 	indexWriters       *IndexWriters
 	indexReaders       *IndexReaders
 	stopWatching       chan bool
-	indexerHash        *rendezvous.Ring
-	searcherHash       *rendezvous.Ring
 	indexerAssignment  map[string]map[string]string
 	searcherAssignment map[string]map[string][]string
 	clients            map[string]*clients.IndexClient
@@ -71,8 +68,6 @@ func NewManager(node *membership.Node, ms *metastore.Metastore, certificateFile 
 		indexWriters:       NewIndexWriters(managerLogger),
 		indexReaders:       NewIndexReaders(managerLogger),
 		stopWatching:       make(chan bool),
-		indexerHash:        rendezvous.New(),
-		searcherHash:       rendezvous.New(),
 		indexerAssignment:  map[string]map[string]string{},
 		searcherAssignment: map[string]map[string][]string{},
 		clients:            map[string]*clients.IndexClient{},
@@ -104,51 +99,16 @@ func (m *Manager) Start() error {
 					m.assignShardsToNode()
 				}
 			case event := <-m.node.Events():
-				m.logger.Info("received membership event", zap.String("name", event.Node.Name), zap.String("type", membership.EventType_name[event.Type]))
+				m.logger.Info("received membership event", zap.String("name", event.Node), zap.String("type", membership.EventType_name[event.Type]))
 
-				switch {
-				case event.Type == membership.EventTypeJoin:
-					nodeMeta, err := membership.NewNodeMetadataWithBytes(event.Node.Meta)
-					if err != nil {
-						m.logger.Warn("failed to make node metadata", zap.Error(err), zap.String("node_name", event.Node.Name))
-						continue
-					}
-
-					if nodeMeta.IsIndexer() {
-						if !m.indexerHash.Contains(event.Node.Name) {
-							m.indexerHash.AddWithWeight(event.Node.Name, 1.0)
-						}
-					}
-
-					if nodeMeta.IsSearcher() {
-						if !m.searcherHash.Contains(event.Node.Name) {
-							m.searcherHash.AddWithWeight(event.Node.Name, 1.0)
-						}
-					}
-
-					if m.node.IsSeedNode() || event.Node.Name != m.node.Name() {
+				switch event.Type {
+				case membership.EventTypeJoin:
+					if m.node.IsSeedNode() || event.Node != m.node.Name() {
 						m.assignShardsToNode()
 					}
-
-				case event.Type == membership.EventTypeLeave:
-					nodeMeta, err := membership.NewNodeMetadataWithBytes(event.Node.Meta)
-					if err != nil {
-						m.logger.Warn("failed to make node metadata", zap.Error(err), zap.String("node_name", event.Node.Name))
-						continue
-					}
-
-					if nodeMeta.IsIndexer() {
-						if m.indexerHash.Contains(event.Node.Name) {
-							m.indexerHash.Remove(event.Node.Name)
-						}
-					}
-
-					if nodeMeta.IsSearcher() {
-						if m.searcherHash.Contains(event.Node.Name) {
-							m.searcherHash.Remove(event.Node.Name)
-						}
-					}
-
+				case membership.EventTypeUpdate:
+					m.assignShardsToNode()
+				case membership.EventTypeLeave:
 					m.assignShardsToNode()
 				}
 			}
@@ -197,18 +157,36 @@ func (m *Manager) assignShardsToNode() error {
 			if _, ok := indexerAssignment[indexName]; !ok {
 				indexerAssignment[indexName] = make(map[string]string)
 			}
-			indexerAssignment[indexName][shardName] = m.indexerHash.Lookup(shardName)
+			indexerAssignment[indexName][shardName] = m.node.LookupIndexer(shardName)
 
 			// Assign searchers.
 			if _, ok := searcherAssignment[indexName]; !ok {
 				searcherAssignment[indexName] = make(map[string][]string)
 			}
-			searcherAssignment[indexName][shardName] = m.searcherHash.LookupTopN(shardName, searchReplicationFactor)
+			searcherAssignment[indexName][shardName] = m.node.LookupSearchers(shardName, searchReplicationFactor)
 		}
 	}
 
 	m.indexerAssignment = indexerAssignment
 	m.searcherAssignment = searcherAssignment
+	// fmt.Println("indexerAssignment:")
+	// for indexName, shardIndexerAssignment := range indexerAssignment {
+	// 	fmt.Println("  index name:", indexName)
+	// 	for shardName, nodeName := range shardIndexerAssignment {
+	// 		fmt.Println("    shard name:", shardName)
+	// 		fmt.Println("      node name:", nodeName)
+	// 	}
+	// }
+	// fmt.Println("searcherAssignment:")
+	// for indexName, shardIndexerAssignment := range searcherAssignment {
+	// 	fmt.Println("  index name:", indexName)
+	// 	for shardName, nodeNames := range shardIndexerAssignment {
+	// 		fmt.Println("    shard name:", shardName)
+	// 		for _, nodeName := range nodeNames {
+	// 			fmt.Println("      node name:", nodeName)
+	// 		}
+	// 	}
+	// }
 
 	// Open the index writers for assigned shards.
 	for assignedIndexName, shardAssignment := range m.indexerAssignment {

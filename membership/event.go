@@ -30,10 +30,40 @@ var (
 	}
 )
 
+type StateType int
+
+const (
+	StateTypeUnknown StateType = iota
+	StateTypeAlive
+	StateTypeSuspect
+	StateTypeDead
+	StateTypeLeft
+)
+
+// Enum value maps for StateType.
+var (
+	StateType_name = map[StateType]string{
+		StateTypeUnknown: "unknown",
+		StateTypeAlive:   "alive",
+		StateTypeSuspect: "suspect",
+		StateTypeDead:    "dead",
+		StateTypeLeft:    "left",
+	}
+	StateType_value = map[string]StateType{
+		"unknown": StateTypeUnknown,
+		"alive":   StateTypeAlive,
+		"suspect": StateTypeSuspect,
+		"dead":    StateTypeDead,
+		"left":    StateTypeLeft,
+	}
+)
+
 type NodeEvent struct {
 	Type    EventType
-	Node    *memberlist.Node
-	Members []*memberlist.Node
+	Node    string
+	Meta    *NodeMetadata
+	State   StateType
+	Members []string
 }
 
 type NodeEventDelegate struct {
@@ -51,21 +81,39 @@ func NewNodeEventDelegate(logger *zap.Logger) *NodeEventDelegate {
 }
 
 func (d *NodeEventDelegate) NotifyJoin(node *memberlist.Node) {
-	d.NodeEvents <- NodeEvent{
-		Type: EventTypeJoin,
-		Node: node,
-	}
+	d.NodeEvents <- makeNodeEvent(EventTypeJoin, node)
 }
 func (d *NodeEventDelegate) NotifyLeave(node *memberlist.Node) {
-	d.NodeEvents <- NodeEvent{
-		Type: EventTypeLeave,
-		Node: node,
-	}
+	d.NodeEvents <- makeNodeEvent(EventTypeLeave, node)
 }
 func (d *NodeEventDelegate) NotifyUpdate(node *memberlist.Node) {
-	d.NodeEvents <- NodeEvent{
-		Type: EventTypeUpdate,
-		Node: node,
+	d.NodeEvents <- makeNodeEvent(EventTypeUpdate, node)
+}
+
+func makeNodeEvent(eventType EventType, node *memberlist.Node) NodeEvent {
+	nodeMeta, err := NewNodeMetadataWithBytes(node.Meta)
+	if err != nil {
+		nodeMeta = NewNodeMetadata()
+	}
+
+	state := StateTypeUnknown
+	switch node.State {
+	case memberlist.StateAlive:
+		state = StateTypeAlive
+	case memberlist.StateSuspect:
+		state = StateTypeSuspect
+	case memberlist.StateDead:
+		state = StateTypeDead
+	case memberlist.StateLeft:
+		state = StateTypeLeft
+	}
+
+	return NodeEvent{
+		Type:    eventType,
+		Node:    node.Name,
+		State:   state,
+		Meta:    nodeMeta,
+		Members: []string{},
 	}
 }
 
