@@ -15,7 +15,6 @@ import (
 
 	"github.com/blugelabs/bluge"
 	"github.com/blugelabs/bluge/index"
-	bindex "github.com/blugelabs/bluge/index"
 	segment "github.com/blugelabs/bluge_segment_api"
 	minio "github.com/minio/minio-go/v7"
 	"github.com/mosuka/phalanx/clients"
@@ -187,7 +186,7 @@ func (d *MinioDirectory) Load(kind string, id uint64) (*segment.Data, io.Closer,
 	return segment.NewDataBytes(data), nil, nil
 }
 
-func (d *MinioDirectory) Persist(kind string, id uint64, w bindex.WriterTo, closeCh chan struct{}) error {
+func (d *MinioDirectory) Persist(kind string, id uint64, w index.WriterTo, closeCh chan struct{}) error {
 	var buf bytes.Buffer
 	size, err := w.WriteTo(&buf, closeCh)
 	if err != nil {

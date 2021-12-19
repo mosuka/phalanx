@@ -18,9 +18,7 @@ func FileSystemIndexConfig(uri string, lockManager lock.LockManager, logger *zap
 
 type FileSystemDirectory struct {
 	*index.FileSystemDirectory
-
-	path string
-
+	path        string
 	lockManager lock.LockManager
 	logger      *zap.Logger
 }
