@@ -16,7 +16,6 @@ import (
 	"github.com/mosuka/phalanx/logging"
 	phalanxmetastore "github.com/mosuka/phalanx/metastore"
 	"github.com/mosuka/phalanx/server"
-	"github.com/mosuka/phalanx/service"
 	"github.com/mosuka/phalanx/util"
 	"github.com/mosuka/phalanx/version"
 	"github.com/spf13/cobra"
@@ -170,7 +169,7 @@ var (
 			}
 
 			// Create indexService
-			indexService, err := service.NewIndexService(indexManager, certificateFile, commonName, logger)
+			indexService, err := server.NewIndexService(indexManager, certificateFile, commonName, logger)
 			if err != nil {
 				logger.Error("failed to create index service", zap.Error(err))
 				return err
