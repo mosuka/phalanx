@@ -1,4 +1,4 @@
-package membership
+package cluster
 
 import (
 	"fmt"
@@ -48,7 +48,7 @@ func NewCluster(host string, bindPort int, nodeMetadata NodeMetadata, isSeedNode
 
 	memberList, err := memberlist.Create(config)
 	if err != nil {
-		clusterLogger.Error("Failed to create member list", zap.Error(err), zap.Any("config", config))
+		clusterLogger.Error("failed to create member list", zap.Error(err), zap.Any("config", config))
 		return nil, err
 	}
 	// members.LocalNode().Meta, err = nodeMetadata.Bytes()
@@ -70,24 +70,24 @@ func NewCluster(host string, bindPort int, nodeMetadata NodeMetadata, isSeedNode
 	}, nil
 }
 
-func (n *Cluster) Join(seeds []string) (int, error) {
-	return n.memberList.Join(seeds)
+func (c *Cluster) Join(seeds []string) (int, error) {
+	return c.memberList.Join(seeds)
 }
 
-func (n *Cluster) Leave(timeout time.Duration) error {
-	return n.memberList.Leave(timeout)
+func (c *Cluster) Leave(timeout time.Duration) error {
+	return c.memberList.Leave(timeout)
 }
 
-func (n *Cluster) LocalNodeName() string {
-	return n.memberList.LocalNode().Name
+func (c *Cluster) LocalNodeName() string {
+	return c.memberList.LocalNode().Name
 }
 
-func (n *Cluster) LocalNodeMetadata() (*NodeMetadata, error) {
-	return NewNodeMetadataWithBytes(n.memberList.LocalNode().Meta)
+func (c *Cluster) LocalNodeMetadata() (*NodeMetadata, error) {
+	return NewNodeMetadataWithBytes(c.memberList.LocalNode().Meta)
 }
 
-func (n *Cluster) NodeMetadata(nodeName string) (*NodeMetadata, error) {
-	nodes := n.memberList.Members()
+func (c *Cluster) NodeMetadata(nodeName string) (*NodeMetadata, error) {
+	nodes := c.memberList.Members()
 	for _, node := range nodes {
 		if node.Name == nodeName {
 			return NewNodeMetadataWithBytes(node.Meta)
@@ -97,8 +97,8 @@ func (n *Cluster) NodeMetadata(nodeName string) (*NodeMetadata, error) {
 	return nil, errors.ErrNodeDoesNotFound
 }
 
-func (n *Cluster) NodeAddress(nodeName string) (string, error) {
-	nodes := n.memberList.Members()
+func (c *Cluster) NodeAddress(nodeName string) (string, error) {
+	nodes := c.memberList.Members()
 	for _, node := range nodes {
 		if node.Name == nodeName {
 			return node.Addr.String(), nil
@@ -108,8 +108,8 @@ func (n *Cluster) NodeAddress(nodeName string) (string, error) {
 	return "", errors.ErrNodeDoesNotFound
 }
 
-func (n *Cluster) NodePort(nodeName string) (uint16, error) {
-	nodes := n.memberList.Members()
+func (c *Cluster) NodePort(nodeName string) (uint16, error) {
+	nodes := c.memberList.Members()
 	for _, node := range nodes {
 		if node.Name == nodeName {
 			return node.Port, nil
@@ -119,8 +119,8 @@ func (n *Cluster) NodePort(nodeName string) (uint16, error) {
 	return 0, errors.ErrNodeDoesNotFound
 }
 
-func (n *Cluster) NodeState(nodeName string) (NodeState, error) {
-	nodes := n.memberList.Members()
+func (c *Cluster) NodeState(nodeName string) (NodeState, error) {
+	nodes := c.memberList.Members()
 	for _, node := range nodes {
 		if node.Name == nodeName {
 			return makeNodeState(node.State), nil
@@ -130,12 +130,12 @@ func (n *Cluster) NodeState(nodeName string) (NodeState, error) {
 	return NodeStateUnknown, errors.ErrNodeDoesNotFound
 }
 
-func (n *Cluster) IsSeedNode() bool {
-	return n.isSeedNode
+func (c *Cluster) IsSeedNode() bool {
+	return c.isSeedNode
 }
 
-func (n *Cluster) IsIndexer() bool {
-	metadata, err := n.LocalNodeMetadata()
+func (c *Cluster) IsIndexer() bool {
+	metadata, err := c.LocalNodeMetadata()
 	if err != nil {
 		return false
 	}
@@ -147,8 +147,8 @@ func (n *Cluster) IsIndexer() bool {
 	return false
 }
 
-func (n *Cluster) IsSearcher() bool {
-	metadata, err := n.LocalNodeMetadata()
+func (c *Cluster) IsSearcher() bool {
+	metadata, err := c.LocalNodeMetadata()
 	if err != nil {
 		return false
 	}
@@ -160,74 +160,76 @@ func (n *Cluster) IsSearcher() bool {
 	return false
 }
 
-func (n *Cluster) Nodes() []string {
+func (c *Cluster) Nodes() []string {
 	members := make([]string, 0)
-	for _, member := range n.memberList.Members() {
+	for _, member := range c.memberList.Members() {
 		members = append(members, member.Name)
 	}
 	return members
 }
 
-func (n *Cluster) ClusterEvents() <-chan ClusterEvent {
-	return n.clusterEvents
+func (c *Cluster) ClusterEvents() <-chan ClusterEvent {
+	return c.clusterEvents
 }
 
-func (n *Cluster) Start() error {
+func (c *Cluster) Start() error {
+	c.logger.Info("start cluster")
+
 	go func() {
 		for {
 			select {
-			case cancel := <-n.stopWatching:
+			case cancel := <-c.stopWatching:
 				if cancel {
 					return
 				}
-			case nodeEvent := <-n.nodeEventDeliegate.NodeEvents:
-				n.logger.Info("Received node event", zap.Any("nodeEvent", nodeEvent))
+			case nodeEvent := <-c.nodeEventDeliegate.NodeEvents:
+				c.logger.Info("received node event", zap.Any("node_event", nodeEvent))
 
 				clusterEvent := ClusterEvent{
 					NodeEvent: nodeEvent,
-					Members:   n.Nodes(),
+					Members:   c.Nodes(),
 				}
 
 				switch nodeEvent.Type {
 				case NodeEventTypeJoin:
-					if nodeEvent.Meta.IsIndexer() {
-						if !n.indexerHash.Contains(nodeEvent.Node) {
-							n.indexerHash.AddWithWeight(nodeEvent.Node, 1.0)
+					if nodeEvent.NodeMetadata.IsIndexer() {
+						if !c.indexerHash.Contains(nodeEvent.NodeName) {
+							c.indexerHash.AddWithWeight(nodeEvent.NodeName, 1.0)
 						}
 					}
 
-					if nodeEvent.Meta.IsSearcher() {
-						if !n.searcherHash.Contains(nodeEvent.Node) {
-							n.searcherHash.AddWithWeight(nodeEvent.Node, 1.0)
+					if nodeEvent.NodeMetadata.IsSearcher() {
+						if !c.searcherHash.Contains(nodeEvent.NodeName) {
+							c.searcherHash.AddWithWeight(nodeEvent.NodeName, 1.0)
 						}
 					}
 				case NodeEventTypeUpdate:
-					if nodeEvent.Meta.IsIndexer() {
-						if !n.indexerHash.Contains(nodeEvent.Node) {
-							n.indexerHash.AddWithWeight(nodeEvent.Node, 1.0)
+					if nodeEvent.NodeMetadata.IsIndexer() {
+						if !c.indexerHash.Contains(nodeEvent.NodeName) {
+							c.indexerHash.AddWithWeight(nodeEvent.NodeName, 1.0)
 						}
 					}
 
-					if nodeEvent.Meta.IsSearcher() {
-						if !n.searcherHash.Contains(nodeEvent.Node) {
-							n.searcherHash.AddWithWeight(nodeEvent.Node, 1.0)
+					if nodeEvent.NodeMetadata.IsSearcher() {
+						if !c.searcherHash.Contains(nodeEvent.NodeName) {
+							c.searcherHash.AddWithWeight(nodeEvent.NodeName, 1.0)
 						}
 					}
 				case NodeEventTypeLeave:
-					if nodeEvent.Meta.IsIndexer() {
-						if n.indexerHash.Contains(nodeEvent.Node) {
-							n.indexerHash.Remove(nodeEvent.Node)
+					if nodeEvent.NodeMetadata.IsIndexer() {
+						if c.indexerHash.Contains(nodeEvent.NodeName) {
+							c.indexerHash.Remove(nodeEvent.NodeName)
 						}
 					}
 
-					if nodeEvent.Meta.IsSearcher() {
-						if n.searcherHash.Contains(nodeEvent.Node) {
-							n.searcherHash.Remove(nodeEvent.Node)
+					if nodeEvent.NodeMetadata.IsSearcher() {
+						if c.searcherHash.Contains(nodeEvent.NodeName) {
+							c.searcherHash.Remove(nodeEvent.NodeName)
 						}
 					}
 				}
 
-				n.clusterEvents <- clusterEvent
+				c.clusterEvents <- clusterEvent
 			}
 		}
 	}()
@@ -235,16 +237,18 @@ func (n *Cluster) Start() error {
 	return nil
 }
 
-func (n *Cluster) Stop() error {
-	n.stopWatching <- true
+func (c *Cluster) Stop() error {
+	c.logger.Info("stop cluster")
+
+	c.stopWatching <- true
 
 	return nil
 }
 
-func (n *Cluster) LookupIndexer(key string) string {
-	return n.indexerHash.Lookup(key)
+func (c *Cluster) LookupIndexer(key string) string {
+	return c.indexerHash.Lookup(key)
 }
 
-func (n *Cluster) LookupSearchers(key string, numNodes int) []string {
-	return n.searcherHash.LookupTopN(key, numNodes)
+func (c *Cluster) LookupSearchers(key string, numNodes int) []string {
+	return c.searcherHash.LookupTopN(key, numNodes)
 }

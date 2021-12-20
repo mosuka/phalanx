@@ -1,4 +1,4 @@
-package membership
+package cluster
 
 import (
 	"github.com/hashicorp/memberlist"
@@ -59,10 +59,10 @@ var (
 )
 
 type NodeEvent struct {
-	Type  NodeEventType
-	Node  string
-	Meta  *NodeMetadata
-	State NodeState
+	Type         NodeEventType
+	NodeName     string
+	NodeMetadata *NodeMetadata
+	NodeState    NodeState
 }
 
 type ClusterEvent struct {
@@ -76,7 +76,7 @@ type NodeEventDelegate struct {
 }
 
 func NewNodeEventDelegate(logger *zap.Logger) *NodeEventDelegate {
-	delegateLogger := logger.Named("node_event_delegate")
+	delegateLogger := logger.Named("event_delegate")
 
 	return &NodeEventDelegate{
 		NodeEvents: make(chan NodeEvent, 10),
@@ -118,10 +118,10 @@ func makeNodeEvent(eventType NodeEventType, node *memberlist.Node) NodeEvent {
 	state := makeNodeState(node.State)
 
 	return NodeEvent{
-		Type:  eventType,
-		Node:  node.Name,
-		State: state,
-		Meta:  nodeMeta,
+		Type:         eventType,
+		NodeName:     node.Name,
+		NodeState:    state,
+		NodeMetadata: nodeMeta,
 	}
 }
 
@@ -131,7 +131,7 @@ type NodeMetadataDelegate struct {
 }
 
 func NewNodeMetadataDelegate(metadata NodeMetadata, logger *zap.Logger) *NodeMetadataDelegate {
-	delegateLogger := logger.Named("node_metadata_delegate")
+	delegateLogger := logger.Named("metadata_delegate")
 
 	return &NodeMetadataDelegate{
 		metadata: metadata,
@@ -140,7 +140,7 @@ func NewNodeMetadataDelegate(metadata NodeMetadata, logger *zap.Logger) *NodeMet
 }
 
 func (d *NodeMetadataDelegate) NodeMeta(limit int) []byte {
-	data, err := d.metadata.Bytes()
+	data, err := d.metadata.Marshal()
 	if err != nil {
 		return []byte{}
 	}

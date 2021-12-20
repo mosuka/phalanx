@@ -57,8 +57,7 @@ func NewIndexConfigWithUri(uri string, lockManager lock.LockManager, logger *zap
 		return MinioIndexConfig(uri, lockManager, directoryLogger), nil
 	default:
 		err := errors.ErrUnsupportedDirectoryType
-		directoryLogger.Error("unknown directory type", zap.Error(err), zap.String("scheme", u.Scheme))
-		return bluge.Config{}, errors.ErrUnsupportedDirectoryType
+		return bluge.Config{}, err
 	}
 }
 
