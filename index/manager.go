@@ -11,7 +11,6 @@ import (
 	"github.com/blugelabs/bluge"
 	"github.com/blugelabs/bluge/numeric/geo"
 	querystr "github.com/blugelabs/query_string"
-	"github.com/hashicorp/memberlist"
 	"github.com/jinzhu/copier"
 	"github.com/mosuka/phalanx/clients"
 	"github.com/mosuka/phalanx/directory"
@@ -42,7 +41,7 @@ func shuffleNodes(nodeNames []string) {
 }
 
 type Manager struct {
-	node               *membership.Node
+	cluster            *membership.Cluster
 	ms                 *metastore.Metastore
 	certificateFile    string
 	commonName         string
@@ -56,11 +55,11 @@ type Manager struct {
 	mutex              sync.RWMutex
 }
 
-func NewManager(node *membership.Node, ms *metastore.Metastore, certificateFile string, commonName string, logger *zap.Logger) (*Manager, error) {
+func NewManager(cluster *membership.Cluster, ms *metastore.Metastore, certificateFile string, commonName string, logger *zap.Logger) (*Manager, error) {
 	managerLogger := logger.Named("manager")
 
 	return &Manager{
-		node:               node,
+		cluster:            cluster,
 		ms:                 ms,
 		certificateFile:    certificateFile,
 		commonName:         commonName,
@@ -98,17 +97,18 @@ func (m *Manager) Start() error {
 					m.logger.Info("received metastore event", zap.String("type", metastore.MetastoreEventType_name[event.Type]), zap.String("index", event.Index), zap.String("shard", event.Shard))
 					m.assignShardsToNode()
 				}
-			case event := <-m.node.Events():
-				m.logger.Info("received membership event", zap.String("name", event.Node), zap.String("type", membership.EventType_name[event.Type]))
-
-				switch event.Type {
-				case membership.EventTypeJoin:
-					if m.node.IsSeedNode() || event.Node != m.node.Name() {
+			case event := <-m.cluster.ClusterEvents():
+				switch event.NodeEvent.Type {
+				case membership.NodeEventTypeJoin:
+					m.logger.Info("received membership event", zap.String("name", event.NodeEvent.Node), zap.String("type", membership.NodeEventType_name[event.NodeEvent.Type]))
+					if m.cluster.IsSeedNode() || event.NodeEvent.Node != m.cluster.LocalNodeName() {
 						m.assignShardsToNode()
 					}
-				case membership.EventTypeUpdate:
+				case membership.NodeEventTypeUpdate:
+					m.logger.Info("received membership event", zap.String("name", event.NodeEvent.Node), zap.String("type", membership.NodeEventType_name[event.NodeEvent.Type]))
 					m.assignShardsToNode()
-				case membership.EventTypeLeave:
+				case membership.NodeEventTypeLeave:
+					m.logger.Info("received membership event", zap.String("name", event.NodeEvent.Node), zap.String("type", membership.NodeEventType_name[event.NodeEvent.Type]))
 					m.assignShardsToNode()
 				}
 			}
@@ -139,7 +139,6 @@ func (m *Manager) Stop() error {
 			m.logger.Error("failed to close index client", zap.Error(err), zap.String("address", address))
 			return err
 		}
-		// m.logger.Debug("closing index client", zap.String("address", address))
 	}
 
 	return nil
@@ -157,13 +156,13 @@ func (m *Manager) assignShardsToNode() error {
 			if _, ok := indexerAssignment[indexName]; !ok {
 				indexerAssignment[indexName] = make(map[string]string)
 			}
-			indexerAssignment[indexName][shardName] = m.node.LookupIndexer(shardName)
+			indexerAssignment[indexName][shardName] = m.cluster.LookupIndexer(shardName)
 
 			// Assign searchers.
 			if _, ok := searcherAssignment[indexName]; !ok {
 				searcherAssignment[indexName] = make(map[string][]string)
 			}
-			searcherAssignment[indexName][shardName] = m.node.LookupSearchers(shardName, searchReplicationFactor)
+			searcherAssignment[indexName][shardName] = m.cluster.LookupSearchers(shardName, searchReplicationFactor)
 		}
 	}
 
@@ -191,7 +190,7 @@ func (m *Manager) assignShardsToNode() error {
 	// Open the index writers for assigned shards.
 	for assignedIndexName, shardAssignment := range m.indexerAssignment {
 		for assignedShardName, assignedNodeName := range shardAssignment {
-			isAssigned := assignedNodeName == m.node.Name()
+			isAssigned := assignedNodeName == m.cluster.LocalNodeName()
 			if isAssigned {
 				if !m.indexWriters.Contains(assignedIndexName, assignedShardName) {
 					indexMetadata, err := m.ms.GetIndexMetadata(assignedIndexName)
@@ -238,7 +237,7 @@ func (m *Manager) assignShardsToNode() error {
 				}
 			}
 
-			isAssigned := assignedNodeName == m.node.Name()
+			isAssigned := assignedNodeName == m.cluster.LocalNodeName()
 			if !isAssigned {
 				// Close the index writer for the shard assigned to the other node.
 				// m.logger.Info("close index writer", zap.String("index_name", openedIndexName), zap.String("shard_name", openedShardName))
@@ -255,7 +254,7 @@ func (m *Manager) assignShardsToNode() error {
 		for assignedShardName, assignedNodeNames := range shardAssignment {
 			isAssigned := false
 			for _, assignedNodeName := range assignedNodeNames {
-				if assignedNodeName == m.node.Name() {
+				if assignedNodeName == m.cluster.LocalNodeName() {
 					isAssigned = true
 					break
 				}
@@ -322,7 +321,7 @@ func (m *Manager) assignShardsToNode() error {
 
 			isAssigned := false
 			for _, assignedNodeName := range assignedNodenames {
-				if assignedNodeName == m.node.Name() {
+				if assignedNodeName == m.cluster.LocalNodeName() {
 					isAssigned = true
 					break
 				}
@@ -339,20 +338,26 @@ func (m *Manager) assignShardsToNode() error {
 	}
 
 	// open clients
-	for _, member := range m.node.Members() {
-		if member.Name != m.node.Name() {
-			metadata, err := membership.NewNodeMetadataWithBytes(member.Meta)
+	for _, member := range m.cluster.Nodes() {
+		if member != m.cluster.LocalNodeName() {
+			metadata, err := m.cluster.NodeMetadata(member)
 			if err != nil {
-				m.logger.Warn("failed to create node metadata", zap.Error(err), zap.String("node_name", member.Name))
+				m.logger.Warn("failed to get node metadata", zap.Error(err), zap.String("node_name", member))
 				continue
 			}
-			grpcAddress := fmt.Sprintf("%s:%d", member.Addr.String(), metadata.GrpcPort)
 
+			nodeAddr, err := m.cluster.NodeAddress(member)
+			if err != nil {
+				m.logger.Warn("failed to get node address", zap.Error(err), zap.String("node_name", member))
+				continue
+			}
+
+			grpcAddress := fmt.Sprintf("%s:%d", nodeAddr, metadata.GrpcPort)
 			if _, ok := m.clients[grpcAddress]; !ok {
 				// m.logger.Info("open index client", zap.String("node_name", member.Name), zap.String("address", grpcAddress))
 				client, err := clients.NewIndexClientWithTLS(grpcAddress, m.certificateFile, m.commonName)
 				if err != nil {
-					m.logger.Warn("failed to open index client", zap.Error(err), zap.String("node_name", member.Name))
+					m.logger.Warn("failed to open index client", zap.Error(err), zap.String("node_name", member))
 					continue
 				}
 				m.mutex.Lock()
@@ -365,13 +370,20 @@ func (m *Manager) assignShardsToNode() error {
 	// close clients
 	for address, client := range m.clients {
 		notFound := true
-		for _, member := range m.node.Members() {
-			metadata, err := membership.NewNodeMetadataWithBytes(member.Meta)
+		for _, member := range m.cluster.Nodes() {
+			metadata, err := m.cluster.NodeMetadata(member)
 			if err != nil {
-				m.logger.Warn("failed to create node metadata", zap.Error(err), zap.String("node_name", member.Name))
+				m.logger.Warn("failed to get node metadata", zap.Error(err), zap.String("node_name", member))
 				continue
 			}
-			grpcAddress := fmt.Sprintf("%s:%d", member.Addr.String(), metadata.GrpcPort)
+
+			nodeAddr, err := m.cluster.NodeAddress(member)
+			if err != nil {
+				m.logger.Warn("failed to get node address", zap.Error(err), zap.String("node_name", member))
+				continue
+			}
+
+			grpcAddress := fmt.Sprintf("%s:%d", nodeAddr, metadata.GrpcPort)
 			if address == grpcAddress {
 				notFound = false
 				break
@@ -396,9 +408,9 @@ func (m *Manager) Cluster(req *proto.ClusterRequest) (*proto.ClusterResponse, er
 	resp := &proto.ClusterResponse{}
 
 	resp.Nodes = make(map[string]*proto.Node)
-	for _, member := range m.node.Members() {
+	for _, member := range m.cluster.Nodes() {
 		// Deserialize the node metadata
-		nodeMetadata, err := membership.NewNodeMetadataWithBytes(member.Meta)
+		nodeMetadata, err := m.cluster.NodeMetadata(member)
 		if err != nil {
 			nodeMetadata = &membership.NodeMetadata{}
 		}
@@ -415,21 +427,35 @@ func (m *Manager) Cluster(req *proto.ClusterRequest) (*proto.ClusterResponse, er
 			}
 		}
 
+		nodeState, err := m.cluster.NodeState(member)
+		if err != nil {
+			return nil, err
+		}
+
 		state := proto.NodeState_NODE_STATE_UNKNOWN
-		switch member.State {
-		case memberlist.StateAlive:
+		switch nodeState {
+		case membership.NodeStateAlive:
 			state = proto.NodeState_NODE_STATE_ALIVE
-		case memberlist.StateSuspect:
+		case membership.NodeStateSuspect:
 			state = proto.NodeState_NODE_STATE_SUSPECT
-		case memberlist.StateDead:
+		case membership.NodeStateDead:
 			state = proto.NodeState_NODE_STATE_DEAD
-		case memberlist.StateLeft:
+		case membership.NodeStateLeft:
 			state = proto.NodeState_NODE_STATE_LEFT
 		}
 
+		nodeAddr, err := m.cluster.NodeAddress(member)
+		if err != nil {
+			return nil, err
+		}
+		nodePort, err := m.cluster.NodePort(member)
+		if err != nil {
+			return nil, err
+		}
+
 		node := &proto.Node{
-			Addr: member.Addr.String(),
-			Port: uint32(member.Port),
+			Addr: nodeAddr,
+			Port: uint32(nodePort),
 			Meta: &proto.NodeMeta{
 				GrpcPort: uint32(nodeMetadata.GrpcPort),
 				HttpPort: uint32(nodeMetadata.HttpPort),
@@ -438,7 +464,7 @@ func (m *Manager) Cluster(req *proto.ClusterRequest) (*proto.ClusterResponse, er
 			State: state,
 		}
 
-		resp.Nodes[member.Name] = node
+		resp.Nodes[member] = node
 	}
 
 	resp.Indexes = make(map[string]*proto.IndexMetadata)
@@ -603,7 +629,7 @@ func (m *Manager) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocume
 			assignedNodes[nodeName] = append(assignedNodes[nodeName], shardName)
 		}
 	} else {
-		assignedNodes[m.node.Name()] = []string{req.ShardName}
+		assignedNodes[m.cluster.LocalNodeName()] = []string{req.ShardName}
 	}
 
 	// Assign documents.
@@ -651,7 +677,7 @@ func (m *Manager) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocume
 				case <-ctx.Done():
 					return ctx.Err()
 				default:
-					if nodeName == m.node.Name() {
+					if nodeName == m.cluster.LocalNodeName() {
 						m.logger.Info("adding documents", zap.String("node_name", nodeName), zap.String("index_name", request.IndexName), zap.String("shard_name", request.ShardName))
 
 						// Make batch.
@@ -714,22 +740,9 @@ func (m *Manager) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocume
 							return err
 						}
 					} else {
-						// remote node
-						node := m.node.Member(nodeName)
-						if node == nil {
-							err := errors.ErrNodeNotFound
-							m.logger.Error("failed to get node", zap.Error(err), zap.String("node_name", nodeName), zap.String("index_name", request.IndexName), zap.String("shard_name", request.ShardName))
-							responsesChan <- addDocumentsResponse{
-								indexName: request.IndexName,
-								shardName: request.ShardName,
-								err:       err,
-							}
-							return err
-						}
-
-						metadata, err := membership.NewNodeMetadataWithBytes(node.Meta)
+						metadata, err := m.cluster.NodeMetadata(nodeName)
 						if err != nil {
-							m.logger.Error("failed to unmarshal node metadata", zap.Error(err))
+							m.logger.Error("failed to get node metadata", zap.Error(err))
 							responsesChan <- addDocumentsResponse{
 								indexName: request.IndexName,
 								shardName: request.ShardName,
@@ -738,10 +751,21 @@ func (m *Manager) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocume
 							return err
 						}
 
-						grpcAddress := fmt.Sprintf("%s:%d", node.Addr.String(), metadata.GrpcPort)
+						nodeAddr, err := m.cluster.NodeAddress(nodeName)
+						if err != nil {
+							m.logger.Error("failed to get node address", zap.Error(err))
+							responsesChan <- addDocumentsResponse{
+								indexName: request.IndexName,
+								shardName: request.ShardName,
+								err:       err,
+							}
+							return err
+						}
+
+						grpcAddress := fmt.Sprintf("%s:%d", nodeAddr, metadata.GrpcPort)
 						client, ok := m.clients[grpcAddress]
 						if !ok {
-							err := errors.ErrNodeNotFound
+							err := errors.ErrNodeDoesNotFound
 							m.logger.Error("failed to get client", zap.Error(err), zap.String("node_name", nodeName), zap.String("grpc_address", grpcAddress))
 							responsesChan <- addDocumentsResponse{
 								indexName: request.IndexName,
@@ -811,7 +835,7 @@ func (m *Manager) DeleteDocuments(req *proto.DeleteDocumentsRequest) (*proto.Del
 			assignedNodes[nodeName] = append(assignedNodes[nodeName], shardName)
 		}
 	} else {
-		assignedNodes[m.node.Name()] = []string{req.ShardName}
+		assignedNodes[m.cluster.LocalNodeName()] = []string{req.ShardName}
 	}
 
 	type deleteDocumentsResponse struct {
@@ -838,7 +862,7 @@ func (m *Manager) DeleteDocuments(req *proto.DeleteDocumentsRequest) (*proto.Del
 				case <-ctx.Done():
 					return ctx.Err()
 				default:
-					if nodeName == m.node.Name() {
+					if nodeName == m.cluster.LocalNodeName() {
 						m.logger.Debug("deleting documents", zap.String("node_name", nodeName), zap.String("index_name", request.IndexName), zap.String("shard_name", request.ShardName))
 
 						batch := bluge.NewBatch()
@@ -881,22 +905,9 @@ func (m *Manager) DeleteDocuments(req *proto.DeleteDocumentsRequest) (*proto.Del
 							return nil
 						}
 					} else {
-						// remote node
-						node := m.node.Member(nodeName)
-						if node == nil {
-							err := errors.ErrNodeNotFound
-							m.logger.Error("failed to get node", zap.Error(err), zap.String("node_name", nodeName), zap.String("index_name", request.IndexName), zap.String("shard_name", request.ShardName))
-							responsesChan <- deleteDocumentsResponse{
-								indexName: request.IndexName,
-								shardName: request.ShardName,
-								err:       err,
-							}
-							return err
-						}
-
-						metadata, err := membership.NewNodeMetadataWithBytes(node.Meta)
+						metadata, err := m.cluster.NodeMetadata(nodeName)
 						if err != nil {
-							m.logger.Error("failed to unmarshal node metadata", zap.Error(err))
+							m.logger.Error("failed to get node metadata", zap.Error(err))
 							responsesChan <- deleteDocumentsResponse{
 								indexName: request.IndexName,
 								shardName: request.ShardName,
@@ -905,10 +916,20 @@ func (m *Manager) DeleteDocuments(req *proto.DeleteDocumentsRequest) (*proto.Del
 							return err
 						}
 
-						grpcAddress := fmt.Sprintf("%s:%d", node.Addr.String(), metadata.GrpcPort)
+						nodeAddr, err := m.cluster.NodeAddress(nodeName)
+						if err != nil {
+							m.logger.Error("failed to get node address", zap.Error(err))
+							responsesChan <- deleteDocumentsResponse{
+								indexName: request.IndexName,
+								shardName: request.ShardName,
+								err:       err,
+							}
+							return err
+						}
+						grpcAddress := fmt.Sprintf("%s:%d", nodeAddr, metadata.GrpcPort)
 						client, ok := m.clients[grpcAddress]
 						if !ok {
-							err := errors.ErrNodeNotFound
+							err := errors.ErrNodeDoesNotFound
 							m.logger.Error("failed to get client", zap.Error(err), zap.String("node_name", nodeName), zap.String("grpc_address", grpcAddress))
 							responsesChan <- deleteDocumentsResponse{
 								indexName: request.IndexName,
@@ -981,7 +1002,7 @@ func (m *Manager) Search(req *proto.SearchRequest) (*proto.SearchResponse, error
 			assignedNodes[nodeNames[0]] = append(assignedNodes[nodeNames[0]], shardName)
 		}
 	} else {
-		assignedNodes[m.node.Name()] = req.ShardNames
+		assignedNodes[m.cluster.LocalNodeName()] = req.ShardNames
 	}
 
 	type searchResponse struct {
@@ -1013,7 +1034,7 @@ func (m *Manager) Search(req *proto.SearchRequest) (*proto.SearchResponse, error
 			case <-ctx.Done():
 				return ctx.Err()
 			default:
-				if nodeName == m.node.Name() {
+				if nodeName == m.cluster.LocalNodeName() {
 					resp := &proto.SearchResponse{
 						IndexName: request.IndexName,
 						Documents: make([]*proto.Document, 0),
@@ -1218,26 +1239,9 @@ func (m *Manager) Search(req *proto.SearchRequest) (*proto.SearchResponse, error
 
 					return nil
 				} else {
-					// remote node
-					// request.ShardNames = shardNames
-
-					member := m.node.Member(nodeName)
-					if member == nil {
-						err := errors.ErrNodeNotFound
-						m.logger.Error("failed to get member", zap.Error(err), zap.String("node_name", nodeName))
-						responsesChan <- searchResponse{
-							nodeName:   nodeName,
-							indexName:  request.IndexName,
-							shardNames: request.ShardNames,
-							resp:       nil,
-							err:        err,
-						}
-						return err
-					}
-
-					metadata, err := membership.NewNodeMetadataWithBytes(member.Meta)
+					metadata, err := m.cluster.NodeMetadata(nodeName)
 					if err != nil {
-						m.logger.Error("failed to unmarshal node metadata", zap.Error(err))
+						m.logger.Error("failed to get node metadata", zap.Error(err))
 						responsesChan <- searchResponse{
 							nodeName:   nodeName,
 							indexName:  request.IndexName,
@@ -1248,10 +1252,23 @@ func (m *Manager) Search(req *proto.SearchRequest) (*proto.SearchResponse, error
 						return err
 					}
 
-					grpcAddr := fmt.Sprintf("%s:%d", member.Addr, metadata.GrpcPort)
+					nodeAddr, err := m.cluster.NodeAddress(nodeName)
+					if err != nil {
+						m.logger.Error("failed to get node metadata", zap.Error(err))
+						responsesChan <- searchResponse{
+							nodeName:   nodeName,
+							indexName:  request.IndexName,
+							shardNames: request.ShardNames,
+							resp:       nil,
+							err:        err,
+						}
+						return err
+					}
+
+					grpcAddr := fmt.Sprintf("%s:%d", nodeAddr, metadata.GrpcPort)
 					client, ok := m.clients[grpcAddr]
 					if !ok {
-						err := errors.ErrNodeNotFound
+						err := errors.ErrNodeDoesNotFound
 						m.logger.Error("failed to get client", zap.Error(err), zap.String("node_name", nodeName), zap.String("grpc_address", grpcAddr))
 						responsesChan <- searchResponse{
 							nodeName:   nodeName,

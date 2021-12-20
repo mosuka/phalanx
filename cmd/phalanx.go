@@ -140,7 +140,7 @@ var (
 
 			isSeedNode := len(seedAddresses) == 0
 
-			node, err := membership.NewNode(host, bindPort, nodeMetadata, isSeedNode, logger)
+			node, err := membership.NewCluster(host, bindPort, nodeMetadata, isSeedNode, logger)
 			if err != nil {
 				logger.Error("Failed to create node", zap.Error(err), zap.String("host", host), zap.Int("bind_port", bindPort))
 				return err

@@ -5,65 +5,69 @@ import (
 	"go.uber.org/zap"
 )
 
-type EventType int
+type NodeEventType int
 
 const (
-	EventTypeUnknown EventType = iota
-	EventTypeJoin
-	EventTypeLeave
-	EventTypeUpdate
+	NodeEventTypeUnknown NodeEventType = iota
+	NodeEventTypeJoin
+	NodeEventTypeLeave
+	NodeEventTypeUpdate
 )
 
-// Enum value maps for EventType.
+// Enum value maps for NodeEventType.
 var (
-	EventType_name = map[EventType]string{
-		EventTypeUnknown: "unknown",
-		EventTypeJoin:    "join",
-		EventTypeLeave:   "leave",
-		EventTypeUpdate:  "update",
+	NodeEventType_name = map[NodeEventType]string{
+		NodeEventTypeUnknown: "unknown",
+		NodeEventTypeJoin:    "join",
+		NodeEventTypeLeave:   "leave",
+		NodeEventTypeUpdate:  "update",
 	}
-	EventType_value = map[string]EventType{
-		"unknown": EventTypeUnknown,
-		"join":    EventTypeJoin,
-		"leave":   EventTypeLeave,
-		"update":  EventTypeUpdate,
+	NodeEventType_value = map[string]NodeEventType{
+		"unknown": NodeEventTypeUnknown,
+		"join":    NodeEventTypeJoin,
+		"leave":   NodeEventTypeLeave,
+		"update":  NodeEventTypeUpdate,
 	}
 )
 
-type StateType int
+type NodeState int
 
 const (
-	StateTypeUnknown StateType = iota
-	StateTypeAlive
-	StateTypeSuspect
-	StateTypeDead
-	StateTypeLeft
+	NodeStateUnknown NodeState = iota
+	NodeStateAlive
+	NodeStateSuspect
+	NodeStateDead
+	NodeStateLeft
 )
 
-// Enum value maps for StateType.
+// Enum value maps for NodeState.
 var (
-	StateType_name = map[StateType]string{
-		StateTypeUnknown: "unknown",
-		StateTypeAlive:   "alive",
-		StateTypeSuspect: "suspect",
-		StateTypeDead:    "dead",
-		StateTypeLeft:    "left",
+	NodeState_name = map[NodeState]string{
+		NodeStateUnknown: "unknown",
+		NodeStateAlive:   "alive",
+		NodeStateSuspect: "suspect",
+		NodeStateDead:    "dead",
+		NodeStateLeft:    "left",
 	}
-	StateType_value = map[string]StateType{
-		"unknown": StateTypeUnknown,
-		"alive":   StateTypeAlive,
-		"suspect": StateTypeSuspect,
-		"dead":    StateTypeDead,
-		"left":    StateTypeLeft,
+	NodeState_value = map[string]NodeState{
+		"unknown": NodeStateUnknown,
+		"alive":   NodeStateAlive,
+		"suspect": NodeStateSuspect,
+		"dead":    NodeStateDead,
+		"left":    NodeStateLeft,
 	}
 )
 
 type NodeEvent struct {
-	Type    EventType
-	Node    string
-	Meta    *NodeMetadata
-	State   StateType
-	Members []string
+	Type  NodeEventType
+	Node  string
+	Meta  *NodeMetadata
+	State NodeState
+}
+
+type ClusterEvent struct {
+	NodeEvent NodeEvent
+	Members   []string
 }
 
 type NodeEventDelegate struct {
@@ -81,39 +85,43 @@ func NewNodeEventDelegate(logger *zap.Logger) *NodeEventDelegate {
 }
 
 func (d *NodeEventDelegate) NotifyJoin(node *memberlist.Node) {
-	d.NodeEvents <- makeNodeEvent(EventTypeJoin, node)
+	d.NodeEvents <- makeNodeEvent(NodeEventTypeJoin, node)
 }
 func (d *NodeEventDelegate) NotifyLeave(node *memberlist.Node) {
-	d.NodeEvents <- makeNodeEvent(EventTypeLeave, node)
+	d.NodeEvents <- makeNodeEvent(NodeEventTypeLeave, node)
 }
 func (d *NodeEventDelegate) NotifyUpdate(node *memberlist.Node) {
-	d.NodeEvents <- makeNodeEvent(EventTypeUpdate, node)
+	d.NodeEvents <- makeNodeEvent(NodeEventTypeUpdate, node)
 }
 
-func makeNodeEvent(eventType EventType, node *memberlist.Node) NodeEvent {
+func makeNodeState(state memberlist.NodeStateType) NodeState {
+	switch state {
+	case memberlist.StateAlive:
+		return NodeStateAlive
+	case memberlist.StateSuspect:
+		return NodeStateSuspect
+	case memberlist.StateDead:
+		return NodeStateDead
+	case memberlist.StateLeft:
+		return NodeStateLeft
+	default:
+		return NodeStateUnknown
+	}
+}
+
+func makeNodeEvent(eventType NodeEventType, node *memberlist.Node) NodeEvent {
 	nodeMeta, err := NewNodeMetadataWithBytes(node.Meta)
 	if err != nil {
 		nodeMeta = NewNodeMetadata()
 	}
 
-	state := StateTypeUnknown
-	switch node.State {
-	case memberlist.StateAlive:
-		state = StateTypeAlive
-	case memberlist.StateSuspect:
-		state = StateTypeSuspect
-	case memberlist.StateDead:
-		state = StateTypeDead
-	case memberlist.StateLeft:
-		state = StateTypeLeft
-	}
+	state := makeNodeState(node.State)
 
 	return NodeEvent{
-		Type:    eventType,
-		Node:    node.Name,
-		State:   state,
-		Meta:    nodeMeta,
-		Members: []string{},
+		Type:  eventType,
+		Node:  node.Name,
+		State: state,
+		Meta:  nodeMeta,
 	}
 }
 

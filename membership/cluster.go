@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/hashicorp/memberlist"
+	"github.com/mosuka/phalanx/errors"
 	"github.com/mosuka/rendezvous"
 	"github.com/thanhpk/randstr"
 	"go.uber.org/zap"
@@ -18,24 +19,23 @@ func generateNodeName() string {
 	return fmt.Sprintf("%s%s", nodeNamePrefix, randstr.String(8))
 }
 
-type Node struct {
+type Cluster struct {
 	memberList           *memberlist.Memberlist
 	nodeEventDeliegate   *NodeEventDelegate
 	nodeMetadataDelegate *NodeMetadataDelegate
 	logger               *zap.Logger
-	nodeEvents           chan NodeEvent
+	clusterEvents        chan ClusterEvent
 	stopWatching         chan bool
 	isSeedNode           bool
 	indexerHash          *rendezvous.Ring
 	searcherHash         *rendezvous.Ring
 }
 
-func NewNode(host string, bindPort int, nodeMetadata NodeMetadata, isSeedNode bool, logger *zap.Logger) (*Node, error) {
-	nodeLogger := logger.Named("node")
+func NewCluster(host string, bindPort int, nodeMetadata NodeMetadata, isSeedNode bool, logger *zap.Logger) (*Cluster, error) {
+	clusterLogger := logger.Named("cluster")
 
-	nodeEventDeliegate := NewNodeEventDelegate(nodeLogger)
-
-	nodeMetadataDelegate := NewNodeMetadataDelegate(nodeMetadata, nodeLogger)
+	nodeEventDeliegate := NewNodeEventDelegate(clusterLogger)
+	nodeMetadataDelegate := NewNodeMetadataDelegate(nodeMetadata, clusterLogger)
 
 	config := memberlist.DefaultLocalConfig()
 	config.Name = generateNodeName()
@@ -46,9 +46,9 @@ func NewNode(host string, bindPort int, nodeMetadata NodeMetadata, isSeedNode bo
 	config.Events = nodeEventDeliegate
 	config.Delegate = nodeMetadataDelegate
 
-	members, err := memberlist.Create(config)
+	memberList, err := memberlist.Create(config)
 	if err != nil {
-		nodeLogger.Error("Failed to create member list", zap.Error(err), zap.Any("config", config))
+		clusterLogger.Error("Failed to create member list", zap.Error(err), zap.Any("config", config))
 		return nil, err
 	}
 	// members.LocalNode().Meta, err = nodeMetadata.Bytes()
@@ -57,12 +57,12 @@ func NewNode(host string, bindPort int, nodeMetadata NodeMetadata, isSeedNode bo
 	// }
 	// members.UpdateNode(10 * time.Second)
 
-	return &Node{
-		memberList:           members,
+	return &Cluster{
+		memberList:           memberList,
 		nodeEventDeliegate:   nodeEventDeliegate,
 		nodeMetadataDelegate: nodeMetadataDelegate,
-		logger:               nodeLogger,
-		nodeEvents:           make(chan NodeEvent, 10),
+		logger:               clusterLogger,
+		clusterEvents:        make(chan ClusterEvent, 10),
 		stopWatching:         make(chan bool),
 		isSeedNode:           isSeedNode,
 		indexerHash:          rendezvous.New(),
@@ -70,28 +70,72 @@ func NewNode(host string, bindPort int, nodeMetadata NodeMetadata, isSeedNode bo
 	}, nil
 }
 
-func (n *Node) Join(seeds []string) (int, error) {
+func (n *Cluster) Join(seeds []string) (int, error) {
 	return n.memberList.Join(seeds)
 }
 
-func (n *Node) Leave(timeout time.Duration) error {
+func (n *Cluster) Leave(timeout time.Duration) error {
 	return n.memberList.Leave(timeout)
 }
 
-func (n *Node) Name() string {
+func (n *Cluster) LocalNodeName() string {
 	return n.memberList.LocalNode().Name
 }
 
-func (n *Node) Metadata() (*NodeMetadata, error) {
+func (n *Cluster) LocalNodeMetadata() (*NodeMetadata, error) {
 	return NewNodeMetadataWithBytes(n.memberList.LocalNode().Meta)
 }
 
-func (n *Node) IsSeedNode() bool {
+func (n *Cluster) NodeMetadata(nodeName string) (*NodeMetadata, error) {
+	nodes := n.memberList.Members()
+	for _, node := range nodes {
+		if node.Name == nodeName {
+			return NewNodeMetadataWithBytes(node.Meta)
+		}
+	}
+
+	return nil, errors.ErrNodeDoesNotFound
+}
+
+func (n *Cluster) NodeAddress(nodeName string) (string, error) {
+	nodes := n.memberList.Members()
+	for _, node := range nodes {
+		if node.Name == nodeName {
+			return node.Addr.String(), nil
+		}
+	}
+
+	return "", errors.ErrNodeDoesNotFound
+}
+
+func (n *Cluster) NodePort(nodeName string) (uint16, error) {
+	nodes := n.memberList.Members()
+	for _, node := range nodes {
+		if node.Name == nodeName {
+			return node.Port, nil
+		}
+	}
+
+	return 0, errors.ErrNodeDoesNotFound
+}
+
+func (n *Cluster) NodeState(nodeName string) (NodeState, error) {
+	nodes := n.memberList.Members()
+	for _, node := range nodes {
+		if node.Name == nodeName {
+			return makeNodeState(node.State), nil
+		}
+	}
+
+	return NodeStateUnknown, errors.ErrNodeDoesNotFound
+}
+
+func (n *Cluster) IsSeedNode() bool {
 	return n.isSeedNode
 }
 
-func (n *Node) IsIndexer() bool {
-	metadata, err := n.Metadata()
+func (n *Cluster) IsIndexer() bool {
+	metadata, err := n.LocalNodeMetadata()
 	if err != nil {
 		return false
 	}
@@ -103,8 +147,8 @@ func (n *Node) IsIndexer() bool {
 	return false
 }
 
-func (n *Node) IsSearcher() bool {
-	metadata, err := n.Metadata()
+func (n *Cluster) IsSearcher() bool {
+	metadata, err := n.LocalNodeMetadata()
 	if err != nil {
 		return false
 	}
@@ -116,25 +160,19 @@ func (n *Node) IsSearcher() bool {
 	return false
 }
 
-func (n *Node) Member(name string) *memberlist.Node {
-	for _, member := range n.Members() {
-		if member.Name == name {
-			return member
-		}
+func (n *Cluster) Nodes() []string {
+	members := make([]string, 0)
+	for _, member := range n.memberList.Members() {
+		members = append(members, member.Name)
 	}
-
-	return nil
+	return members
 }
 
-func (n *Node) Members() []*memberlist.Node {
-	return n.memberList.Members()
+func (n *Cluster) ClusterEvents() <-chan ClusterEvent {
+	return n.clusterEvents
 }
 
-func (n *Node) Events() <-chan NodeEvent {
-	return n.nodeEvents
-}
-
-func (n *Node) Start() error {
+func (n *Cluster) Start() error {
 	go func() {
 		for {
 			select {
@@ -145,15 +183,13 @@ func (n *Node) Start() error {
 			case nodeEvent := <-n.nodeEventDeliegate.NodeEvents:
 				n.logger.Info("Received node event", zap.Any("nodeEvent", nodeEvent))
 
-				// make member list
-				members := make([]string, 0)
-				for _, member := range n.Members() {
-					members = append(members, member.Name)
+				clusterEvent := ClusterEvent{
+					NodeEvent: nodeEvent,
+					Members:   n.Nodes(),
 				}
-				nodeEvent.Members = members
 
 				switch nodeEvent.Type {
-				case EventTypeJoin:
+				case NodeEventTypeJoin:
 					if nodeEvent.Meta.IsIndexer() {
 						if !n.indexerHash.Contains(nodeEvent.Node) {
 							n.indexerHash.AddWithWeight(nodeEvent.Node, 1.0)
@@ -165,7 +201,7 @@ func (n *Node) Start() error {
 							n.searcherHash.AddWithWeight(nodeEvent.Node, 1.0)
 						}
 					}
-				case EventTypeUpdate:
+				case NodeEventTypeUpdate:
 					if nodeEvent.Meta.IsIndexer() {
 						if !n.indexerHash.Contains(nodeEvent.Node) {
 							n.indexerHash.AddWithWeight(nodeEvent.Node, 1.0)
@@ -177,7 +213,7 @@ func (n *Node) Start() error {
 							n.searcherHash.AddWithWeight(nodeEvent.Node, 1.0)
 						}
 					}
-				case EventTypeLeave:
+				case NodeEventTypeLeave:
 					if nodeEvent.Meta.IsIndexer() {
 						if n.indexerHash.Contains(nodeEvent.Node) {
 							n.indexerHash.Remove(nodeEvent.Node)
@@ -191,7 +227,7 @@ func (n *Node) Start() error {
 					}
 				}
 
-				n.nodeEvents <- nodeEvent
+				n.clusterEvents <- clusterEvent
 			}
 		}
 	}()
@@ -199,16 +235,16 @@ func (n *Node) Start() error {
 	return nil
 }
 
-func (n *Node) Stop() error {
+func (n *Cluster) Stop() error {
 	n.stopWatching <- true
 
 	return nil
 }
 
-func (n *Node) LookupIndexer(key string) string {
+func (n *Cluster) LookupIndexer(key string) string {
 	return n.indexerHash.Lookup(key)
 }
 
-func (n *Node) LookupSearchers(key string, numNodes int) []string {
+func (n *Cluster) LookupSearchers(key string, numNodes int) []string {
 	return n.searcherHash.LookupTopN(key, numNodes)
 }

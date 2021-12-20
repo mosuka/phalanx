@@ -43,6 +43,6 @@ var (
 	ErrFieldSettingDoesNotExist = errors.New("field setting does not exist")
 	ErrUnexpectedFieldSetting   = errors.New("unexpected field setting")
 
-	ErrNodeNotFound = errors.New("node not found")
-	ErrInvalidData  = errors.New("invalid data")
+	ErrNodeDoesNotFound = errors.New("node not found")
+	ErrInvalidData      = errors.New("invalid data")
 )
