@@ -10,11 +10,11 @@ import (
 
 	"github.com/joho/godotenv"
 	homedir "github.com/mitchellh/go-homedir"
+	phalanxcluster "github.com/mosuka/phalanx/cluster"
 	"github.com/mosuka/phalanx/gateway"
 	"github.com/mosuka/phalanx/index"
 	"github.com/mosuka/phalanx/logging"
-	"github.com/mosuka/phalanx/membership"
-	"github.com/mosuka/phalanx/metastore"
+	phalanxmetastore "github.com/mosuka/phalanx/metastore"
 	"github.com/mosuka/phalanx/server"
 	"github.com/mosuka/phalanx/service"
 	"github.com/mosuka/phalanx/util"
@@ -128,11 +128,11 @@ var (
 				return err
 			}
 
-			nodeRoles := make([]membership.NodeRole, 0)
+			nodeRoles := make([]phalanxcluster.NodeRole, 0)
 			for _, role := range roles {
-				nodeRoles = append(nodeRoles, membership.NodeRole(membership.NodeRole_value[role]))
+				nodeRoles = append(nodeRoles, phalanxcluster.NodeRole(phalanxcluster.NodeRole_value[role]))
 			}
-			nodeMetadata := membership.NodeMetadata{
+			nodeMetadata := phalanxcluster.NodeMetadata{
 				GrpcPort: grpcPort,
 				HttpPort: httpPort,
 				Roles:    nodeRoles,
@@ -140,25 +140,26 @@ var (
 
 			isSeedNode := len(seedAddresses) == 0
 
-			node, err := membership.NewNode(host, bindPort, nodeMetadata, isSeedNode, logger)
+			// Create cluster
+			cluster, err := phalanxcluster.NewCluster(host, bindPort, nodeMetadata, isSeedNode, logger)
 			if err != nil {
 				logger.Error("Failed to create node", zap.Error(err), zap.String("host", host), zap.Int("bind_port", bindPort))
 				return err
 			}
 
 			// Create index metastore
-			indexMetastore, err := metastore.NewMetastore(indexMetastoreUri, logger)
+			metastore, err := phalanxmetastore.NewMetastore(indexMetastoreUri, logger)
 			if err != nil {
-				logger.Error("failed to create index metastore", zap.Error(err), zap.Any("uri", indexMetastoreUri))
+				logger.Error("failed to create metastore", zap.Error(err), zap.Any("uri", indexMetastoreUri))
 				return err
 			}
-			if err := indexMetastore.Start(); err != nil {
-				logger.Error("failed to start index metastore", zap.Error(err))
+			if err := metastore.Start(); err != nil {
+				logger.Error("failed to start metastore", zap.Error(err))
 				return err
 			}
 
 			// Create index manager
-			indexManager, err := index.NewManager(node, indexMetastore, certificateFile, commonName, logger)
+			indexManager, err := index.NewManager(cluster, metastore, certificateFile, commonName, logger)
 			if err != nil {
 				logger.Error("failed to create index manager", zap.Error(err))
 				return err
@@ -190,12 +191,8 @@ var (
 				return err
 			}
 
-			// Make signal channel.
-			quitCh := make(chan os.Signal, 1)
-			signal.Notify(quitCh, syscall.SIGINT, syscall.SIGTERM)
-
 			// Start node
-			if err := node.Start(); err != nil {
+			if err := cluster.Start(); err != nil {
 				return err
 			}
 
@@ -210,14 +207,14 @@ var (
 					}
 					resolvedSeedHost, err := util.ResolveHost(seedHost)
 					if err != nil {
-						logger.Error("failed to resolve seed address", zap.Error(err), zap.String("seed_address", seedAddress))
+						logger.Error("failed to resolve seed host", zap.Error(err), zap.String("seed_host", seedHost))
 						return err
 					}
 					resolvedSeedAddresses = append(resolvedSeedAddresses, fmt.Sprintf("%s:%s", resolvedSeedHost, seedPort))
 				}
-				_, err := node.Join(resolvedSeedAddresses)
+				_, err := cluster.Join(resolvedSeedAddresses)
 				if err != nil {
-					logger.Error("failed to join cluster", zap.Error(err), zap.Any("seed_addresses", seedAddresses))
+					logger.Error("failed to join to the cluster", zap.Error(err), zap.Any("seed_addresses", seedAddresses))
 					return err
 				}
 			}
@@ -232,16 +229,20 @@ var (
 				return err
 			}
 
+			// Make signal channel.
+			quitCh := make(chan os.Signal, 1)
+			signal.Notify(quitCh, syscall.SIGINT, syscall.SIGTERM)
+
 			// Wait for receiving signal.
 			<-quitCh
 
 			// Leave the cluster.
-			if err := node.Leave(10 * time.Second); err != nil {
+			if err := cluster.Leave(10 * time.Second); err != nil {
 				logger.Error("failed to leave cluster", zap.Error(err))
 			}
 
 			// Stop node
-			if err := node.Stop(); err != nil {
+			if err := cluster.Stop(); err != nil {
 				logger.Error("failed to stop node", zap.Error(err))
 			}
 
@@ -251,7 +252,7 @@ var (
 			}
 
 			// Stop index metastore.
-			if err := indexMetastore.Stop(); err != nil {
+			if err := metastore.Stop(); err != nil {
 				logger.Error("failed to stop index metastore", zap.Error(err))
 			}
 
@@ -333,7 +334,7 @@ func init() {
 	phalanxCmd.Flags().IntVar(&grpcPort, "grpc-port", defaultGrpcPort, "gRPC port")
 	phalanxCmd.Flags().IntVar(&httpPort, "http-port", defaultHttpPort, "HTTP port")
 	phalanxCmd.Flags().StringSliceVar(&seedAddresses, "seed-addresses", []string{}, "seed address (e.g. 192.168.1.10:2000, 192.168.1.11)")
-	phalanxCmd.Flags().StringSliceVar(&roles, "roles", []string{string(membership.NodeRole_name[1]), string(membership.NodeRole_name[2])}, "node roles (ex: indexer,searcher)")
+	phalanxCmd.Flags().StringSliceVar(&roles, "roles", []string{string(phalanxcluster.NodeRole_name[1]), string(phalanxcluster.NodeRole_name[2])}, "node roles (ex: indexer,searcher)")
 
 	phalanxCmd.Flags().StringVar(&indexMetastoreUri, "index-metastore-uri", defaultIndexMetastoreUri, "index metastore URI.")
 

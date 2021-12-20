@@ -1,4 +1,4 @@
-package membership
+package cluster
 
 import (
 	"encoding/json"
@@ -49,7 +49,7 @@ func NewNodeMetadataWithBytes(data []byte) (*NodeMetadata, error) {
 	return metadata, nil
 }
 
-func (m *NodeMetadata) Bytes() ([]byte, error) {
+func (m *NodeMetadata) Marshal() ([]byte, error) {
 	data, err := json.Marshal(m)
 	if err != nil {
 		return nil, err
