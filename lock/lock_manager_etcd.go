@@ -26,15 +26,19 @@ func NewEtcdLockManagerWithUri(uri string, logger *zap.Logger) (*EtcdLockManager
 
 	client, err := clients.NewEtcdClientWithUri(uri)
 	if err != nil {
+		lockManagerLogger.Error(err.Error(), zap.String("uri", uri))
 		return nil, err
 	}
 
 	u, err := url.Parse(uri)
 	if err != nil {
+		lockManagerLogger.Error(err.Error(), zap.String("uri", uri))
 		return nil, err
 	}
 	if u.Scheme != SchemeType_name[SchemeTypeEtcd] {
-		return nil, errors.ErrInvalidUri
+		err := errors.ErrInvalidUri
+		lockManagerLogger.Error(err.Error(), zap.String("uri", uri))
+		return nil, err
 	}
 
 	return &EtcdLockManager{
@@ -51,7 +55,7 @@ func (m *EtcdLockManager) Lock() (int64, error) {
 		var err error
 		session, err := concurrency.NewSession(m.client) // without TTL
 		if err != nil {
-			m.logger.Error("failed to create session", zap.Error(err), zap.String("path", m.path))
+			m.logger.Error(err.Error())
 			return 0, err
 		}
 		m.mutex = concurrency.NewMutex(session, m.path)
@@ -62,11 +66,9 @@ func (m *EtcdLockManager) Lock() (int64, error) {
 	defer cancel()
 
 	if err := m.mutex.Lock(ctx); err != nil {
-		m.logger.Error("failed to lock", zap.Error(err), zap.String("path", m.path))
+		m.logger.Error(err.Error())
 		return 0, err
 	}
-
-	// m.logger.Info("locked", zap.String("path", m.path))
 
 	return m.mutex.Header().Revision, nil
 }
@@ -74,7 +76,7 @@ func (m *EtcdLockManager) Lock() (int64, error) {
 func (m *EtcdLockManager) Unlock() error {
 	if m.mutex == nil {
 		err := errors.ErrLockDoesNotExists
-		m.logger.Error("lock not held", zap.Error(err), zap.String("path", m.path))
+		m.logger.Error(err.Error())
 		return err
 	}
 
@@ -83,11 +85,9 @@ func (m *EtcdLockManager) Unlock() error {
 	defer cancel()
 
 	if err := m.mutex.Unlock(ctx); err != nil {
-		m.logger.Error("failed to unlock", zap.Error(err), zap.String("path", m.path))
+		m.logger.Error(err.Error())
 		return err
 	}
-
-	// m.logger.Info("unlocked", zap.String("path", m.path))
 
 	return nil
 }

@@ -16,20 +16,18 @@ import (
 	"google.golang.org/grpc/keepalive"
 )
 
-type IndexServer struct {
-	grpcAddress string
-	grpcService proto.IndexServer
-	grpcServer  *grpc.Server
-	listener    net.Listener
-
+type GRPCIndexServer struct {
+	grpcAddress  string
+	grpcService  proto.IndexServer
+	grpcServer   *grpc.Server
+	listener     net.Listener
 	certFile     string
 	keyFile      string
 	certHostname string
-
-	logger *zap.Logger
+	logger       *zap.Logger
 }
 
-func NewIndexServer(grpcAddress string, certificateFile string, keyFile string, commonName string, indexService proto.IndexServer, logger *zap.Logger) (*IndexServer, error) {
+func NewGRPCIndexServer(grpcAddress string, certificateFile string, keyFile string, commonName string, indexService proto.IndexServer, logger *zap.Logger) (*GRPCIndexServer, error) {
 	serverLogger := logger.Named("server")
 
 	// Make the gRPC options.
@@ -63,7 +61,7 @@ func NewIndexServer(grpcAddress string, certificateFile string, keyFile string, 
 	if certificateFile != "" && keyFile != "" {
 		creds, err := credentials.NewServerTLSFromFile(certificateFile, keyFile)
 		if err != nil {
-			serverLogger.Error("failed to create server TLS", zap.Error(err))
+			serverLogger.Error(err.Error(), zap.String("certificate_file", certificateFile), zap.String("key_file", keyFile))
 			return nil, err
 		}
 		grpcOpts = append(grpcOpts, grpc.Creds(creds))
@@ -84,11 +82,11 @@ func NewIndexServer(grpcAddress string, certificateFile string, keyFile string, 
 	// Make the listener.
 	listener, err := net.Listen("tcp", grpcAddress)
 	if err != nil {
-		serverLogger.Error("failed to create listener", zap.String("grpc_address", grpcAddress), zap.Error(err))
+		serverLogger.Error(err.Error(), zap.String("grpc_address", grpcAddress))
 		return nil, err
 	}
 
-	return &IndexServer{
+	return &GRPCIndexServer{
 		grpcAddress:  grpcAddress,
 		grpcService:  indexService,
 		grpcServer:   grpcServer,
@@ -100,18 +98,18 @@ func NewIndexServer(grpcAddress string, certificateFile string, keyFile string, 
 	}, nil
 }
 
-func (s *IndexServer) Start() error {
+func (s *GRPCIndexServer) Start() error {
 	go func() {
 		err := s.grpcServer.Serve(s.listener)
 		if err != nil {
-			s.logger.Error("failed to start server", zap.String("address", s.grpcAddress), zap.Error(err))
+			s.logger.Error(err.Error(), zap.String("address", s.grpcAddress))
 		}
 	}()
 
 	return nil
 }
 
-func (s *IndexServer) Stop() error {
+func (s *GRPCIndexServer) Stop() error {
 	s.grpcServer.GracefulStop()
 
 	return nil

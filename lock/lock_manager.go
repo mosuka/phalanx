@@ -49,7 +49,7 @@ func NewLockManagerWithUri(uri string, logger *zap.Logger) (LockManager, error) 
 		return NewEtcdLockManagerWithUri(uri, logger)
 	default:
 		err := errors.ErrUnsupportedLockManagerType
-		lockManagerLogger.Error("unknown lock manager type", zap.Error(err), zap.String("scheme", u.Scheme))
+		lockManagerLogger.Error(err.Error(), zap.String("scheme", u.Scheme))
 		return nil, err
 	}
 }

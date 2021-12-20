@@ -1,6 +1,7 @@
 package index
 
 import (
+	"fmt"
 	"sync"
 
 	"github.com/blugelabs/bluge"
@@ -45,7 +46,7 @@ func (i *IndexWriters) Indexes() []string {
 func (i *IndexWriters) shards(indexName string) []string {
 	_, ok := i.writerMap[indexName]
 	if !ok {
-		return nil
+		return []string{}
 	}
 
 	shards := make([]string, 0, len(i.writerMap[indexName]))
@@ -85,12 +86,14 @@ func (i *IndexWriters) open(indexName string, shardName string, indexMetadata *m
 	// Create lock manager
 	lockManager, err := lock.NewLockManagerWithUri(shardMetadata.ShardLockUri, i.logger)
 	if err != nil {
+		i.logger.Error(err.Error(), zap.String("shard_lock_uri", shardMetadata.ShardLockUri))
 		return err
 	}
 
 	// Make directory config
 	config, err := directory.NewIndexConfigWithUri(shardMetadata.ShardUri, lockManager, i.logger)
 	if err != nil {
+		i.logger.Error(err.Error(), zap.String("shard_uri", shardMetadata.ShardUri))
 		return err
 	}
 	if indexMetadata.DefaultSearchField != "" {
@@ -102,6 +105,7 @@ func (i *IndexWriters) open(indexName string, shardName string, indexMetadata *m
 	// Open index writer.
 	writer, err := bluge.OpenWriter(config)
 	if err != nil {
+		i.logger.Error(err.Error(), zap.String("index_name", indexName), zap.String("shard_name", shardName))
 		return err
 	}
 
@@ -126,12 +130,16 @@ func (i *IndexWriters) Open(indexName string, shardName string, indexMetadata *m
 func (i *IndexWriters) get(indexName string, shardName string) (*bluge.Writer, error) {
 	_, ok := i.writerMap[indexName]
 	if !ok {
-		return nil, errors.ErrIndexDoesNotExist
+		err := errors.ErrIndexDoesNotExist
+		i.logger.Error(err.Error(), zap.String("index_name", indexName))
+		return nil, err
 	}
 
 	writer, ok := i.writerMap[indexName][shardName]
 	if !ok {
-		return nil, errors.ErrShardDoesNotExist
+		err := errors.ErrShardDoesNotExist
+		i.logger.Error(err.Error(), zap.String("index_name", indexName), zap.String("shard_name", shardName))
+		return nil, err
 	}
 
 	return writer, nil
@@ -147,12 +155,16 @@ func (i *IndexWriters) Get(indexName string, shardName string) (*bluge.Writer, e
 func (i *IndexWriters) close(indexName string, shardName string) error {
 	_, ok := i.writerMap[indexName]
 	if !ok {
-		return errors.ErrIndexDoesNotExist
+		err := errors.ErrIndexDoesNotExist
+		i.logger.Error(err.Error(), zap.String("index_name", indexName))
+		return err
 	}
 
 	writer, ok := i.writerMap[indexName][shardName]
 	if !ok {
-		return errors.ErrShardDoesNotExist
+		err := errors.ErrShardDoesNotExist
+		i.logger.Error(err.Error(), zap.String("index_name", indexName), zap.String("shard_name", shardName))
+		return err
 	}
 
 	if err := writer.Close(); err != nil {
@@ -181,11 +193,13 @@ func (i *IndexWriters) Reopen(indexName string, shardName string, indexMetadata 
 
 	// Close index writer.
 	if err := i.close(indexName, shardName); err != nil {
+		i.logger.Error(err.Error(), zap.String("index_name", indexName), zap.String("shard_name", shardName))
 		return err
 	}
 
 	// Open index writer.
 	if err := i.open(indexName, shardName, indexMetadata, shardMetadata); err != nil {
+		i.logger.Error(err.Error(), zap.String("index_name", indexName), zap.String("shard_name", shardName))
 		return err
 	}
 
@@ -196,12 +210,18 @@ func (i *IndexWriters) CloseAll() error {
 	i.mutex.Lock()
 	defer i.mutex.Unlock()
 
+	errCnt := 0
 	for _, indexName := range i.indexes() {
 		for _, shardName := range i.shards(indexName) {
 			if err := i.close(indexName, shardName); err != nil {
-				return err
+				i.logger.Warn("error closing index writer", zap.Error(err), zap.String("index_name", indexName), zap.String("shard_name", shardName))
+				errCnt += 1
 			}
 		}
+	}
+
+	if errCnt > 0 {
+		return fmt.Errorf("%d errors occured at the closing index writers", errCnt)
 	}
 
 	return nil

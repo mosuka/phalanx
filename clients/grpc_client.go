@@ -10,16 +10,16 @@ import (
 	"google.golang.org/grpc/keepalive"
 )
 
-type IndexClient struct {
+type GRPCIndexClient struct {
 	proto.IndexClient
 	conn *grpc.ClientConn
 }
 
-func NewIndexClient(address string) (*IndexClient, error) {
-	return NewIndexClientWithTLS(address, "", "")
+func NewGRPCIndexClient(address string) (*GRPCIndexClient, error) {
+	return NewGRPCIndexClientWithTLS(address, "", "")
 }
 
-func NewIndexClientWithTLS(address string, certFile string, commonName string) (*IndexClient, error) {
+func NewGRPCIndexClientWithTLS(address string, certFile string, commonName string) (*GRPCIndexClient, error) {
 	dialOpts := []grpc.DialOption{
 		grpc.WithDefaultCallOptions(
 			grpc.MaxCallSendMsgSize(math.MaxInt64),
@@ -50,16 +50,16 @@ func NewIndexClientWithTLS(address string, certFile string, commonName string) (
 	}
 	client := proto.NewIndexClient(conn)
 
-	return &IndexClient{
+	return &GRPCIndexClient{
 		IndexClient: client,
 		conn:        conn,
 	}, nil
 }
 
-func (c *IndexClient) Address() string {
+func (c *GRPCIndexClient) Address() string {
 	return c.conn.Target()
 }
 
-func (c *IndexClient) Close() error {
+func (c *GRPCIndexClient) Close() error {
 	return c.conn.Close()
 }

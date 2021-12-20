@@ -73,7 +73,7 @@ func NewStorageWithUri(uri string, logger *zap.Logger) (Storage, error) {
 
 	u, err := url.Parse(uri)
 	if err != nil {
-		metastoreLogger.Error("failed to create storage", zap.Error(err), zap.String("uri", uri))
+		metastoreLogger.Error(err.Error(), zap.String("uri", uri))
 		return nil, err
 	}
 
@@ -84,7 +84,7 @@ func NewStorageWithUri(uri string, logger *zap.Logger) (Storage, error) {
 		return NewEtcdStorageWithUri(uri, metastoreLogger)
 	default:
 		err := errors.ErrUnsupportedStorageType
-		metastoreLogger.Error("unknown storage type", zap.Error(err), zap.String("scheme", u.Scheme))
-		return nil, errors.ErrUnsupportedStorageType
+		metastoreLogger.Error(err.Error(), zap.String("scheme", u.Scheme))
+		return nil, err
 	}
 }

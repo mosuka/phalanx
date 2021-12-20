@@ -1,4 +1,4 @@
-package gateway
+package server
 
 import (
 	"bufio"
@@ -17,19 +17,19 @@ import (
 	"github.com/mosuka/phalanx/proto"
 )
 
-func setClient(client *clients.IndexClient) gin.HandlerFunc {
+func setClient(client *clients.GRPCIndexClient) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		c.Set("client", client)
 		c.Next()
 	}
 }
 
-func getClient(c *gin.Context) (*clients.IndexClient, error) {
+func getClient(c *gin.Context) (*clients.GRPCIndexClient, error) {
 	clientIntr, ok := c.Get("client")
 	if !ok {
 		return nil, fmt.Errorf("client does not exist")
 	}
-	client, ok := clientIntr.(*clients.IndexClient)
+	client, ok := clientIntr.(*clients.GRPCIndexClient)
 	if !ok {
 		return nil, fmt.Errorf("client is not an IndexClient")
 	}

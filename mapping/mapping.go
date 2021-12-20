@@ -139,54 +139,54 @@ type FieldType string
 
 const (
 	TextField     FieldType = "text"
-	NumericField            = "numeric"
-	DatetimeField           = "datetime"
-	GeoPointField           = "geo_point"
+	NumericField  FieldType = "numeric"
+	DatetimeField FieldType = "datetime"
+	GeoPointField FieldType = "geo_point"
 )
 
 type CharFilter string
 
 const (
 	AsciiFoldingCharFilter       CharFilter = "ascii_folding"
-	HtmlCharFilter                          = "html"
-	RegexpCharFilter                        = "regexp"
-	UnicodeNormalizeCharFilter              = "unicode_normalize"
-	ZeroWidthNonJoinerCharFilter            = "zero_width_non_joiner"
+	HtmlCharFilter               CharFilter = "html"
+	RegexpCharFilter             CharFilter = "regexp"
+	UnicodeNormalizeCharFilter   CharFilter = "unicode_normalize"
+	ZeroWidthNonJoinerCharFilter CharFilter = "zero_width_non_joiner"
 )
 
 type Tokenizer string
 
 const (
 	CharacterTokenizer   Tokenizer = "character"
-	ExceptionTokenizer             = "exception"
-	JapaneseTokenizer              = "japanese"
-	LetterTokenizer                = "letter"
-	RegexpTokenizer                = "regexp"
-	SingleTokenTokenizer           = "single_token"
-	UnicodeTokenizer               = "unicode"
-	WebTokenizer                   = "web"
-	WhitespaceTokenizer            = "whitespace"
+	ExceptionTokenizer   Tokenizer = "exception"
+	JapaneseTokenizer    Tokenizer = "japanese"
+	LetterTokenizer      Tokenizer = "letter"
+	RegexpTokenizer      Tokenizer = "regexp"
+	SingleTokenTokenizer Tokenizer = "single_token"
+	UnicodeTokenizer     Tokenizer = "unicode"
+	WebTokenizer         Tokenizer = "web"
+	WhitespaceTokenizer  Tokenizer = "whitespace"
 )
 
 type TokenFilter string
 
 const (
 	ApostropheTokenFilter         TokenFilter = "apostrophe"
-	CamelCaseTokenFilter                      = "camel_case"
-	DictionaryCompoundTokenFilter             = "dictionary_compound"
-	EdgeNgramTokenFilter                      = "edge_ngram"
-	ElisionTokenFilter                        = "elision"
-	KeywordMarkerTokenFilter                  = "keyword_marker"
-	LengthTokenFilter                         = "length"
-	LowerCaseTokenFilter                      = "lower_case"
-	NgramTokenFilter                          = "ngram"
-	PorterStemmerTokenFilter                  = "porter_stemmer"
-	ReverseTokenFilter                        = "reverse"
-	ShingleTokenFilter                        = "shingle"
-	StopTokensTokenFilter                     = "stop_tokens"
-	TruncateTokenFilter                       = "truncate"
-	UnicodeNormalizeTokenFilter               = "unicode_normalize"
-	UniqueTermTokenFilter                     = "unique_term"
+	CamelCaseTokenFilter          TokenFilter = "camel_case"
+	DictionaryCompoundTokenFilter TokenFilter = "dictionary_compound"
+	EdgeNgramTokenFilter          TokenFilter = "edge_ngram"
+	ElisionTokenFilter            TokenFilter = "elision"
+	KeywordMarkerTokenFilter      TokenFilter = "keyword_marker"
+	LengthTokenFilter             TokenFilter = "length"
+	LowerCaseTokenFilter          TokenFilter = "lower_case"
+	NgramTokenFilter              TokenFilter = "ngram"
+	PorterStemmerTokenFilter      TokenFilter = "porter_stemmer"
+	ReverseTokenFilter            TokenFilter = "reverse"
+	ShingleTokenFilter            TokenFilter = "shingle"
+	StopTokensTokenFilter         TokenFilter = "stop_tokens"
+	TruncateTokenFilter           TokenFilter = "truncate"
+	UnicodeNormalizeTokenFilter   TokenFilter = "unicode_normalize"
+	UniqueTermTokenFilter         TokenFilter = "unique_term"
 )
 
 type CharFilterSetting struct {

@@ -29,13 +29,13 @@ func NewFileSystemDirectoryWithUri(uri string, lockManager lock.LockManager, log
 	// Parse URI.
 	u, err := url.Parse(uri)
 	if err != nil {
-		fileSystemLogger.Error("failed to parse URI", zap.Error(err), zap.String("uri", uri))
+		fileSystemLogger.Error(err.Error(), zap.String("uri", uri))
 		return nil
 	}
 
 	if u.Scheme != SchemeType_name[SchemeTypeFile] {
 		err := errors.ErrInvalidUri
-		fileSystemLogger.Error("failed to parse URI", zap.Error(err), zap.String("uri", uri))
+		fileSystemLogger.Error(err.Error(), zap.String("uri", uri))
 		return nil
 	}
 
@@ -53,7 +53,7 @@ func NewFileSystemDirectoryWithUri(uri string, lockManager lock.LockManager, log
 
 func (d *FileSystemDirectory) Lock() error {
 	if _, err := d.lockManager.Lock(); err != nil {
-		d.logger.Error("failed to lock", zap.Error(err), zap.String("path", d.path))
+		d.logger.Error(err.Error(), zap.String("path", d.path))
 		return err
 	}
 
@@ -62,7 +62,7 @@ func (d *FileSystemDirectory) Lock() error {
 
 func (d *FileSystemDirectory) Unlock() error {
 	if err := d.lockManager.Unlock(); err != nil {
-		d.logger.Error("failed to unlock", zap.Error(err), zap.String("path", d.path))
+		d.logger.Error(err.Error(), zap.String("path", d.path))
 		return err
 	}
 

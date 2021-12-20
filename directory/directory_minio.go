@@ -50,19 +50,19 @@ func NewMinioDirectoryWithUri(uri string, lockManager lock.LockManager, logger *
 
 	client, err := clients.NewMinioClientWithUri(uri)
 	if err != nil {
-		logger.Error("failed to create minio client", zap.Error(err))
+		logger.Error(err.Error(), zap.String("uri", uri))
 		return nil
 	}
 
 	// Parse URI.
 	u, err := url.Parse(uri)
 	if err != nil {
-		logger.Error("failed to parse URI", zap.Error(err))
+		logger.Error(err.Error(), zap.String("uri", uri))
 		return nil
 	}
 	if u.Scheme != SchemeType_name[SchemeTypeMinio] {
 		err := errors.ErrInvalidUri
-		logger.Error("scheme is not etcd", zap.Error(err))
+		logger.Error(err.Error(), zap.String("uri", uri))
 		return nil
 	}
 
@@ -84,7 +84,7 @@ func (d *MinioDirectory) exists() (bool, error) {
 	// Check to see if we already own this bucket (which happens if you run this twice)
 	exists, err := d.client.BucketExists(ctx, d.bucket)
 	if err != nil {
-		d.logger.Error("failed to check the bucket existence", zap.Error(err))
+		d.logger.Error(err.Error(), zap.String("bucket", d.bucket))
 		return false, err
 	}
 
@@ -98,7 +98,7 @@ func (d *MinioDirectory) fileName(kind string, id uint64) string {
 func (d *MinioDirectory) Setup(readOnly bool) error {
 	exists, err := d.exists()
 	if err != nil {
-		d.logger.Error("failed to check the bucket existence", zap.Error(err))
+		d.logger.Error(err.Error())
 		return err
 	}
 
@@ -108,7 +108,7 @@ func (d *MinioDirectory) Setup(readOnly bool) error {
 
 		region, err := d.client.GetBucketLocation(ctx, d.bucket)
 		if err != nil {
-			d.logger.Error("failed to get bucket location (region)", zap.Error(err), zap.String("bucket", d.bucket))
+			d.logger.Error(err.Error(), zap.String("bucket", d.bucket))
 			return err
 		}
 
@@ -118,7 +118,7 @@ func (d *MinioDirectory) Setup(readOnly bool) error {
 
 		err = d.client.MakeBucket(ctx, d.bucket, opts)
 		if err != nil {
-			d.logger.Error("failed to make the bucket", zap.Error(err), zap.String("region", region), zap.String("bucket", d.bucket))
+			d.logger.Error(err.Error(), zap.String("region", region), zap.String("bucket", d.bucket))
 			return err
 		}
 	}
@@ -138,7 +138,7 @@ func (d *MinioDirectory) List(kind string) ([]uint64, error) {
 	var rv uint64Slice
 	for object := range d.client.ListObjects(ctx, d.bucket, opts) {
 		if object.Err != nil {
-			d.logger.Error("failed to list objects", zap.Error(object.Err))
+			d.logger.Error(object.Err.Error(), zap.String("bucket", d.bucket), zap.Any("opts", opts))
 			return nil, object.Err
 		}
 		if filepath.Ext(object.Key) != kind {
@@ -152,7 +152,7 @@ func (d *MinioDirectory) List(kind string) ([]uint64, error) {
 		var epoch uint64
 		epoch, err := strconv.ParseUint(base, 16, 64)
 		if err != nil {
-			d.logger.Error("failed to parse identifier", zap.Error(object.Err), zap.String("base", base))
+			d.logger.Error(object.Err.Error(), zap.String("base", base))
 			return nil, err
 		}
 		rv = append(rv, epoch)
@@ -173,13 +173,13 @@ func (d *MinioDirectory) Load(kind string, id uint64) (*segment.Data, io.Closer,
 
 	object, err := d.client.GetObject(ctx, d.bucket, path, opts)
 	if err != nil {
-		d.logger.Error("failed to get object", zap.Error(err), zap.String("path", path))
+		d.logger.Error(err.Error(), zap.String("bucket", d.bucket), zap.String("path", path), zap.Any("opts", opts))
 		return nil, nil, err
 	}
 
 	data, err := ioutil.ReadAll(object)
 	if err != nil {
-		d.logger.Error("failed to read object", zap.Error(err), zap.String("path", path))
+		d.logger.Error(err.Error())
 		return nil, nil, err
 	}
 
@@ -190,7 +190,7 @@ func (d *MinioDirectory) Persist(kind string, id uint64, w index.WriterTo, close
 	var buf bytes.Buffer
 	size, err := w.WriteTo(&buf, closeCh)
 	if err != nil {
-		d.logger.Error("failed to write object", zap.Error(err), zap.String("kind", kind), zap.Uint64("id", id))
+		d.logger.Error(err.Error())
 		return err
 	}
 
@@ -207,13 +207,13 @@ func (d *MinioDirectory) Persist(kind string, id uint64, w index.WriterTo, close
 
 	putInfo, err := d.client.PutObject(ctx, d.bucket, path, reader, size, opts)
 	if err != nil {
-		d.logger.Error("failed to put object", zap.Error(err), zap.String("path", path), zap.Int64("size", size))
+		d.logger.Error(err.Error(), zap.String("bucket", d.bucket), zap.String("path", path), zap.Int64("size", size), zap.Any("opts", opts))
 
 		// TODO: Remove the failed file.
 		return err
 	}
 	if size != putInfo.Size {
-		d.logger.Error("failed to put object", zap.String("path", path), zap.Int64("expected_size", size), zap.Int64("actual_size", putInfo.Size))
+		d.logger.Error("failed to put object", zap.String("bucket", d.bucket), zap.String("path", path), zap.Int64("expected_size", size), zap.Int64("actual_size", putInfo.Size), zap.Any("opts", opts))
 
 		// TODO: Remove the failed file.
 		return err
@@ -234,7 +234,7 @@ func (d *MinioDirectory) Remove(kind string, id uint64) error {
 
 	err := d.client.RemoveObject(ctx, d.bucket, path, opts)
 	if err != nil {
-		d.logger.Error("failed to remove object", zap.Error(err), zap.String("path", path))
+		d.logger.Error(err.Error(), zap.String("bucket", d.bucket), zap.String("path", path), zap.Any("opts", opts))
 		return err
 	}
 
@@ -255,7 +255,7 @@ func (d *MinioDirectory) Stats() (uint64, uint64) {
 
 	for object := range d.client.ListObjects(ctx, d.bucket, opts) {
 		if object.Err != nil {
-			d.logger.Error("failed to list objects", zap.Error(object.Err))
+			d.logger.Error(object.Err.Error(), zap.String("bucket", d.bucket), zap.Any("opts", opts))
 			return 0, 0
 		}
 
@@ -267,13 +267,12 @@ func (d *MinioDirectory) Stats() (uint64, uint64) {
 }
 
 func (d *MinioDirectory) Sync() error {
-	// d.logger.Debug("sync", zap.String("path", d.path))
 	return nil
 }
 
 func (d *MinioDirectory) Lock() error {
 	if _, err := d.lockManager.Lock(); err != nil {
-		d.logger.Error("failed to lock", zap.Error(err), zap.String("path", d.path))
+		d.logger.Error(err.Error())
 		return err
 	}
 
@@ -282,7 +281,7 @@ func (d *MinioDirectory) Lock() error {
 
 func (d *MinioDirectory) Unlock() error {
 	if err := d.lockManager.Unlock(); err != nil {
-		d.logger.Error("failed to unlock", zap.Error(err), zap.String("path", d.path))
+		d.logger.Error(err.Error())
 		return err
 	}
 

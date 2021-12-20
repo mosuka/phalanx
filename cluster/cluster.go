@@ -48,7 +48,7 @@ func NewCluster(host string, bindPort int, nodeMetadata NodeMetadata, isSeedNode
 
 	memberList, err := memberlist.Create(config)
 	if err != nil {
-		clusterLogger.Error("failed to create member list", zap.Error(err), zap.Any("config", config))
+		clusterLogger.Error(err.Error(), zap.Any("config", config))
 		return nil, err
 	}
 	// members.LocalNode().Meta, err = nodeMetadata.Bytes()
@@ -173,8 +173,6 @@ func (c *Cluster) ClusterEvents() <-chan ClusterEvent {
 }
 
 func (c *Cluster) Start() error {
-	c.logger.Info("start cluster")
-
 	go func() {
 		for {
 			select {
@@ -238,8 +236,6 @@ func (c *Cluster) Start() error {
 }
 
 func (c *Cluster) Stop() error {
-	c.logger.Info("stop cluster")
-
 	c.stopWatching <- true
 
 	return nil
