@@ -59,7 +59,9 @@ func NewMinioClientWithUri(uri string) (*minio.Client, error) {
 	}
 
 	secureStr := os.Getenv("MINIO_SECURE")
-	secureStr = u.Query().Get("secure")
+	if str := u.Query().Get("secure"); str != "" {
+		secureStr = str
+	}
 	secure := false
 	if secureStr != "" {
 		secure, err = strconv.ParseBool(secureStr)

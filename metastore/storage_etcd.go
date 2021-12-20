@@ -29,16 +29,20 @@ func NewEtcdStorageWithUri(uri string, logger *zap.Logger) (*EtcdStorage, error)
 
 	client, err := clients.NewEtcdClientWithUri(uri)
 	if err != nil {
+		metastorelogger.Error(err.Error(), zap.String("uri", uri))
 		return nil, err
 	}
 
 	u, err := url.Parse(uri)
 	if err != nil {
+		metastorelogger.Error(err.Error(), zap.String("uri", uri))
 		return nil, err
 	}
 
 	if u.Scheme != SchemeType_name[SchemeTypeEtcd] {
-		return nil, errors.ErrInvalidUri
+		err := errors.ErrInvalidUri
+		metastorelogger.Error(err.Error(), zap.String("scheme", u.Scheme))
+		return nil, err
 	}
 
 	root := filepath.ToSlash(filepath.Join(string(filepath.Separator), u.Host, u.Path))
@@ -56,21 +60,23 @@ func NewEtcdStorageWithUri(uri string, logger *zap.Logger) (*EtcdStorage, error)
 }
 
 func (m *EtcdStorage) makeStorageEvent(event *clientv3.Event) (*StorageEvent, error) {
-	switch {
-	case event.Type == mvccpb.PUT:
+	switch event.Type {
+	case mvccpb.PUT:
 		return &StorageEvent{
 			Type:  StorageEventTypePut,
 			Path:  string(event.Kv.Key),
 			Value: event.Kv.Value,
 		}, nil
-	case event.Type == mvccpb.DELETE:
+	case mvccpb.DELETE:
 		return &StorageEvent{
 			Type:  StorageEventTypeDelete,
 			Path:  string(event.Kv.Key),
 			Value: event.Kv.Value,
 		}, nil
 	default:
-		return nil, errors.ErrUnsupportedMetastoreEvent
+		err := errors.ErrUnsupportedMetastoreEvent
+		m.logger.Error(err.Error(), zap.String("event_type", mvccpb.Event_EventType_name[int32(event.Type)]))
+		return nil, err
 	}
 }
 
@@ -87,14 +93,16 @@ func (m *EtcdStorage) Get(path string) ([]byte, error) {
 
 	resp, err := m.kv.Get(ctx, fullPath)
 	if err != nil {
-		m.logger.Error("failed to get key", zap.Error(err), zap.String("key", fullPath))
+		m.logger.Error(err.Error(), zap.String("key", fullPath))
 		return nil, err
 	}
 
 	if resp.Count > 0 {
 		return resp.Kvs[0].Value, nil
 	} else {
-		return nil, errors.ErrIndexMetadataDoesNotExist
+		err := errors.ErrInvalidData
+		m.logger.Error(err.Error(), zap.String("key", fullPath))
+		return nil, err
 	}
 }
 
@@ -111,7 +119,7 @@ func (m *EtcdStorage) List(prefix string) ([]string, error) {
 
 	resp, err := m.kv.Get(ctx, prefixPath, opts...)
 	if err != nil {
-		m.logger.Error("failed to get keys", zap.Error(err), zap.String("key", prefixPath))
+		m.logger.Error(err.Error(), zap.String("key", prefixPath), zap.Any("opts", opts))
 		return nil, err
 	}
 
@@ -133,7 +141,7 @@ func (m *EtcdStorage) Put(path string, content []byte) error {
 	defer cancel()
 
 	if _, err := m.kv.Put(ctx, fullPath, string(content)); err != nil {
-		m.logger.Error("failed to put key-value", zap.Error(err), zap.String("key", fullPath))
+		m.logger.Error(err.Error(), zap.String("key", fullPath))
 		return err
 	}
 
@@ -147,7 +155,7 @@ func (m *EtcdStorage) Delete(path string) error {
 	defer cancel()
 
 	if _, err := m.kv.Delete(ctx, fullPath); err != nil {
-		m.logger.Error("failed to delete key", zap.Error(err), zap.String("key", fullPath))
+		m.logger.Error(err.Error(), zap.String("key", fullPath))
 		return err
 	}
 
@@ -162,7 +170,7 @@ func (m *EtcdStorage) Exists(path string) (bool, error) {
 
 	resp, err := m.kv.Get(ctx, fullPath)
 	if err != nil {
-		m.logger.Error("failed to get key", zap.Error(err), zap.String("key", fullPath))
+		m.logger.Error(err.Error(), zap.String("key", fullPath))
 		return false, err
 	}
 
@@ -189,15 +197,13 @@ func (m *EtcdStorage) Start() error {
 				}
 			case result := <-watchChan:
 				for _, event := range result.Events {
-					// m.logger.Info("received etcd event", zap.String("type", event.Type.String()), zap.String("key", string(event.Kv.Key)))
+					m.logger.Info("received etcd event", zap.Any("event", event))
 
 					metastoreEvent, err := m.makeStorageEvent(event)
 					if err != nil {
-						m.logger.Error("failed to convert event", zap.Error(err), zap.Any("event", event))
+						m.logger.Warn(err.Error(), zap.Any("event", event))
 						continue
 					}
-
-					// m.logger.Info("received metastore storage event", zap.Any("path", metastoreEvent.Path), zap.String("type", StorageEventType_name[metastoreEvent.Type]))
 
 					m.events <- *metastoreEvent
 				}
@@ -212,7 +218,7 @@ func (m *EtcdStorage) Stop() error {
 	m.stopWatching <- true
 
 	if err := m.client.Close(); err != nil {
-		m.logger.Error("failed to close etcd client", zap.Error(err))
+		m.logger.Error(err.Error())
 		return err
 	}
 

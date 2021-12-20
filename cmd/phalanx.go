@@ -11,8 +11,6 @@ import (
 	"github.com/joho/godotenv"
 	homedir "github.com/mitchellh/go-homedir"
 	phalanxcluster "github.com/mosuka/phalanx/cluster"
-	"github.com/mosuka/phalanx/gateway"
-	"github.com/mosuka/phalanx/index"
 	"github.com/mosuka/phalanx/logging"
 	phalanxmetastore "github.com/mosuka/phalanx/metastore"
 	"github.com/mosuka/phalanx/server"
@@ -142,51 +140,44 @@ var (
 			// Create cluster
 			cluster, err := phalanxcluster.NewCluster(host, bindPort, nodeMetadata, isSeedNode, logger)
 			if err != nil {
-				logger.Error("Failed to create node", zap.Error(err), zap.String("host", host), zap.Int("bind_port", bindPort))
 				return err
 			}
 
 			// Create index metastore
 			metastore, err := phalanxmetastore.NewMetastore(indexMetastoreUri, logger)
 			if err != nil {
-				logger.Error("failed to create metastore", zap.Error(err), zap.Any("uri", indexMetastoreUri))
 				return err
 			}
 			if err := metastore.Start(); err != nil {
-				logger.Error("failed to start metastore", zap.Error(err))
 				return err
 			}
 
 			// Create index manager
-			indexManager, err := index.NewManager(cluster, metastore, certificateFile, commonName, logger)
+			indexService, err := server.NewIndexService(cluster, metastore, certificateFile, commonName, logger)
 			if err != nil {
-				logger.Error("failed to create index manager", zap.Error(err))
 				return err
 			}
-			if err := indexManager.Start(); err != nil {
-				logger.Error("failed to start index manager", zap.Error(err))
+			if err := indexService.Start(); err != nil {
 				return err
 			}
 
-			// Create indexService
-			indexService, err := server.NewIndexService(indexManager, certificateFile, commonName, logger)
+			// Create gRPC index service
+			grpcIndexService, err := server.NewGRPCIndexService(indexService, certificateFile, commonName, logger)
 			if err != nil {
-				logger.Error("failed to create index service", zap.Error(err))
 				return err
 			}
 
-			// Create indexServer
+			// Create gRPC index server
 			grpcAddress := fmt.Sprintf("%s:%d", host, grpcPort)
-			indexServer, err := server.NewIndexServer(grpcAddress, certificateFile, keyFile, commonName, indexService, logger)
+			grpcIndexServer, err := server.NewGRPCIndexServer(grpcAddress, certificateFile, keyFile, commonName, grpcIndexService, logger)
 			if err != nil {
-				logger.Error("failed to create index server", zap.Error(err))
 				return err
 			}
 
+			// Create HTTP index server
 			httpAddress := fmt.Sprintf("%s:%d", host, httpPort)
-			indexxGateway, err := gateway.NewIndexGatewayWithTLS(httpAddress, grpcAddress, certificateFile, keyFile, commonName, corsAllowedMethods, corsAllowedOrigins, corsAllowedHeaders, logger)
+			httpIndexServer, err := server.NewHTTPIndexServerWithTLS(httpAddress, grpcAddress, certificateFile, keyFile, commonName, corsAllowedMethods, corsAllowedOrigins, corsAllowedHeaders, logger)
 			if err != nil {
-				logger.Error("failed to create index gateway", zap.Error(err))
 				return err
 			}
 
@@ -201,30 +192,27 @@ var (
 				for _, seedAddress := range seedAddresses {
 					seedHost, seedPort, err := net.SplitHostPort(seedAddress)
 					if err != nil {
-						logger.Error("failed to split seed address", zap.Error(err), zap.String("seed_address", seedAddress))
 						return err
 					}
 					resolvedSeedHost, err := util.ResolveHost(seedHost)
 					if err != nil {
-						logger.Error("failed to resolve seed host", zap.Error(err), zap.String("seed_host", seedHost))
 						return err
 					}
 					resolvedSeedAddresses = append(resolvedSeedAddresses, fmt.Sprintf("%s:%s", resolvedSeedHost, seedPort))
 				}
 				_, err := cluster.Join(resolvedSeedAddresses)
 				if err != nil {
-					logger.Error("failed to join to the cluster", zap.Error(err), zap.Any("seed_addresses", seedAddresses))
 					return err
 				}
 			}
 
 			// Start server
-			if err := indexServer.Start(); err != nil {
+			if err := grpcIndexServer.Start(); err != nil {
 				return err
 			}
 
 			// Start gateway
-			if err := indexxGateway.Start(); err != nil {
+			if err := httpIndexServer.Start(); err != nil {
 				return err
 			}
 
@@ -237,34 +225,34 @@ var (
 
 			// Leave the cluster.
 			if err := cluster.Leave(10 * time.Second); err != nil {
-				logger.Error("failed to leave cluster", zap.Error(err))
+				logger.Warn("failed to leave cluster", zap.Error(err))
 			}
 
 			// Stop node
 			if err := cluster.Stop(); err != nil {
-				logger.Error("failed to stop node", zap.Error(err))
+				logger.Warn("failed to stop node", zap.Error(err))
 			}
 
 			// Stop index manager.
-			if err := indexManager.Stop(); err != nil {
-				logger.Error("failed to stop index manager", zap.Error(err))
+			if err := indexService.Stop(); err != nil {
+				logger.Warn("failed to stop index manager", zap.Error(err))
 			}
 
 			// Stop index metastore.
 			if err := metastore.Stop(); err != nil {
-				logger.Error("failed to stop index metastore", zap.Error(err))
+				logger.Warn("failed to stop index metastore", zap.Error(err))
 			}
 
 			// Stop server.
-			err = indexxGateway.Stop()
+			err = httpIndexServer.Stop()
 			if err != nil {
-				logger.Error("failed to stop gatway", zap.Error(err))
+				logger.Warn("failed to stop gatway", zap.Error(err))
 			}
 
 			// Stop server.
-			err = indexServer.Stop()
+			err = grpcIndexServer.Stop()
 			if err != nil {
-				logger.Error("failed to stop server", zap.Error(err))
+				logger.Warn("failed to stop server", zap.Error(err))
 			}
 
 			return nil

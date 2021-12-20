@@ -27,10 +27,13 @@ func NewFileSystemLockManagerWithUri(uri string, logger *zap.Logger) (*FileSyste
 
 	u, err := url.Parse(uri)
 	if err != nil {
+		lockManagerLogger.Error(err.Error(), zap.String("uri", uri))
 		return nil, err
 	}
 	if u.Scheme != SchemeType_name[SchemeTypeFile] {
-		return nil, errors.ErrInvalidUri
+		err := errors.ErrInvalidUri
+		lockManagerLogger.Error(err.Error(), zap.String("uri", uri))
+		return nil, err
 	}
 
 	root := filepath.FromSlash(u.Path)
@@ -45,8 +48,8 @@ func (m *FileSystemLockManager) Lock() (int64, error) {
 	fullPath := filepath.Join(m.root, pidFilename)
 
 	lockDir := filepath.Dir(fullPath)
-	if err := os.MkdirAll(filepath.Dir(fullPath), 0700); err != nil {
-		m.logger.Error("failed to create directory", zap.Error(err), zap.String("path", lockDir))
+	if err := os.MkdirAll(lockDir, 0700); err != nil {
+		m.logger.Error(err.Error(), zap.String("path", lockDir))
 		return 0, err
 	}
 
@@ -60,34 +63,29 @@ func (m *FileSystemLockManager) Lock() (int64, error) {
 	retryDelay := 500 * time.Millisecond
 	m.locked, err = m.lockFile.TryLockContext(ctx, retryDelay)
 	if err != nil {
-		m.logger.Error("failed to lock", zap.Error(err), zap.String("path", fullPath))
+		m.logger.Error(err.Error())
 		return 0, err
 	}
 	if !m.locked {
-		m.logger.Error("failed to lock", zap.String("path", fullPath))
-		return 0, fmt.Errorf("failed to lock %s", fullPath)
+		err := fmt.Errorf("not locked")
+		m.logger.Error(err.Error())
+		return 0, err
 	}
-
-	// m.logger.Info("locked", zap.String("path", fullPath))
 
 	return 0, nil
 }
 
 func (m *FileSystemLockManager) Unlock() error {
-	fullPath := filepath.Join(m.root, pidFilename)
-
 	if !m.locked {
 		err := errors.ErrLockDoesNotExists
-		m.logger.Error("lock not held", zap.Error(err), zap.String("path", fullPath))
+		m.logger.Error(err.Error())
 		return err
 	}
 
 	if err := m.lockFile.Unlock(); err != nil {
-		m.logger.Error("failed to unlock", zap.Error(err), zap.String("path", fullPath))
+		m.logger.Error(err.Error())
 		return err
 	}
-
-	// m.logger.Info("unlocked", zap.String("path", fullPath))
 
 	return nil
 }

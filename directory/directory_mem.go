@@ -20,13 +20,13 @@ func NewInMemoryDirectoryWithUri(uri string, logger *zap.Logger) *index.InMemory
 
 	u, err := url.Parse(uri)
 	if err != nil {
-		inMemoryLogger.Error("failed to parse URI", zap.Error(err), zap.String("uri", uri))
+		inMemoryLogger.Error(err.Error(), zap.String("uri", uri))
 		return nil
 	}
 
 	if u.Scheme != SchemeType_name[SchemeTypeMem] {
 		err := errors.ErrInvalidUri
-		inMemoryLogger.Error("failed to parse URI", zap.Error(err), zap.String("uri", uri))
+		inMemoryLogger.Error(err.Error(), zap.String("uri", uri))
 		return nil
 	}
 
