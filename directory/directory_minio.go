@@ -29,9 +29,10 @@ func (e uint64Slice) Len() int           { return len(e) }
 func (e uint64Slice) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
 func (e uint64Slice) Less(i, j int) bool { return e[i] < e[j] }
 
-func MinioIndexConfig(uri string, lockManager lock.LockManager, logger *zap.Logger) bluge.Config {
+// func MinioIndexConfig(uri string, lockManager lock.LockManager, logger *zap.Logger) bluge.Config {
+func MinioIndexConfig(uri string, lockUri string, logger *zap.Logger) bluge.Config {
 	return bluge.DefaultConfigWithDirectory(func() index.Directory {
-		return NewMinioDirectoryWithUri(uri, lockManager, logger)
+		return NewMinioDirectoryWithUri(uri, lockUri, logger)
 	})
 }
 
@@ -41,11 +42,13 @@ type MinioDirectory struct {
 	client         *minio.Client
 	ctx            context.Context
 	requestTimeout time.Duration
+	lockUri        string
 	lockManager    lock.LockManager
 	logger         *zap.Logger
 }
 
-func NewMinioDirectoryWithUri(uri string, lockManager lock.LockManager, logger *zap.Logger) *MinioDirectory {
+// func NewMinioDirectoryWithUri(uri string, lockManager lock.LockManager, logger *zap.Logger) *MinioDirectory {
+func NewMinioDirectoryWithUri(uri string, lockUri string, logger *zap.Logger) *MinioDirectory {
 	directoryLogger := logger.Named("minio")
 
 	client, err := clients.NewMinioClientWithUri(uri)
@@ -72,7 +75,8 @@ func NewMinioDirectoryWithUri(uri string, lockManager lock.LockManager, logger *
 		path:           u.Path,
 		ctx:            context.Background(),
 		requestTimeout: 3 * time.Second,
-		lockManager:    lockManager,
+		lockUri:        lockUri,
+		lockManager:    nil,
 		logger:         directoryLogger,
 	}
 }
@@ -271,6 +275,14 @@ func (d *MinioDirectory) Sync() error {
 }
 
 func (d *MinioDirectory) Lock() error {
+	// Create lock manager
+	lockManager, err := lock.NewLockManagerWithUri(d.lockUri, d.logger)
+	if err != nil {
+		d.logger.Error(err.Error(), zap.String("lock_uri", d.lockUri))
+		return err
+	}
+	d.lockManager = lockManager
+
 	if _, err := d.lockManager.Lock(); err != nil {
 		d.logger.Error(err.Error())
 		return err
@@ -284,6 +296,8 @@ func (d *MinioDirectory) Unlock() error {
 		d.logger.Error(err.Error())
 		return err
 	}
+
+	d.lockManager.Close()
 
 	return nil
 }

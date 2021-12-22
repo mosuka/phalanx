@@ -6,24 +6,16 @@ import (
 	"github.com/blugelabs/bluge"
 	"github.com/blugelabs/bluge/index"
 	"github.com/mosuka/phalanx/errors"
-	"github.com/mosuka/phalanx/lock"
 	"go.uber.org/zap"
 )
 
-func FileSystemIndexConfig(uri string, lockManager lock.LockManager, logger *zap.Logger) bluge.Config {
+func FileSystemIndexConfig(uri string, logger *zap.Logger) bluge.Config {
 	return bluge.DefaultConfigWithDirectory(func() index.Directory {
-		return NewFileSystemDirectoryWithUri(uri, lockManager, logger)
+		return NewFileSystemDirectoryWithUri(uri, logger)
 	})
 }
 
-type FileSystemDirectory struct {
-	*index.FileSystemDirectory
-	path        string
-	lockManager lock.LockManager
-	logger      *zap.Logger
-}
-
-func NewFileSystemDirectoryWithUri(uri string, lockManager lock.LockManager, logger *zap.Logger) *FileSystemDirectory {
+func NewFileSystemDirectoryWithUri(uri string, logger *zap.Logger) *index.FileSystemDirectory {
 	fileSystemLogger := logger.Named("file_system")
 
 	// Parse URI.
@@ -41,35 +33,5 @@ func NewFileSystemDirectoryWithUri(uri string, lockManager lock.LockManager, log
 
 	path := u.Path
 
-	parent := index.NewFileSystemDirectory(path)
-
-	return &FileSystemDirectory{
-		FileSystemDirectory: parent,
-		path:                path,
-		lockManager:         lockManager,
-		logger:              logger,
-	}
-}
-
-func (d *FileSystemDirectory) Lock() error {
-	// 1. create lockmanager
-	// 2. lock
-
-	if _, err := d.lockManager.Lock(); err != nil {
-		d.logger.Error(err.Error(), zap.String("path", d.path))
-		return err
-	}
-
-	return nil
-}
-
-func (d *FileSystemDirectory) Unlock() error {
-	// 1. unlock
-	// 2. remove lockmanager
-	if err := d.lockManager.Unlock(); err != nil {
-		d.logger.Error(err.Error(), zap.String("path", d.path))
-		return err
-	}
-
-	return nil
+	return index.NewFileSystemDirectory(path)
 }

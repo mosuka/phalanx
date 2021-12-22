@@ -163,6 +163,8 @@ func (s *IndexService) assignShardsToNode() error {
 
 	s.indexerAssignment = indexerAssignment
 	s.searcherAssignment = searcherAssignment
+	fmt.Println("indexerAssignment:", indexerAssignment)
+	fmt.Println("searcherAssignment:", searcherAssignment)
 
 	// Open the index writers for assigned shards.
 	for assignedIndexName, shardAssignment := range s.indexerAssignment {
@@ -517,10 +519,16 @@ func (s *IndexService) CreateIndex(req *proto.CreateIndexRequest) (*proto.Create
 	for i := uint32(0); i < numShards; i++ {
 		// Make the shard metadata.
 		shardName := generateShardName()
+
+		// If the index lock is omitted, the shard lock is also omitted.
+		shardLockUri := ""
+		if req.LockUri != "" {
+			shardLockUri = fmt.Sprintf("%s/%s", req.LockUri, shardName)
+		}
 		shardMetadata := &phalanxmetastore.ShardMetadata{
 			ShardName:    shardName,
 			ShardUri:     fmt.Sprintf("%s/%s", req.IndexUri, shardName),
-			ShardLockUri: fmt.Sprintf("%s/%s", req.LockUri, shardName),
+			ShardLockUri: shardLockUri,
 		}
 
 		// Set the shard metadata to the index metadata.
@@ -547,7 +555,7 @@ func (s *IndexService) DeleteIndex(req *proto.DeleteIndexRequest) (*proto.Delete
 		s.logger.Error(err.Error(), zap.String("index_name", req.IndexName))
 		return nil, err
 	}
-	for shardName, shardMetadata := range indexMetadata.AllShardMetadata() {
+	for _, shardMetadata := range indexMetadata.AllShardMetadata() {
 		// Check shard directory existence.
 		if exists, err := directory.DirectoryExists(shardMetadata.ShardUri); err != nil {
 			s.logger.Warn(err.Error(), zap.String("shard_uri", shardMetadata.ShardUri))
@@ -561,12 +569,6 @@ func (s *IndexService) DeleteIndex(req *proto.DeleteIndexRequest) (*proto.Delete
 				err := errors.ErrIndexDirectoryDoesNotExist
 				s.logger.Warn(err.Error(), zap.String("shard_uri", shardMetadata.ShardUri))
 			}
-		}
-
-		// Delete shard metadata.
-		if err := s.metastore.DeleteShardMetadata(req.IndexName, shardName); err != nil {
-			s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.String("shard_name", shardName))
-			return nil, err
 		}
 	}
 	// Delete index metadata.

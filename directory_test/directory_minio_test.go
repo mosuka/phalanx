@@ -1,4 +1,4 @@
-package directory
+package directory_test
 
 // import (
 // 	"testing"

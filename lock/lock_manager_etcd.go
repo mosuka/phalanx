@@ -91,3 +91,12 @@ func (m *EtcdLockManager) Unlock() error {
 
 	return nil
 }
+
+func (m *EtcdLockManager) Close() error {
+	if err := m.client.Close(); err != nil {
+		m.logger.Error(err.Error())
+		return err
+	}
+
+	return nil
+}

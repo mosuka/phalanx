@@ -42,6 +42,7 @@ var (
 	ErrUnknownFieldType         = errors.New("unknown field type")
 	ErrFieldSettingDoesNotExist = errors.New("field setting does not exist")
 	ErrUnexpectedFieldSetting   = errors.New("unexpected field setting")
+	ErrLockUriIsNotSupported    = errors.New("lock URI is not supported")
 
 	ErrNodeDoesNotFound = errors.New("node not found")
 	ErrInvalidData      = errors.New("invalid data")

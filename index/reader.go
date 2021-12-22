@@ -7,7 +7,6 @@ import (
 	"github.com/blugelabs/bluge"
 	"github.com/mosuka/phalanx/directory"
 	"github.com/mosuka/phalanx/errors"
-	"github.com/mosuka/phalanx/lock"
 	"github.com/mosuka/phalanx/metastore"
 	"go.uber.org/zap"
 )
@@ -103,15 +102,8 @@ func (i *IndexReaders) Contains(indexName string, shardName string) bool {
 }
 
 func (i *IndexReaders) open(indexName string, shardName string, indexMetadata *metastore.IndexMetadata, shardMetadata *metastore.ShardMetadata) error {
-	// Create lock manager
-	lockManager, err := lock.NewLockManagerWithUri(shardMetadata.ShardLockUri, i.logger)
-	if err != nil {
-		i.logger.Error(err.Error(), zap.String("shard_lock_uri", shardMetadata.ShardLockUri))
-		return err
-	}
-
 	// Make directory config
-	config, err := directory.NewIndexConfigWithUri(shardMetadata.ShardUri, lockManager, i.logger)
+	config, err := directory.NewIndexConfigWithUri(shardMetadata.ShardUri, shardMetadata.ShardLockUri, i.logger)
 	if err != nil {
 		i.logger.Error(err.Error(), zap.String("shard_uri", shardMetadata.ShardUri))
 		return err
