@@ -28,7 +28,6 @@ const (
 )
 
 // Event value maps for MetastoreEventType.
-
 var (
 	MetastoreEventType_name = map[MetastoreEventType]string{
 		MetastoreEventTypeUnknown:     "unknown",
@@ -279,10 +278,10 @@ func (m *Metastore) handleStorageEvent(event StorageEvent) error {
 }
 
 func (m *Metastore) Start() error {
-	if err := m.storage.Start(); err != nil {
-		m.logger.Error(err.Error())
-		return err
-	}
+	// if err := m.storage.Start(); err != nil {
+	// 	m.logger.Error(err.Error())
+	// 	return err
+	// }
 
 	go func() {
 		for {
@@ -305,7 +304,7 @@ func (m *Metastore) Start() error {
 }
 
 func (m *Metastore) Stop() error {
-	if err := m.storage.Stop(); err != nil {
+	if err := m.storage.Close(); err != nil {
 		m.logger.Error(err.Error())
 		return err
 	}

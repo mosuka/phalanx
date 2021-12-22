@@ -52,6 +52,9 @@ func NewFileSystemDirectoryWithUri(uri string, lockManager lock.LockManager, log
 }
 
 func (d *FileSystemDirectory) Lock() error {
+	// 1. create lockmanager
+	// 2. lock
+
 	if _, err := d.lockManager.Lock(); err != nil {
 		d.logger.Error(err.Error(), zap.String("path", d.path))
 		return err
@@ -61,6 +64,8 @@ func (d *FileSystemDirectory) Lock() error {
 }
 
 func (d *FileSystemDirectory) Unlock() error {
+	// 1. unlock
+	// 2. remove lockmanager
 	if err := d.lockManager.Unlock(); err != nil {
 		d.logger.Error(err.Error(), zap.String("path", d.path))
 		return err
