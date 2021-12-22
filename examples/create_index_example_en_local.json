@@ -1,6 +1,5 @@
 {
 	"index_uri": "file:///tmp/phalanx/indexes/example_en",
-	"lock_uri": "file:///tmp/phalanx/locks/example_en",
 	"index_mapping": {
 		"url": {
 			"type": "text",

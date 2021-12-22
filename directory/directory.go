@@ -10,7 +10,6 @@ import (
 	minio "github.com/minio/minio-go/v7"
 	"github.com/mosuka/phalanx/clients"
 	"github.com/mosuka/phalanx/errors"
-	"github.com/mosuka/phalanx/lock"
 	"github.com/mosuka/phalanx/util"
 	"go.uber.org/zap"
 )
@@ -40,7 +39,7 @@ var (
 	}
 )
 
-func NewIndexConfigWithUri(uri string, lockManager lock.LockManager, logger *zap.Logger) (bluge.Config, error) {
+func NewIndexConfigWithUri(uri string, lockUri string, logger *zap.Logger) (bluge.Config, error) {
 	directoryLogger := logger.Named("directory")
 
 	u, err := url.Parse(uri)
@@ -50,11 +49,21 @@ func NewIndexConfigWithUri(uri string, lockManager lock.LockManager, logger *zap
 
 	switch u.Scheme {
 	case SchemeType_name[SchemeTypeMem]:
+		if lockUri != "" {
+			err := errors.ErrLockUriIsNotSupported
+			directoryLogger.Error(err.Error(), zap.String("scheme", u.Scheme), zap.String("lock_uri", lockUri))
+			return bluge.Config{}, err
+		}
 		return InMemoryIndexConfig(uri, directoryLogger), nil
 	case SchemeType_name[SchemeTypeFile]:
-		return FileSystemIndexConfig(uri, lockManager, directoryLogger), nil
+		if lockUri != "" {
+			err := errors.ErrLockUriIsNotSupported
+			directoryLogger.Error(err.Error(), zap.String("scheme", u.Scheme), zap.String("lock_uri", lockUri))
+			return bluge.Config{}, err
+		}
+		return FileSystemIndexConfig(uri, directoryLogger), nil
 	case SchemeType_name[SchemeTypeMinio]:
-		return MinioIndexConfig(uri, lockManager, directoryLogger), nil
+		return MinioIndexConfig(uri, lockUri, directoryLogger), nil
 	default:
 		err := errors.ErrUnsupportedDirectoryType
 		directoryLogger.Error(err.Error(), zap.String("scheme", u.Scheme))
@@ -70,7 +79,7 @@ func DirectoryExists(uri string) (bool, error) {
 
 	switch u.Scheme {
 	case SchemeType_name[SchemeTypeMem]:
-		// TODO: Remove index from memory.
+		// TODO: check the in-memory index existence.
 		return true, nil
 	case SchemeType_name[SchemeTypeFile]:
 		return util.FileExists(u.Path), nil
@@ -119,7 +128,7 @@ func DeleteDirectory(uri string) error {
 
 	switch u.Scheme {
 	case SchemeType_name[SchemeTypeMem]:
-		// TODO: Remove index from memory.
+		// TODO: delete in-memory index.
 		return nil
 	case SchemeType_name[SchemeTypeFile]:
 		return os.RemoveAll(u.Path)

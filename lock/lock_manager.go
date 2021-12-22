@@ -11,7 +11,7 @@ type SchemeType int
 
 const (
 	SchemeTypeUnknown SchemeType = iota
-	SchemeTypeFile
+	// SchemeTypeFile
 	SchemeTypeEtcd
 )
 
@@ -19,19 +19,20 @@ const (
 var (
 	SchemeType_name = map[SchemeType]string{
 		SchemeTypeUnknown: "unknown",
-		SchemeTypeFile:    "file",
-		SchemeTypeEtcd:    "etcd",
+		// SchemeTypeFile:    "file",
+		SchemeTypeEtcd: "etcd",
 	}
 	SchemeType_value = map[string]SchemeType{
 		"unknown": SchemeTypeUnknown,
-		"file":    SchemeTypeFile,
-		"etcd":    SchemeTypeEtcd,
+		// "file":    SchemeTypeFile,
+		"etcd": SchemeTypeEtcd,
 	}
 )
 
 type LockManager interface {
 	Lock() (int64, error)
 	Unlock() error
+	Close() error
 }
 
 func NewLockManagerWithUri(uri string, logger *zap.Logger) (LockManager, error) {
@@ -43,8 +44,8 @@ func NewLockManagerWithUri(uri string, logger *zap.Logger) (LockManager, error) 
 	}
 
 	switch u.Scheme {
-	case SchemeType_name[SchemeTypeFile]:
-		return NewFileSystemLockManagerWithUri(uri, logger)
+	// case SchemeType_name[SchemeTypeFile]:
+	// 	return NewFileSystemLockManagerWithUri(uri, logger)
 	case SchemeType_name[SchemeTypeEtcd]:
 		return NewEtcdLockManagerWithUri(uri, logger)
 	default:

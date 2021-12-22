@@ -243,9 +243,10 @@ func putIndex(c *gin.Context) {
 
 	lockUri, ok := reqMap["lock_uri"].(string)
 	if !ok {
-		resp := gin.H{"error": "lock_uri is required or unexpected data"}
-		c.JSON(http.StatusInternalServerError, resp)
-		return
+		// resp := gin.H{"error": "lock_uri is required or unexpected data"}
+		// c.JSON(http.StatusInternalServerError, resp)
+		// return
+		req.LockUri = ""
 	}
 	req.LockUri = lockUri
 

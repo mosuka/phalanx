@@ -157,8 +157,8 @@ func NewMetastore(uri string, logger *zap.Logger) (*Metastore, error) {
 }
 
 func (m *Metastore) handleStorageEvent(event StorageEvent) error {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
+	// m.mutex.Lock()
+	// defer m.mutex.Unlock()
 
 	switch event.Type {
 	case StorageEventTypePut:
@@ -278,11 +278,6 @@ func (m *Metastore) handleStorageEvent(event StorageEvent) error {
 }
 
 func (m *Metastore) Start() error {
-	// if err := m.storage.Start(); err != nil {
-	// 	m.logger.Error(err.Error())
-	// 	return err
-	// }
-
 	go func() {
 		for {
 			select {
@@ -436,7 +431,9 @@ func (m *Metastore) DeleteIndexMetadata(indexName string) error {
 		m.logger.Error(err.Error(), zap.String("index_name", indexName))
 		return err
 	}
+	fmt.Println(indexMetadata)
 
+	// Delete shard metadata file
 	for shardName := range indexMetadata.ShardMetadataMap {
 		if err := m.DeleteShardMetadata(indexName, shardName); err != nil {
 			m.logger.Warn(err.Error(), zap.String("index_name", indexName), zap.String("shard_name", shardName))
@@ -444,9 +441,17 @@ func (m *Metastore) DeleteIndexMetadata(indexName string) error {
 		}
 	}
 
+	// Delete index metadata file
 	indexMetadataPath := makeIndexMetadataPath(indexName)
 	if err := m.storage.Delete(indexMetadataPath); err != nil {
 		m.logger.Error(err.Error(), zap.String("index_metadata_path", indexMetadataPath))
+		return err
+	}
+
+	// Delete index metadata directory
+	indexMetadataDir := filepath.Dir(indexMetadataPath)
+	if err := m.storage.Delete(indexMetadataDir); err != nil {
+		m.logger.Error(err.Error(), zap.String("index_metadata_dir", indexMetadataDir))
 		return err
 	}
 

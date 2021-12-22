@@ -66,6 +66,7 @@ type FileSystemStorage struct {
 	fsWatcher   *fsnotify.Watcher
 	stopWatcher chan bool
 	events      chan StorageEvent
+	watchSet    map[string]bool
 }
 
 func NewFileSystemStorageWithUri(uri string, logger *zap.Logger) (*FileSystemStorage, error) {
@@ -100,12 +101,13 @@ func NewFileSystemStorageWithPath(path string, logger *zap.Logger) (*FileSystemS
 	if err != nil {
 		return nil, err
 	}
-	if err := fsWatcher.Add(path); err != nil {
-		fileLogger.Error(err.Error(), zap.String("path", path))
-		return nil, err
-	}
 	stopWatcher := make(chan bool)
 	events := make(chan StorageEvent, 10)
+
+	// if err := addWatchList(fsWatcher, path, fileLogger); err != nil {
+	// 	fileLogger.Error(err.Error(), zap.String("path", path))
+	// 	return nil, err
+	// }
 
 	// Start file system watcher
 	go func(fsWatcher *fsnotify.Watcher, stopWatcher chan bool, event chan StorageEvent, logger *zap.Logger) {
@@ -124,6 +126,11 @@ func NewFileSystemStorageWithPath(path string, logger *zap.Logger) (*FileSystemS
 				}
 
 				logger.Info("received file system event", zap.Any("event", event))
+				if event.Op == fsnotify.Create || event.Op == fsnotify.Chmod || event.Op == fsnotify.Rename {
+					logger.Debug("event ignored", zap.Any("event", event))
+					continue
+				}
+
 				metastoreEvent, err := makeFileSystemStorageEvent(&event, logger)
 				if err != nil {
 					logger.Warn(err.Error(), zap.Any("event", event))
@@ -142,13 +149,18 @@ func NewFileSystemStorageWithPath(path string, logger *zap.Logger) (*FileSystemS
 		}
 	}(fsWatcher, stopWatcher, events, fileLogger)
 
-	return &FileSystemStorage{
+	fsStorage := &FileSystemStorage{
 		path:        path,
 		logger:      fileLogger,
 		fsWatcher:   fsWatcher,
 		stopWatcher: stopWatcher,
 		events:      events,
-	}, nil
+		watchSet:    make(map[string]bool),
+	}
+
+	fsStorage.addWatchList(path)
+
+	return fsStorage, nil
 }
 
 func (m *FileSystemStorage) Get(path string) ([]byte, error) {
@@ -171,7 +183,7 @@ func (m *FileSystemStorage) Get(path string) ([]byte, error) {
 func (m *FileSystemStorage) List(prefix string) ([]string, error) {
 	prefixPath := filepath.Join(m.path, prefix)
 	paths := make([]string, 0)
-	err := filepath.Walk(prefixPath, func(path string, info os.FileInfo, err error) error {
+	err := filepath.Walk(prefixPath, func(path string, Debug os.FileInfo, err error) error {
 		if path != prefixPath {
 			// Remove prefixPath.
 			// E.g. /tmp/phalanx179449480/hello.txt to /hello.txt
@@ -197,7 +209,7 @@ func (m *FileSystemStorage) Put(path string, content []byte) error {
 		return err
 	}
 
-	if err := m.fsWatcher.Add(dir); err != nil {
+	if err := m.addWatchList(dir); err != nil {
 		m.logger.Error(err.Error(), zap.String("path", dir))
 		return err
 	}
@@ -207,11 +219,23 @@ func (m *FileSystemStorage) Put(path string, content []byte) error {
 		return err
 	}
 
+	if err := m.addWatchList(fullPath); err != nil {
+		m.logger.Error(err.Error(), zap.String("path", fullPath))
+		return err
+	}
+
 	return nil
 }
 
 func (m *FileSystemStorage) Delete(path string) error {
 	fullPath := filepath.Join(m.path, path)
+	m.logger.Info("delete file", zap.String("path", fullPath))
+
+	if err := m.removeWatchList(fullPath); err != nil {
+		m.logger.Error(err.Error(), zap.String("path", fullPath))
+		return err
+	}
+
 	if err := os.Remove(fullPath); err != nil {
 		m.logger.Error(err.Error(), zap.String("path", fullPath))
 		return err
@@ -239,4 +263,32 @@ func (m *FileSystemStorage) Close() error {
 
 func (m *FileSystemStorage) Events() chan StorageEvent {
 	return m.events
+}
+
+func (m *FileSystemStorage) addWatchList(watchPath string) error {
+	if err := filepath.Walk(watchPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		m.logger.Info("add to watch list", zap.String("path", path))
+		return m.fsWatcher.Add(path)
+	}); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *FileSystemStorage) removeWatchList(watchPath string) error {
+	if err := filepath.Walk(watchPath, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		m.logger.Info("remove from watch list", zap.String("path", path))
+		return m.fsWatcher.Remove(path)
+	}); err != nil {
+		return err
+	}
+
+	return nil
 }
