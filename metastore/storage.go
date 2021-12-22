@@ -63,8 +63,8 @@ type Storage interface {
 	Put(key string, value []byte) error
 	Delete(key string) error
 	Exists(key string) (bool, error)
-	Start() error
-	Stop() error
+	// Start() error
+	Close() error
 	Events() chan StorageEvent
 }
 

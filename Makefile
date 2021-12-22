@@ -64,6 +64,11 @@ fmt: show-env
 	@echo ">> formatting code"
 	$(GO) fmt $(PACKAGES)
 
+.PHONY: mock
+mock: show-env
+	@echo ">> generating mocks"
+	mockgen -source=./metastore/storage.go -destination=./mock/metastore/storage.go
+
 .PHONY: test
 test: show-env
 	@echo ">> testing all packages"

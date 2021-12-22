@@ -19,15 +19,29 @@ func TestNewLanguageDetectorEn(t *testing.T) {
 	text := "Hello world."
 	analyzer := detector.DetectAnalyzer(text)
 
-	ts := analyzer.Analyze([]byte(text))
-	freqs, _ := analysis.TokenFrequency(ts, true, 0)
-	tokens := make([]string, 0)
-	for token := range freqs {
-		tokens = append(tokens, token)
+	actual := analyzer.Analyze([]byte(text))
+
+	expected := analysis.TokenStream{
+		&analysis.Token{
+			Start:        0,
+			End:          5,
+			PositionIncr: 1,
+			Type:         0,
+			Term:         []byte("hello"),
+		},
+		&analysis.Token{
+			Start:        6,
+			End:          11,
+			PositionIncr: 1,
+			Type:         0,
+			Term:         []byte("world"),
+		},
 	}
-	if !reflect.DeepEqual(tokens, []string{"hello", "world"}) {
-		t.Fatalf("unexpected %v\n", tokens)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Fatalf("unexpected %v\n", actual)
 	}
+
 }
 
 func TestNewLanguageDetectorJa(t *testing.T) {
@@ -41,13 +55,26 @@ func TestNewLanguageDetectorJa(t *testing.T) {
 	text := "本日は晴天なり"
 	analyzer := detector.DetectAnalyzer(text)
 
-	ts := analyzer.Analyze([]byte(text))
-	freqs, _ := analysis.TokenFrequency(ts, true, 0)
-	tokens := make([]string, 0)
-	for token := range freqs {
-		tokens = append(tokens, token)
+	actual := analyzer.Analyze([]byte(text))
+
+	expected := analysis.TokenStream{
+		&analysis.Token{
+			Start:        0,
+			End:          6,
+			PositionIncr: 1,
+			Type:         1,
+			Term:         []byte("本日"),
+		},
+		&analysis.Token{
+			Start:        9,
+			End:          15,
+			PositionIncr: 2,
+			Type:         1,
+			Term:         []byte("晴天"),
+		},
 	}
-	if !reflect.DeepEqual(tokens, []string{"本日", "晴天"}) {
-		t.Fatalf("unexpected %v\n", tokens)
+
+	if !reflect.DeepEqual(actual, expected) {
+		t.Fatalf("unexpected %v\n", actual)
 	}
 }

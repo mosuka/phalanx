@@ -1,4 +1,4 @@
-package metastore
+package metastore_test
 
 import (
 	"io/ioutil"
@@ -9,7 +9,10 @@ import (
 	"testing"
 
 	"github.com/mosuka/phalanx/logging"
+	"github.com/mosuka/phalanx/metastore"
 	"github.com/mosuka/phalanx/util"
+	// "github.com/golang/mock/gomock"
+	// mock_metastore "github.com/mosuka/phalanx/mock/metastore"
 )
 
 func TestNewFileSystemStorageWithUri(t *testing.T) {
@@ -24,10 +27,11 @@ func TestNewFileSystemStorageWithUri(t *testing.T) {
 
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	_, err = NewFileSystemStorageWithUri(uri, logger)
+	fsMetastore, err := metastore.NewFileSystemStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
+	defer fsMetastore.Close()
 
 	if !util.FileExists(path) {
 		t.Fatalf("directory does not exist.\n")
@@ -45,10 +49,11 @@ func TestNewFileSystemStorageWithPath(t *testing.T) {
 
 	path := filepath.ToSlash(tmpDir)
 
-	_, err = NewFileSystemStorageWithPath(path, logger)
+	fsMetastore, err := metastore.NewFileSystemStorageWithPath(path, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
+	defer fsMetastore.Close()
 
 	if !util.FileExists(path) {
 		t.Fatalf("directory does not exist.\n")
@@ -56,22 +61,36 @@ func TestNewFileSystemStorageWithPath(t *testing.T) {
 }
 
 func TestFileSystemStoragePut(t *testing.T) {
+	// mockCtrl := gomock.NewController(t)
+	// defer mockCtrl.Finish()
+
+	// mockStorage := mock_metastore.NewMockStorage(mockCtrl)
+
+	// mockStorage.EXPECT().Put("/hello.txt", []byte("hello")).Return(nil)
+
+	// err := mockStorage.Put("/hello.txt", []byte("hello"))
+	// if err != nil {
+	// 	t.Fatalf("%v\n", err)
+	// }
+
 	tmpDir, err := ioutil.TempDir("", "phalanx-test")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
 	defer os.RemoveAll(tmpDir)
 
+	path := filepath.ToSlash(tmpDir)
+	uri := "file://" + path
+
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	path := filepath.ToSlash(tmpDir)
-
-	metastore, err := NewFileSystemStorageWithPath(path, logger)
+	fsMetastore, err := metastore.NewFileSystemStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
+	defer fsMetastore.Close()
 
-	if err := metastore.Put("/hello.txt", []byte("hello")); err != nil {
+	if err := fsMetastore.Put("/hello.txt", []byte("world")); err != nil {
 		t.Fatalf("%v\n", err)
 	}
 }
@@ -87,14 +106,15 @@ func TestFileSystemStorageGet(t *testing.T) {
 
 	path := filepath.ToSlash(tmpDir)
 
-	metastore, err := NewFileSystemStorageWithPath(path, logger)
+	fsMetastore, err := metastore.NewFileSystemStorageWithPath(path, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
+	defer fsMetastore.Close()
 
-	metastore.Put("/hello.txt", []byte("hello"))
+	fsMetastore.Put("/hello.txt", []byte("hello"))
 
-	content, err := metastore.Get("/hello.txt")
+	content, err := fsMetastore.Get("/hello.txt")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -115,14 +135,15 @@ func TestFileSystemStorageDelete(t *testing.T) {
 
 	path := filepath.ToSlash(tmpDir)
 
-	metastore, err := NewFileSystemStorageWithPath(path, logger)
+	fsMetastore, err := metastore.NewFileSystemStorageWithPath(path, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
+	defer fsMetastore.Close()
 
-	metastore.Put("/hello.txt", []byte("hello"))
+	fsMetastore.Put("/hello.txt", []byte("hello"))
 
-	err = metastore.Delete("/hello.txt")
+	err = fsMetastore.Delete("/hello.txt")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -139,12 +160,13 @@ func TestFileSystemStorageExists(t *testing.T) {
 
 	path := filepath.ToSlash(tmpDir)
 
-	metastore, err := NewFileSystemStorageWithPath(path, logger)
+	fsMetastore, err := metastore.NewFileSystemStorageWithPath(path, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
+	defer fsMetastore.Close()
 
-	if exists, err := metastore.Exists("/hello.txt"); err != nil {
+	if exists, err := fsMetastore.Exists("/hello.txt"); err != nil {
 		t.Fatalf("%v\n", err)
 	} else {
 		if exists != false {
@@ -152,9 +174,9 @@ func TestFileSystemStorageExists(t *testing.T) {
 		}
 	}
 
-	metastore.Put("/hello.txt", []byte("hello"))
+	fsMetastore.Put("/hello.txt", []byte("hello"))
 
-	if exists, err := metastore.Exists("/hello.txt"); err != nil {
+	if exists, err := fsMetastore.Exists("/hello.txt"); err != nil {
 		t.Fatalf("%v\n", err)
 	} else {
 		if !exists {
@@ -174,15 +196,16 @@ func TestFileSystemStorageList(t *testing.T) {
 
 	path := filepath.ToSlash(tmpDir)
 
-	metastore, err := NewFileSystemStorageWithPath(path, logger)
+	fsMetastore, err := metastore.NewFileSystemStorageWithPath(path, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
+	defer fsMetastore.Close()
 
-	metastore.Put("/hello.txt", []byte("hello"))
-	metastore.Put("/world.txt", []byte("world"))
+	fsMetastore.Put("/hello.txt", []byte("hello"))
+	fsMetastore.Put("/world.txt", []byte("world"))
 
-	paths, err := metastore.List("/")
+	paths, err := fsMetastore.List("/")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}

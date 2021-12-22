@@ -13,13 +13,33 @@ import (
 	"go.uber.org/zap"
 )
 
+func makeEtcdStorageEvent(event *clientv3.Event) (*StorageEvent, error) {
+	switch event.Type {
+	case mvccpb.PUT:
+		return &StorageEvent{
+			Type:  StorageEventTypePut,
+			Path:  string(event.Kv.Key),
+			Value: event.Kv.Value,
+		}, nil
+	case mvccpb.DELETE:
+		return &StorageEvent{
+			Type:  StorageEventTypeDelete,
+			Path:  string(event.Kv.Key),
+			Value: event.Kv.Value,
+		}, nil
+	default:
+		err := errors.ErrUnsupportedMetastoreEvent
+		return nil, err
+	}
+}
+
 type EtcdStorage struct {
 	client         *clientv3.Client
 	kv             clientv3.KV
 	root           string
 	logger         *zap.Logger
 	ctx            context.Context
-	stopWatching   chan bool
+	stopWatcher    chan bool
 	events         chan StorageEvent
 	requestTimeout time.Duration
 }
@@ -47,37 +67,52 @@ func NewEtcdStorageWithUri(uri string, logger *zap.Logger) (*EtcdStorage, error)
 
 	root := filepath.ToSlash(filepath.Join(string(filepath.Separator), u.Host, u.Path))
 
+	stopWatching := make(chan bool)
+	events := make(chan StorageEvent, 10)
+
+	// Start etcd watcher
+	go func(root string, client *clientv3.Client, stopWatcher chan bool, events chan StorageEvent, logger *zap.Logger) {
+		watchPath := root + "/"
+		opts := []clientv3.OpOption{
+			clientv3.WithFromKey(),
+		}
+		ctx := context.Background()
+
+		watchChan := client.Watch(ctx, watchPath, opts...)
+
+		for {
+			select {
+			case cancel := <-stopWatcher:
+				// check
+				if cancel {
+					return
+				}
+			case result := <-watchChan:
+				for _, event := range result.Events {
+					logger.Info("received etcd event", zap.Any("event", event))
+
+					metastoreEvent, err := makeEtcdStorageEvent(event)
+					if err != nil {
+						logger.Warn(err.Error(), zap.Any("event", event))
+						continue
+					}
+
+					events <- *metastoreEvent
+				}
+			}
+		}
+	}(root, client, stopWatching, events, metastorelogger)
+
 	return &EtcdStorage{
 		client:         client,
 		kv:             clientv3.NewKV(client),
 		root:           root,
 		logger:         metastorelogger,
 		ctx:            context.Background(),
-		stopWatching:   make(chan bool),
-		events:         make(chan StorageEvent, 10),
+		stopWatcher:    stopWatching,
+		events:         events,
 		requestTimeout: 3 * time.Second,
 	}, nil
-}
-
-func (m *EtcdStorage) makeStorageEvent(event *clientv3.Event) (*StorageEvent, error) {
-	switch event.Type {
-	case mvccpb.PUT:
-		return &StorageEvent{
-			Type:  StorageEventTypePut,
-			Path:  string(event.Kv.Key),
-			Value: event.Kv.Value,
-		}, nil
-	case mvccpb.DELETE:
-		return &StorageEvent{
-			Type:  StorageEventTypeDelete,
-			Path:  string(event.Kv.Key),
-			Value: event.Kv.Value,
-		}, nil
-	default:
-		err := errors.ErrUnsupportedMetastoreEvent
-		m.logger.Error(err.Error(), zap.String("event_type", mvccpb.Event_EventType_name[int32(event.Type)]))
-		return nil, err
-	}
 }
 
 // Replace the path separator with '/'.
@@ -100,9 +135,7 @@ func (m *EtcdStorage) Get(path string) ([]byte, error) {
 	if resp.Count > 0 {
 		return resp.Kvs[0].Value, nil
 	} else {
-		err := errors.ErrInvalidData
-		m.logger.Error(err.Error(), zap.String("key", fullPath))
-		return nil, err
+		return []byte{}, nil
 	}
 }
 
@@ -181,41 +214,8 @@ func (m *EtcdStorage) Exists(path string) (bool, error) {
 	}
 }
 
-func (m *EtcdStorage) Start() error {
-	go func() {
-		watchPath := m.root + "/"
-		opts := []clientv3.OpOption{
-			clientv3.WithFromKey(),
-		}
-		watchChan := m.client.Watch(m.ctx, watchPath, opts...)
-		for {
-			select {
-			case cancel := <-m.stopWatching:
-				// check
-				if cancel {
-					return
-				}
-			case result := <-watchChan:
-				for _, event := range result.Events {
-					m.logger.Info("received etcd event", zap.Any("event", event))
-
-					metastoreEvent, err := m.makeStorageEvent(event)
-					if err != nil {
-						m.logger.Warn(err.Error(), zap.Any("event", event))
-						continue
-					}
-
-					m.events <- *metastoreEvent
-				}
-			}
-		}
-	}()
-
-	return nil
-}
-
-func (m *EtcdStorage) Stop() error {
-	m.stopWatching <- true
+func (m *EtcdStorage) Close() error {
+	m.stopWatcher <- true
 
 	if err := m.client.Close(); err != nil {
 		m.logger.Error(err.Error())

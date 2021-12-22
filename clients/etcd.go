@@ -25,6 +25,10 @@ func NewEtcdClientWithUri(uri string) (*clientv3.Client, error) {
 		endpoints = strings.Split(str, ",")
 	}
 
+	return NewEtcdClient(endpoints)
+}
+
+func NewEtcdClient(endpoints []string) (*clientv3.Client, error) {
 	cfg := clientv3.Config{
 		Endpoints:   endpoints,
 		DialTimeout: 2 * time.Second,
