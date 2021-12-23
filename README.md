@@ -23,7 +23,7 @@ Building Phalanx as following:
 You can see the binary file when build successful like so:
 
 ```bash
-$ ls ./bin
+% ls ./bin
 phalanx
 ```
 
@@ -454,7 +454,7 @@ See https://hub.docker.com/r/mosuka/phalanx/tags/
 Running a Blast data node on Docker. Start Blast node like so:
 
 ```bash
-$ docker run --rm --name phalanx-node1 \
+% docker run --rm --name phalanx-node1 \
     -p 2000:2000 \
     -p 5000:5000 \
     -p 8000:8000 \
