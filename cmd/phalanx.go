@@ -144,7 +144,7 @@ var (
 			}
 
 			// Create index metastore
-			metastore, err := phalanxmetastore.NewMetastore(indexMetastoreUri, logger)
+			metastore, err := phalanxmetastore.NewMetastoreWithUri(indexMetastoreUri, logger)
 			if err != nil {
 				return err
 			}

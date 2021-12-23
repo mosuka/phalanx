@@ -126,10 +126,10 @@ func NewFileSystemStorageWithPath(path string, logger *zap.Logger) (*FileSystemS
 				}
 
 				logger.Info("received file system event", zap.Any("event", event))
-				if event.Op == fsnotify.Create || event.Op == fsnotify.Chmod || event.Op == fsnotify.Rename {
-					logger.Debug("event ignored", zap.Any("event", event))
-					continue
-				}
+				// if event.Op == fsnotify.Create || event.Op == fsnotify.Chmod || event.Op == fsnotify.Rename {
+				// 	logger.Debug("event ignored", zap.Any("event", event))
+				// 	continue
+				// }
 
 				metastoreEvent, err := makeFileSystemStorageEvent(&event, logger)
 				if err != nil {
