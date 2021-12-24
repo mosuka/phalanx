@@ -11,8 +11,6 @@ import (
 	"github.com/mosuka/phalanx/logging"
 	"github.com/mosuka/phalanx/metastore"
 	"github.com/mosuka/phalanx/util"
-	// "github.com/golang/mock/gomock"
-	// mock_metastore "github.com/mosuka/phalanx/mock/metastore"
 )
 
 func TestNewFileSystemStorageWithUri(t *testing.T) {
@@ -61,18 +59,6 @@ func TestNewFileSystemStorageWithPath(t *testing.T) {
 }
 
 func TestFileSystemStoragePut(t *testing.T) {
-	// mockCtrl := gomock.NewController(t)
-	// defer mockCtrl.Finish()
-
-	// mockStorage := mock_metastore.NewMockStorage(mockCtrl)
-
-	// mockStorage.EXPECT().Put("/hello.txt", []byte("hello")).Return(nil)
-
-	// err := mockStorage.Put("/hello.txt", []byte("hello"))
-	// if err != nil {
-	// 	t.Fatalf("%v\n", err)
-	// }
-
 	tmpDir, err := ioutil.TempDir("", "phalanx-test")
 	if err != nil {
 		t.Fatalf("%v\n", err)
@@ -214,5 +200,38 @@ func TestFileSystemStorageList(t *testing.T) {
 
 	if !reflect.DeepEqual(paths, []string{"/hello.txt", "/world.txt"}) {
 		t.Fatalf("unexpected %v\v", paths)
+	}
+}
+
+func TestFileSystemStorageWatch(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "phalanx-test")
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	logger := logging.NewLogger("INFO", "", 500, 3, 30, false)
+
+	path := filepath.ToSlash(tmpDir)
+
+	fsMetastore, err := metastore.NewFileSystemStorageWithPath(path, logger)
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+	defer fsMetastore.Close()
+
+	fsMetastore.Put("/test/hello.txt", []byte("hello"))
+	fsMetastore.Delete("/test/hello.txt")
+
+	event := <-fsMetastore.Events()
+	expected := metastore.StorageEventTypePut
+	if event.Type != expected {
+		t.Fatalf("%v\n", err)
+	}
+
+	event = <-fsMetastore.Events()
+	expected = metastore.StorageEventTypeDelete
+	if event.Type != expected {
+		t.Fatalf("%v\n", err)
 	}
 }

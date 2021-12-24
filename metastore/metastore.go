@@ -73,18 +73,20 @@ type Metastore struct {
 	mutex            sync.RWMutex
 }
 
-func NewMetastore(uri string, logger *zap.Logger) (*Metastore, error) {
-	metastoreLogger := logger.Named("metastore")
-
-	storage, err := NewStorageWithUri(uri, metastoreLogger)
+func NewMetastoreWithUri(uri string, logger *zap.Logger) (*Metastore, error) {
+	storage, err := NewStorageWithUri(uri, logger)
 	if err != nil {
-		metastoreLogger.Error(err.Error(), zap.String("uri", uri))
+		logger.Error(err.Error(), zap.String("uri", uri))
 		return nil, err
 	}
 
+	return NewMetastore(storage, logger)
+}
+
+func NewMetastore(storage Storage, logger *zap.Logger) (*Metastore, error) {
 	paths, err := storage.List(string(filepath.Separator))
 	if err != nil {
-		metastoreLogger.Error(err.Error(), zap.String("prefix", string(filepath.Separator)))
+		logger.Error(err.Error(), zap.String("prefix", string(filepath.Separator)))
 		return nil, err
 	}
 
@@ -95,13 +97,13 @@ func NewMetastore(uri string, logger *zap.Logger) (*Metastore, error) {
 		if fileName == "index.json" {
 			value, err := storage.Get(path)
 			if err != nil {
-				metastoreLogger.Error(err.Error(), zap.String("path", path))
+				logger.Error(err.Error(), zap.String("path", path))
 				return nil, err
 			}
 
 			indexMetadata, err := NewIndexMetadataWithBytes(value)
 			if err != nil {
-				metastoreLogger.Error(err.Error())
+				logger.Error(err.Error())
 				return nil, err
 			}
 
@@ -117,13 +119,13 @@ func NewMetastore(uri string, logger *zap.Logger) (*Metastore, error) {
 		if strings.HasPrefix(fileName, shardNamePrefix) && strings.HasSuffix(fileName, ".json") {
 			value, err := storage.Get(path)
 			if err != nil {
-				metastoreLogger.Error(err.Error(), zap.String("path", path))
+				logger.Error(err.Error(), zap.String("path", path))
 				return nil, err
 			}
 
 			shardMetadata, err := NewShardMetadataWithBytes(value)
 			if err != nil {
-				metastoreLogger.Error(err.Error())
+				logger.Error(err.Error())
 				return nil, err
 			}
 
@@ -134,14 +136,14 @@ func NewMetastore(uri string, logger *zap.Logger) (*Metastore, error) {
 			if indexMetadata, ok := indexMetadataMap[indexName]; ok {
 				indexMetadata.SetShardMetadata(shardName, shardMetadata)
 			} else {
-				metastoreLogger.Warn("index metadata do not found", zap.String("index_name", indexName))
+				logger.Warn("index metadata do not found", zap.String("index_name", indexName))
 			}
 
 			// Add new hash ring item for shard.
 			if hashRing, ok := ringMap[indexName]; ok {
 				hashRing.AddWithWeight(shardName, 1.0)
 			} else {
-				metastoreLogger.Warn("hash ring do not found", zap.String("index_name", indexName))
+				logger.Warn("hash ring do not found", zap.String("index_name", indexName))
 			}
 		}
 	}
@@ -152,7 +154,7 @@ func NewMetastore(uri string, logger *zap.Logger) (*Metastore, error) {
 		ringMap:          ringMap,
 		events:           make(chan MetastoreEvent, 10),
 		stopWatching:     make(chan bool),
-		logger:           metastoreLogger,
+		logger:           logger,
 	}, nil
 }
 
@@ -299,12 +301,12 @@ func (m *Metastore) Start() error {
 }
 
 func (m *Metastore) Stop() error {
+	m.stopWatching <- true
+
 	if err := m.storage.Close(); err != nil {
 		m.logger.Error(err.Error())
 		return err
 	}
-
-	m.stopWatching <- true
 
 	return nil
 }
@@ -377,8 +379,9 @@ func (m *Metastore) SetIndexMetadata(indexName string, indexMetadata *IndexMetad
 	}
 
 	indexMetadataPath := makeIndexMetadataPath(indexName)
+	m.logger.Info("put index metadata", zap.String("path", indexMetadataPath))
 	if err := m.storage.Put(indexMetadataPath, value); err != nil {
-		m.logger.Error(err.Error(), zap.String("index_metadata_path", indexMetadataPath))
+		m.logger.Error(err.Error(), zap.String("path", indexMetadataPath))
 		return err
 	}
 
@@ -400,8 +403,9 @@ func (m *Metastore) SetShardMetadata(indexName string, shardName string, shardMe
 	}
 
 	shardMetadataPath := makeShardMetadataPath(indexName, shardName)
+	m.logger.Info("put shard metadata", zap.String("path", shardMetadataPath))
 	if err := m.storage.Put(shardMetadataPath, value); err != nil {
-		m.logger.Error(err.Error(), zap.String("shard_metadata_path", shardMetadataPath))
+		m.logger.Error(err.Error(), zap.String("path", shardMetadataPath))
 		return err
 	}
 
@@ -431,7 +435,6 @@ func (m *Metastore) DeleteIndexMetadata(indexName string) error {
 		m.logger.Error(err.Error(), zap.String("index_name", indexName))
 		return err
 	}
-	fmt.Println(indexMetadata)
 
 	// Delete shard metadata file
 	for shardName := range indexMetadata.ShardMetadataMap {
