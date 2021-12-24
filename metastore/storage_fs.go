@@ -94,8 +94,24 @@ func NewFileSystemStorageWithPath(path string, logger *zap.Logger) (*FileSystemS
 				switch {
 				case event.Op&fsnotify.Create == fsnotify.Create:
 					storageEvent.Type = StorageEventTypePut
+					if util.IsFile(event.Name) {
+						content, err := ioutil.ReadFile(event.Name)
+						if err != nil {
+							logger.Error(err.Error(), zap.String("path", event.Name))
+							continue
+						}
+						storageEvent.Value = content
+					}
 				case event.Op&fsnotify.Write == fsnotify.Write:
 					storageEvent.Type = StorageEventTypePut
+					if util.IsFile(event.Name) {
+						content, err := ioutil.ReadFile(event.Name)
+						if err != nil {
+							logger.Error(err.Error(), zap.String("path", event.Name))
+							continue
+						}
+						storageEvent.Value = content
+					}
 				case event.Op&fsnotify.Remove == fsnotify.Remove:
 					storageEvent.Type = StorageEventTypeDelete
 				case event.Op&fsnotify.Rename == fsnotify.Rename:
@@ -183,16 +199,12 @@ func (m *FileSystemStorage) Put(path string, content []byte) error {
 
 	fullPath := filepath.Join(m.path, path)
 
+	m.logger.Info("put", zap.String("path", fullPath))
+
 	// Create directory.
 	dir := filepath.Dir(fullPath)
 	if err := os.MkdirAll(dir, 0700); err != nil {
 		m.logger.Error(err.Error(), zap.String("path", dir))
-		return err
-	}
-
-	// Write file.
-	if err := ioutil.WriteFile(fullPath, content, 0600); err != nil {
-		m.logger.Error(err.Error(), zap.String("path", fullPath))
 		return err
 	}
 
@@ -208,6 +220,12 @@ func (m *FileSystemStorage) Put(path string, content []byte) error {
 		m.watchSet[watchDir] = true
 	}
 
+	// Write file.
+	if err := ioutil.WriteFile(fullPath, content, 0600); err != nil {
+		m.logger.Error(err.Error(), zap.String("path", fullPath))
+		return err
+	}
+
 	return nil
 }
 
@@ -216,6 +234,8 @@ func (m *FileSystemStorage) Delete(path string) error {
 	defer m.mutex.Unlock()
 
 	fullPath := filepath.Join(m.path, path)
+
+	m.logger.Info("delete", zap.String("path", fullPath))
 
 	// Remove file.
 	if err := os.Remove(fullPath); err != nil {
