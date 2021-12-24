@@ -23,5 +23,4 @@ func TestNewMetastore(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
-
 }

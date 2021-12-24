@@ -163,8 +163,6 @@ func (s *IndexService) assignShardsToNode() error {
 
 	s.indexerAssignment = indexerAssignment
 	s.searcherAssignment = searcherAssignment
-	fmt.Println("indexerAssignment:", indexerAssignment)
-	fmt.Println("searcherAssignment:", searcherAssignment)
 
 	// Open the index writers for assigned shards.
 	for assignedIndexName, shardAssignment := range s.indexerAssignment {

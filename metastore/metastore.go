@@ -379,8 +379,9 @@ func (m *Metastore) SetIndexMetadata(indexName string, indexMetadata *IndexMetad
 	}
 
 	indexMetadataPath := makeIndexMetadataPath(indexName)
+	m.logger.Info("put index metadata", zap.String("path", indexMetadataPath))
 	if err := m.storage.Put(indexMetadataPath, value); err != nil {
-		m.logger.Error(err.Error(), zap.String("index_metadata_path", indexMetadataPath))
+		m.logger.Error(err.Error(), zap.String("path", indexMetadataPath))
 		return err
 	}
 
@@ -402,8 +403,9 @@ func (m *Metastore) SetShardMetadata(indexName string, shardName string, shardMe
 	}
 
 	shardMetadataPath := makeShardMetadataPath(indexName, shardName)
+	m.logger.Info("put shard metadata", zap.String("path", shardMetadataPath))
 	if err := m.storage.Put(shardMetadataPath, value); err != nil {
-		m.logger.Error(err.Error(), zap.String("shard_metadata_path", shardMetadataPath))
+		m.logger.Error(err.Error(), zap.String("path", shardMetadataPath))
 		return err
 	}
 
@@ -433,7 +435,6 @@ func (m *Metastore) DeleteIndexMetadata(indexName string) error {
 		m.logger.Error(err.Error(), zap.String("index_name", indexName))
 		return err
 	}
-	fmt.Println(indexMetadata)
 
 	// Delete shard metadata file
 	for shardName := range indexMetadata.ShardMetadataMap {
