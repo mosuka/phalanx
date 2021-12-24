@@ -430,6 +430,7 @@ func (m *Metastore) TouchShardMetadata(indexName string, shardName string) error
 }
 
 func (m *Metastore) DeleteIndexMetadata(indexName string) error {
+
 	indexMetadata, err := m.GetIndexMetadata(indexName)
 	if err != nil {
 		m.logger.Error(err.Error(), zap.String("index_name", indexName))
@@ -457,6 +458,10 @@ func (m *Metastore) DeleteIndexMetadata(indexName string) error {
 		m.logger.Error(err.Error(), zap.String("index_metadata_dir", indexMetadataDir))
 		return err
 	}
+
+	m.mutex.Lock()
+	delete(m.indexMetadataMap, indexName)
+	defer m.mutex.Unlock()
 
 	return nil
 }
