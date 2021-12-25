@@ -6,7 +6,6 @@ require (
 	github.com/blugelabs/bluge v0.1.8
 	github.com/blugelabs/bluge_segment_api v0.2.0
 	github.com/blugelabs/query_string v0.1.0
-	github.com/fsnotify/fsnotify v1.5.1
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-contrib/zap v0.0.1
 	github.com/gin-gonic/gin v1.7.4
@@ -40,6 +39,7 @@ require (
 
 require (
 	github.com/form3tech-oss/jwt-go v3.2.3+incompatible // indirect
+	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/gorilla/websocket v1.4.2 // indirect
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0 // indirect
