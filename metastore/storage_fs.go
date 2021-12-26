@@ -15,7 +15,6 @@ import (
 type FileSystemStorage struct {
 	path   string
 	logger *zap.Logger
-	events chan StorageEvent
 	mutex  sync.RWMutex
 }
 
@@ -50,7 +49,6 @@ func NewFileSystemStorageWithPath(path string, logger *zap.Logger) (*FileSystemS
 	fsStorage := &FileSystemStorage{
 		path:   path,
 		logger: fileLogger,
-		events: make(chan StorageEvent, 10),
 	}
 
 	return fsStorage, nil
@@ -120,14 +118,6 @@ func (m *FileSystemStorage) Put(path string, content []byte) error {
 		return err
 	}
 
-	// Send event to the event channel.
-	storageEvent := &StorageEvent{
-		Type:  StorageEventTypePut,
-		Path:  fullPath,
-		Value: content,
-	}
-	m.events <- *storageEvent
-
 	return nil
 }
 
@@ -145,14 +135,6 @@ func (m *FileSystemStorage) Delete(path string) error {
 		return err
 	}
 
-	// Send event to the event channel.
-	storageEvent := &StorageEvent{
-		Type:  StorageEventTypeDelete,
-		Path:  fullPath,
-		Value: []byte{},
-	}
-	m.events <- *storageEvent
-
 	return nil
 }
 
@@ -167,8 +149,4 @@ func (m *FileSystemStorage) Exists(path string) (bool, error) {
 
 func (m *FileSystemStorage) Close() error {
 	return nil
-}
-
-func (m *FileSystemStorage) Events() chan StorageEvent {
-	return m.events
 }

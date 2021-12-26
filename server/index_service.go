@@ -530,7 +530,7 @@ func (s *IndexService) CreateIndex(req *proto.CreateIndexRequest) (*proto.Create
 		}
 
 		// Set the shard metadata to the index metadata.
-		indexMetadata.SetShardMetadata(shardName, shardMetadata)
+		indexMetadata.ShardMetadataMap[shardName] = shardMetadata
 	}
 
 	if err := s.metastore.SetIndexMetadata(req.IndexName, indexMetadata); err != nil {
@@ -553,7 +553,7 @@ func (s *IndexService) DeleteIndex(req *proto.DeleteIndexRequest) (*proto.Delete
 		s.logger.Error(err.Error(), zap.String("index_name", req.IndexName))
 		return nil, err
 	}
-	for _, shardMetadata := range indexMetadata.AllShardMetadata() {
+	for _, shardMetadata := range indexMetadata.ShardMetadataMap {
 		// Check shard directory existence.
 		if exists, err := directory.DirectoryExists(shardMetadata.ShardUri); err != nil {
 			s.logger.Warn(err.Error(), zap.String("shard_uri", shardMetadata.ShardUri))
