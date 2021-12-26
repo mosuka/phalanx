@@ -148,9 +148,6 @@ var (
 			if err != nil {
 				return err
 			}
-			if err := metastore.Start(); err != nil {
-				return err
-			}
 
 			// Create index manager
 			indexService, err := server.NewIndexService(cluster, metastore, certificateFile, commonName, logger)
@@ -239,7 +236,7 @@ var (
 			}
 
 			// Stop index metastore.
-			if err := metastore.Stop(); err != nil {
+			if err := metastore.Close(); err != nil {
 				logger.Warn("failed to stop index metastore", zap.Error(err))
 			}
 

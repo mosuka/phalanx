@@ -8,7 +8,6 @@ import (
 	reflect "reflect"
 
 	gomock "github.com/golang/mock/gomock"
-	metastore "github.com/mosuka/phalanx/metastore"
 )
 
 // MockStorage is a mock of Storage interface.
@@ -60,20 +59,6 @@ func (m *MockStorage) Delete(key string) error {
 func (mr *MockStorageMockRecorder) Delete(key interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockStorage)(nil).Delete), key)
-}
-
-// Events mocks base method.
-func (m *MockStorage) Events() chan metastore.StorageEvent {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Events")
-	ret0, _ := ret[0].(chan metastore.StorageEvent)
-	return ret0
-}
-
-// Events indicates an expected call of Events.
-func (mr *MockStorageMockRecorder) Events() *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Events", reflect.TypeOf((*MockStorage)(nil).Events))
 }
 
 // Exists mocks base method.

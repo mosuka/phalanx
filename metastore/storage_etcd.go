@@ -18,7 +18,6 @@ type EtcdStorage struct {
 	root           string
 	logger         *zap.Logger
 	ctx            context.Context
-	events         chan StorageEvent
 	requestTimeout time.Duration
 }
 
@@ -51,7 +50,6 @@ func NewEtcdStorageWithUri(uri string, logger *zap.Logger) (*EtcdStorage, error)
 		root:           root,
 		logger:         metastorelogger,
 		ctx:            context.Background(),
-		events:         make(chan StorageEvent, 10),
 		requestTimeout: 3 * time.Second,
 	}, nil
 }
@@ -119,14 +117,6 @@ func (m *EtcdStorage) Put(path string, content []byte) error {
 		return err
 	}
 
-	// Send event to the event channel.
-	storageEvent := &StorageEvent{
-		Type:  StorageEventTypePut,
-		Path:  fullPath,
-		Value: content,
-	}
-	m.events <- *storageEvent
-
 	return nil
 }
 
@@ -140,14 +130,6 @@ func (m *EtcdStorage) Delete(path string) error {
 		m.logger.Error(err.Error(), zap.String("key", fullPath))
 		return err
 	}
-
-	// Send event to the event channel.
-	storageEvent := &StorageEvent{
-		Type:  StorageEventTypeDelete,
-		Path:  fullPath,
-		Value: []byte{},
-	}
-	m.events <- *storageEvent
 
 	return nil
 }
@@ -178,8 +160,4 @@ func (m *EtcdStorage) Close() error {
 	}
 
 	return nil
-}
-
-func (m *EtcdStorage) Events() chan StorageEvent {
-	return m.events
 }

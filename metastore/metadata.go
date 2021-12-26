@@ -2,7 +2,6 @@ package metastore
 
 import (
 	"encoding/json"
-	"sync"
 
 	"github.com/mosuka/phalanx/mapping"
 )
@@ -36,13 +35,6 @@ type IndexMetadata struct {
 	IndexMappingVersion int64                     `json:"index_mapping_version"`
 	DefaultSearchField  string                    `json:"default_search_field"`
 	ShardMetadataMap    map[string]*ShardMetadata `json:"-"`
-	mutex               sync.RWMutex
-}
-
-func NewIndexMetadata() *IndexMetadata {
-	return &IndexMetadata{
-		ShardMetadataMap: make(map[string]*ShardMetadata),
-	}
 }
 
 func NewIndexMetadataWithBytes(bytes []byte) (*IndexMetadata, error) {
@@ -58,48 +50,4 @@ func NewIndexMetadataWithBytes(bytes []byte) (*IndexMetadata, error) {
 
 func (m *IndexMetadata) Marshal() ([]byte, error) {
 	return json.Marshal(m)
-}
-
-func (m *IndexMetadata) NumShards() int {
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-
-	return len(m.ShardMetadataMap)
-}
-
-func (m *IndexMetadata) AllShardMetadata() map[string]*ShardMetadata {
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-
-	return m.ShardMetadataMap
-}
-
-func (m *IndexMetadata) ShardMetadataExists(shardName string) bool {
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-
-	_, ok := m.ShardMetadataMap[shardName]
-
-	return ok
-}
-
-func (m *IndexMetadata) GetShardMetadata(shardName string) (*ShardMetadata, error) {
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-
-	return m.ShardMetadataMap[shardName], nil
-}
-
-func (m *IndexMetadata) SetShardMetadata(shardName string, shardMetadata *ShardMetadata) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	m.ShardMetadataMap[shardName] = shardMetadata
-}
-
-func (m *IndexMetadata) DeleteShardMetadata(shardName string) {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	delete(m.ShardMetadataMap, shardName)
 }

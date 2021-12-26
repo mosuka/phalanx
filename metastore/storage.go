@@ -64,7 +64,6 @@ type Storage interface {
 	Delete(key string) error
 	Exists(key string) (bool, error)
 	Close() error
-	Events() chan StorageEvent
 }
 
 func NewStorageWithUri(uri string, logger *zap.Logger) (Storage, error) {
