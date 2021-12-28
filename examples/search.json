@@ -1,7 +1,7 @@
 {
     "index_name": "wikipedia_en",
     "query": "search",
-    "field": "description",
+    "field": "text",
     "boost": 1.0,
     "start": 0,
     "num": 10

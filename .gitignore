@@ -5,7 +5,7 @@
 
 .idea/
 
-bin/
+bin/phalanx
 dist/
 
 *.pem
