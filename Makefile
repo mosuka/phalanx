@@ -79,14 +79,10 @@ test: show-env
 clean: show-env
 	@echo ">> cleaning repository"
 	$(GO) clean
-	rm -rf ./bin
-	rm -rf ./data
-	rm -rf ./dist
 
 .PHONY: build
 build: show-env
 	@echo ">> building binaries"
-	mkdir -p bin
 	$(GO) build $(LDFLAGS) -o bin/phalanx
 
 .PHONY: tag

@@ -33,7 +33,7 @@ phalanx
 Phalanx can be started on a local machine using a local file system as a metastore. The following command starts with a configuration file:
 
 ```
-% phalanx --index-metastore-uri=file:///tmp/phalanx/metastore
+% ./phalanx --index-metastore-uri=file:///tmp/phalanx/metastore
 ```
 
 A metastore is a place where various information about an index is stored.  
@@ -43,7 +43,7 @@ A metastore is a place where various information about an index is stored.
 If you have started Phalanx to use the local file system, you can use this command to create an index.
 
 ```
-% curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example_en --data-binary @./examples/create_index_example_en_local.json
+% curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/wikipedia_en --data-binary @./examples/create_index_wikipedia_en_local.json
 ```
 
 In `create_index_example_en_local.json` used in the above command, the URI of the local filesystem is specified in `index_uri` and `lock_uri`.
@@ -128,6 +128,9 @@ This endpoint returns Phalanx metrics in Prometheus exposition format.
 phalanx_grpc_server_handled_total{grpc_code="Aborted",grpc_method="AddDocuments",grpc_service="index.Index",grpc_type="unary"} 0
 phalanx_grpc_server_handled_total{grpc_code="Aborted",grpc_method="Cluster",grpc_service="index.Index",grpc_type="unary"} 0
 ...
+phalanx_grpc_server_started_total{grpc_method="Metrics",grpc_service="index.Index",grpc_type="unary"} 1
+phalanx_grpc_server_started_total{grpc_method="ReadinessCheck",grpc_service="index.Index",grpc_type="unary"} 0
+phalanx_grpc_server_started_total{grpc_method="Search",grpc_service="index.Index",grpc_type="unary"} 0
 ```
 
 
@@ -263,160 +266,21 @@ This endpoint returns the latest cluster status.
 ## Add / Update documents
 
 ```
-% curl -XPUT -H 'Content-type: application/x-ndjson' http://localhost:8000/v1/indexes/example_en/documents --data-binary @./examples/add_documents.ndjson
+% ./bin/phalanx_docs.sh -i id ./testdata/enwiki-20211201-pages-articles-multistream-1000.jsonl | curl -XPUT -H 'Content-type: application/x-ndjson' http://localhost:8000/v1/indexes/wikipedia_en/documents --data-binary @-
 ```
 
 
 ## Delete documents
 
 ```
-% curl -XDELETE -H 'Content-type: text/plain' http://localhost:8000/v1/indexes/example_en/documents --data-binary @./examples/delete_ids.txt
+% jq -r '.id' ./testdata/enwiki-20211201-pages-articles-multistream-1000.jsonl | curl -XDELETE -H 'Content-type: text/plain' http://localhost:8000/v1/indexes/wikipedia_en/documents --data-binary @-
 ```
 
 
 ## Search
 
 ```
-% curl -XPOST -H 'Content-type: text/plain' http://localhost:8000/v1/indexes/example_en/_search --data-binary @./examples/search.json | jq .
-```
-
-```json
-{
-  "documents": [
-    {
-      "fields": {
-        "_timestamp": "2021-12-10T13:03:18Z",
-        "category": "/language/rust",
-        "description": "Sonic is a fast, lightweight and schema-less search backend.",
-        "name": "Sonic",
-        "popularity": 7895,
-        "publish_date": "2019-12-10T14:13:00Z",
-        "url": "https://github.com/valeriansaliou/sonic"
-      },
-      "id": "7",
-      "score": 0.37863163826497015
-    },
-    {
-      "fields": {
-        "_timestamp": "2021-12-10T13:03:18Z",
-        "category": "/language/python",
-        "description": "Whoosh is a fast, pure Python search engine library.",
-        "name": "Whoosh",
-        "popularity": 0,
-        "publish_date": "2019-10-07T20:30:26Z",
-        "url": "https://bitbucket.org/mchaput/whoosh/wiki/Home"
-      },
-      "id": "11",
-      "score": 0.3731338946601548
-    },
-    {
-      "fields": {
-        "_timestamp": "2021-12-10T13:03:18Z",
-        "category": "/language/java",
-        "description": "Apache Lucene is a high-performance, full-featured text search engine library written entirely in Java.",
-        "name": "Lucene",
-        "popularity": 3135,
-        "publish_date": "2019-12-19T05:08:00Z",
-        "url": "https://lucene.apache.org/"
-      },
-      "id": "9",
-      "score": 0.3710793549141038
-    },
-    {
-      "fields": {
-        "_timestamp": "2021-12-10T13:03:18Z",
-        "category": "/language/go",
-        "description": "Riot is Go Open Source, Distributed, Simple and efficient full text search engine.",
-        "name": "Riot",
-        "popularity": 4948,
-        "publish_date": "2019-12-15T22:12:00Z",
-        "url": "https://github.com/go-ego/riot"
-      },
-      "id": "5",
-      "score": 0.3611255085637879
-    },
-    {
-      "fields": {
-        "_timestamp": "2021-12-10T13:03:18Z",
-        "category": "/language/rust",
-        "description": "Tantivy is a full-text search engine library inspired by Apache Lucene and written in Rust.",
-        "name": "Tantivy",
-        "popularity": 3142,
-        "publish_date": "2019-12-19T01:07:00Z",
-        "url": "https://github.com/quickwit-inc/tantivy"
-      },
-      "id": "8",
-      "score": 0.34530979286026436
-    },
-    {
-      "fields": {
-        "_timestamp": "2021-12-10T13:03:18Z",
-        "category": "/language/java",
-        "description": "Elasticsearch is a distributed, open source search and analytics engine for all types of data, including textual, numerical, geospatial, structured, and unstructured.",
-        "name": "Elasticsearch",
-        "popularity": 46054,
-        "publish_date": "2019-12-18T23:19:00Z",
-        "url": "https://www.elastic.co/products/elasticsearch"
-      },
-      "id": "3",
-      "score": 0.13076457838717315
-    },
-    {
-      "fields": {
-        "_timestamp": "2021-12-10T13:03:18Z",
-        "category": "/language/go",
-        "description": "Phalanx is a cloud-native full-text search and indexing server written in Go built on top of Bluge that provides endpoints through gRPC and traditional RESTful API.",
-        "name": "Phalanx",
-        "popularity": 0,
-        "publish_date": "2021-12-10T12:00:00Z",
-        "url": "https://github.com/mosuka/phalanx"
-      },
-      "id": "1",
-      "score": 0.13076457838717315
-    },
-    {
-      "fields": {
-        "_timestamp": "2021-12-10T13:03:18Z",
-        "category": "/language/rust",
-        "description": "Toshi is meant to be a full-text search engine similar to Elasticsearch. Toshi strives to be to Elasticsearch what Tantivy is to Lucene.",
-        "name": "Toshi",
-        "popularity": 2448,
-        "publish_date": "2019-12-01T19:00:00Z",
-        "url": "https://github.com/toshi-search/Toshi"
-      },
-      "id": "6",
-      "score": 0.13076457838717315
-    },
-    {
-      "fields": {
-        "_timestamp": "2021-12-10T13:03:18Z",
-        "category": "/language/go",
-        "description": "Blast is a full text search and indexing server, written in Go, built on top of Bleve.",
-        "name": "Blast",
-        "popularity": 654,
-        "publish_date": "2019-10-18T10:50:00Z",
-        "url": "https://github.com/mosuka/blast"
-      },
-      "id": "4",
-      "score": 0.08523749485612774
-    },
-    {
-      "fields": {
-        "_timestamp": "2021-12-10T13:03:18Z",
-        "category": "/language/rust",
-        "description": "Quickwit is a distributed search engine built from the ground up to offer cost-efficiency and high reliability.",
-        "name": "quickwit",
-        "popularity": 0,
-        "publish_date": "2021-07-13T15:07:00Z",
-        "url": "https://github.com/quickwit-inc/quickwit"
-      },
-      "id": "13",
-      "score": 0.08063697039612684
-    }
-  ],
-  "hits": 10,
-  "index_name": "example_en"
-}
+% curl -XPOST -H 'Content-type: text/plain' http://localhost:8000/v1/indexes/wikipedia_en/_search --data-binary @./examples/search.json | jq .
 ```
 
 
@@ -425,7 +289,7 @@ This endpoint returns the latest cluster status.
 The following command will delete the index `example_en` with the specified name. This command will delete the index file on the object storage and the index metadata on the metastore.
 
 ```
-% curl -XDELETE http://localhost:8000/v1/indexes/example_en
+% curl -XDELETE http://localhost:8000/v1/indexes/wikipedia_en
 ```
 
 
