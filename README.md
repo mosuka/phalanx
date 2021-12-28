@@ -33,7 +33,7 @@ phalanx
 Phalanx can be started on a local machine using a local file system as a metastore. The following command starts with a configuration file:
 
 ```
-% ./phalanx --index-metastore-uri=file:///tmp/phalanx/metastore
+% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx/metastore
 ```
 
 A metastore is a place where various information about an index is stored.  

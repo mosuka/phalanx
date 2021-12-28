@@ -25,6 +25,12 @@
 				"char_filters": [
 					{
 						"name": "ascii_folding"
+					},
+					{
+						"name": "unicode_normalize",
+						"options": {
+							"form": "NFKC"
+						}
 					}
 				],
 				"tokenizer": {
@@ -58,6 +64,12 @@
 				"char_filters": [
 					{
 						"name": "ascii_folding"
+					},
+					{
+						"name": "unicode_normalize",
+						"options": {
+							"form": "NFKC"
+						}
 					}
 				],
 				"tokenizer": {
@@ -133,6 +145,12 @@
 				"char_filters": [
 					{
 						"name": "ascii_folding"
+					},
+					{
+						"name": "unicode_normalize",
+						"options": {
+							"form": "NFKC"
+						}
 					}
 				],
 				"tokenizer": {
