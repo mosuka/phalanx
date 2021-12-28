@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/url"
 	"reflect"
+	"runtime"
 	"sort"
 	"testing"
 
@@ -14,6 +15,12 @@ import (
 )
 
 func TestEtcdStorageWithUri(t *testing.T) {
+	// Skip this test if windows.
+	// See https://github.com/etcd-io/etcd/issues/10854
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	defer testutil.AfterTest(t)
 	integration.BeforeTest(t)
 	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1, UseTCP: true})
@@ -37,6 +44,12 @@ func TestEtcdStorageWithUri(t *testing.T) {
 }
 
 func TestEtcdStoragePut(t *testing.T) {
+	// Skip this test if windows.
+	// See https://github.com/etcd-io/etcd/issues/10854
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	defer testutil.AfterTest(t)
 	integration.BeforeTest(t)
 	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1, UseTCP: true})
@@ -65,6 +78,12 @@ func TestEtcdStoragePut(t *testing.T) {
 }
 
 func TestEtcdStorageGet(t *testing.T) {
+	// Skip this test if windows.
+	// See https://github.com/etcd-io/etcd/issues/10854
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	defer testutil.AfterTest(t)
 	integration.BeforeTest(t)
 	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1, UseTCP: true})
@@ -99,6 +118,12 @@ func TestEtcdStorageGet(t *testing.T) {
 }
 
 func TestEtcdStorageDelete(t *testing.T) {
+	// Skip this test if windows.
+	// See https://github.com/etcd-io/etcd/issues/10854
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	defer testutil.AfterTest(t)
 	integration.BeforeTest(t)
 	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1, UseTCP: true})
@@ -132,6 +157,12 @@ func TestEtcdStorageDelete(t *testing.T) {
 }
 
 func TestEtcdStorageExists(t *testing.T) {
+	// Skip this test if windows.
+	// See https://github.com/etcd-io/etcd/issues/10854
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	defer testutil.AfterTest(t)
 	integration.BeforeTest(t)
 	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1, UseTCP: true})
@@ -178,6 +209,12 @@ func TestEtcdStorageExists(t *testing.T) {
 }
 
 func TestEtcdStorageList(t *testing.T) {
+	// Skip this test if windows.
+	// See https://github.com/etcd-io/etcd/issues/10854
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	defer testutil.AfterTest(t)
 	integration.BeforeTest(t)
 	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1, UseTCP: true})

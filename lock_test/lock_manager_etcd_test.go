@@ -3,6 +3,7 @@ package lock_test
 import (
 	"fmt"
 	"net/url"
+	"runtime"
 	"testing"
 
 	"github.com/mosuka/phalanx/lock"
@@ -12,6 +13,12 @@ import (
 )
 
 func TestEtcdLockManagerWithUri(t *testing.T) {
+	// Skip this test if windows.
+	// See https://github.com/etcd-io/etcd/issues/10854
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	defer testutil.AfterTest(t)
 	integration.BeforeTest(t)
 	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1, UseTCP: true})
@@ -35,6 +42,12 @@ func TestEtcdLockManagerWithUri(t *testing.T) {
 }
 
 func TestEtcdLockManagerLock(t *testing.T) {
+	// Skip this test if windows.
+	// See https://github.com/etcd-io/etcd/issues/10854
+	if runtime.GOOS == "windows" {
+		return
+	}
+
 	defer testutil.AfterTest(t)
 	integration.BeforeTest(t)
 	cluster := integration.NewClusterV3(t, &integration.ClusterConfig{Size: 1, UseTCP: true})
