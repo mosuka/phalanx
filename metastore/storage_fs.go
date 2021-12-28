@@ -54,11 +54,17 @@ func NewFileSystemStorageWithPath(path string, logger *zap.Logger) (*FileSystemS
 	return fsStorage, nil
 }
 
+// Replace the path separator with '/'.
+func (m *FileSystemStorage) makePath(path string) string {
+	return filepath.FromSlash(filepath.Join(filepath.FromSlash(m.path), filepath.FromSlash(path)))
+}
+
 func (m *FileSystemStorage) Get(path string) ([]byte, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	fullPath := filepath.Join(m.path, path)
+	fullPath := m.makePath(path)
+
 	if !util.FileExists(fullPath) {
 		err := errors.ErrIndexMetadataDoesNotExist
 		m.logger.Error(err.Error(), zap.String("path", fullPath))
@@ -78,7 +84,8 @@ func (m *FileSystemStorage) List(prefix string) ([]string, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	prefixPath := filepath.Join(m.path, prefix)
+	prefixPath := m.makePath(prefix)
+
 	paths := make([]string, 0)
 	err := filepath.Walk(prefixPath, func(path string, Debug os.FileInfo, err error) error {
 		if path != prefixPath {
@@ -101,7 +108,7 @@ func (m *FileSystemStorage) Put(path string, content []byte) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	fullPath := filepath.Join(m.path, path)
+	fullPath := m.makePath(path)
 
 	m.logger.Info("put", zap.String("path", fullPath))
 
@@ -125,7 +132,7 @@ func (m *FileSystemStorage) Delete(path string) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	fullPath := filepath.Join(m.path, path)
+	fullPath := m.makePath(path)
 
 	m.logger.Info("delete", zap.String("path", fullPath))
 
@@ -142,7 +149,7 @@ func (m *FileSystemStorage) Exists(path string) (bool, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	fullPath := filepath.Join(m.path, path)
+	fullPath := m.makePath(path)
 
 	return util.FileExists(fullPath), nil
 }

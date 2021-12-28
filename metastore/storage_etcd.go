@@ -56,7 +56,7 @@ func NewEtcdStorageWithUri(uri string, logger *zap.Logger) (*EtcdStorage, error)
 
 // Replace the path separator with '/'.
 func (m *EtcdStorage) makePath(path string) string {
-	return filepath.ToSlash(filepath.Join(filepath.FromSlash(m.root), path))
+	return filepath.ToSlash(filepath.Join(filepath.ToSlash(m.root), filepath.ToSlash(path)))
 }
 
 func (m *EtcdStorage) Get(path string) ([]byte, error) {
