@@ -21,6 +21,17 @@
 				"aggregatable": true
 			},
 			"analyzer": {
+				"char_filters": [
+					{
+						"name": "ascii_folding"
+					},
+					{
+						"name": "unicode_normalize",
+						"options": {
+							"form": "NFKC"
+						}
+					}
+				],
 				"tokenizer": {
 					"name": "unicode"
 				},
@@ -52,6 +63,12 @@
 				"char_filters": [
 					{
 						"name": "ascii_folding"
+					},
+					{
+						"name": "unicode_normalize",
+						"options": {
+							"form": "NFKC"
+						}
 					}
 				],
 				"tokenizer": {
@@ -124,6 +141,17 @@
 				"aggregatable": true
 			},
 			"analyzer": {
+				"char_filters": [
+					{
+						"name": "ascii_folding"
+					},
+					{
+						"name": "unicode_normalize",
+						"options": {
+							"form": "NFKC"
+						}
+					}
+				],
 				"tokenizer": {
 					"name": "single_token"
 				},
