@@ -1,6 +1,7 @@
 package metastore_test
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -15,7 +16,7 @@ func TestNewMetastore(t *testing.T) {
 
 	mockStorage := mock_metastore.NewMockStorage(mockCtrl)
 
-	mockStorage.EXPECT().List("/").Return([]string{}, nil)
+	mockStorage.EXPECT().List(filepath.FromSlash("/")).Return([]string{}, nil)
 
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 

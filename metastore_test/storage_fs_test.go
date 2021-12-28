@@ -198,7 +198,7 @@ func TestFileSystemStorageList(t *testing.T) {
 
 	sort.Slice(paths, func(i, j int) bool { return paths[i] < paths[j] })
 
-	if !reflect.DeepEqual(paths, []string{"/hello.txt", "/world.txt"}) {
+	if !reflect.DeepEqual(paths, []string{filepath.FromSlash("/hello.txt"), filepath.FromSlash("/world.txt")}) {
 		t.Fatalf("unexpected %v\v", paths)
 	}
 }
