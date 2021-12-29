@@ -1,4 +1,4 @@
-name: Run periodic tests on multi environment
+name: Periodic integration tests
 
 on:
   workflow_dispatch:
