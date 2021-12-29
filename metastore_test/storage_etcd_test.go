@@ -23,7 +23,7 @@ func TestEtcdStorageWithUri(t *testing.T) {
 }
 
 func TestEtcdStoragePut(t *testing.T) {
-	uri := "etcd://phalanx-test/metastore?endpoints=localhost:2379"
+	uri := "etcd://phalanx-test/metastore/puttest?endpoints=localhost:2379"
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	etcdStorage, err := metastore.NewEtcdStorageWithUri(uri, logger)
@@ -39,7 +39,7 @@ func TestEtcdStoragePut(t *testing.T) {
 }
 
 func TestEtcdStorageGet(t *testing.T) {
-	uri := "etcd://phalanx-test/metastore?endpoints=localhost:2379"
+	uri := "etcd://phalanx-test/metastore/gettest?endpoints=localhost:2379"
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	etcdStorage, err := metastore.NewEtcdStorageWithUri(uri, logger)
@@ -61,7 +61,7 @@ func TestEtcdStorageGet(t *testing.T) {
 }
 
 func TestEtcdStorageDelete(t *testing.T) {
-	uri := "etcd://phalanx-test/metastore?endpoints=localhost:2379"
+	uri := "etcd://phalanx-test/metastore/deletetest?endpoints=localhost:2379"
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	etcdStorage, err := metastore.NewEtcdStorageWithUri(uri, logger)
@@ -82,7 +82,7 @@ func TestEtcdStorageDelete(t *testing.T) {
 }
 
 func TestEtcdStorageExists(t *testing.T) {
-	uri := "etcd://phalanx-test/metastore?endpoints=localhost:2379"
+	uri := "etcd://phalanx-test/metastore/existstest?endpoints=localhost:2379"
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	etcdStorage, err := metastore.NewEtcdStorageWithUri(uri, logger)
@@ -116,7 +116,7 @@ func TestEtcdStorageExists(t *testing.T) {
 }
 
 func TestEtcdStorageList(t *testing.T) {
-	uri := "etcd://phalanx-test/metastore?endpoints=localhost:2379"
+	uri := "etcd://phalanx-test/metastore/listtest?endpoints=localhost:2379"
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	etcdStorage, err := metastore.NewEtcdStorageWithUri(uri, logger)

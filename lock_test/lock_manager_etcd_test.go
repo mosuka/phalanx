@@ -10,7 +10,7 @@ import (
 )
 
 func TestEtcdLockManagerWithUri(t *testing.T) {
-	uri := "etcd://phalanx-test/locks/example_en/shard-05he7Bph?endpoints=localhost:2379"
+	uri := "etcd://phalanx-test/locks/example_en/shard-05he7Bph?endpoints=127.0.0.1:2379"
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	etcdLock, err := lock.NewEtcdLockManagerWithUri(uri, logger)
@@ -21,7 +21,7 @@ func TestEtcdLockManagerWithUri(t *testing.T) {
 }
 
 func TestEtcdLockManagerLock(t *testing.T) {
-	uri := "etcd://phalanx-test/locks/example_en/shard-05he7Bph?endpoints=localhost:2379"
+	uri := "etcd://phalanx-test/locks/example_en/shard-05he7Bph?endpoints=127.0.0.1:2379"
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	etcdLock, err := lock.NewEtcdLockManagerWithUri(uri, logger)
