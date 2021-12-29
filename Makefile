@@ -9,7 +9,7 @@ VERSION ?=
 BIN_EXT ?=
 DOCKER_REPOSITORY ?= mosuka
 
-PACKAGES = $(shell $(GO) list ./... | grep -v '/vendor/')
+PACKAGES = $(shell $(GO) list -tags="$(BUILD_TAGS)" ./... | grep -v '/vendor/')
 
 PROTOBUFS = $(shell find . -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq | grep -v /vendor/)
 TARGET_PACKAGES = $(shell find $(CURDIR) -name 'main.go' -print0 | xargs -0 -n1 dirname | sort | uniq | grep -v /vendor/)
@@ -83,7 +83,7 @@ clean: show-env
 .PHONY: build
 build: show-env
 	@echo ">> building binaries"
-	$(GO) build $(LDFLAGS) -o bin/phalanx
+	$(GO) build -tags="$(BUILD_TAGS)" $(LDFLAGS) -o bin/phalanx
 
 .PHONY: tag
 tag: show-env
