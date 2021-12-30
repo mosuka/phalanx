@@ -1,6 +1,6 @@
 //go:build integration
 
-package metastore_test
+package metastore_integration_test
 
 import (
 	"reflect"
