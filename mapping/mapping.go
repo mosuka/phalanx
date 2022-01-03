@@ -25,6 +25,7 @@ import (
 
 const IdFieldName = "_id"
 const TimestampFieldName = "_timestamp"
+const ScoreFieldName = "_score"
 const AllFieldName = "_all"
 
 const DefaultTextFieldOptions = bluge.Index | bluge.Store | bluge.SearchTermPositions | bluge.HighlightMatches
@@ -396,7 +397,7 @@ func (m IndexMapping) GetAnalyzer(fieldName string) (*analysis.Analyzer, error) 
 			charFilter := char.NewZeroWidthNonJoinerCharFilter()
 			charFilters = append(charFilters, charFilter)
 		default:
-			err := fmt.Errorf("unknown char filter: %s\n", charFilterSetting.Name)
+			err := fmt.Errorf("unknown char filter: %s", charFilterSetting.Name)
 			return nil, err
 		}
 	}
@@ -442,7 +443,7 @@ func (m IndexMapping) GetAnalyzer(fieldName string) (*analysis.Analyzer, error) 
 		case "symbol":
 			rune = unicode.IsSymbol
 		default:
-			err := fmt.Errorf("unknown rune option: %s\n", runeStr)
+			err := fmt.Errorf("unknown rune option: %s", runeStr)
 			return nil, err
 		}
 		fieldTokenizer = tokenizer.NewCharacterTokenizer(rune)
@@ -550,7 +551,7 @@ func (m IndexMapping) GetAnalyzer(fieldName string) (*analysis.Analyzer, error) 
 		for _, stopTag := range stopTags {
 			token, ok := stopTag.(string)
 			if !ok {
-				return nil, fmt.Errorf("stop_tag is unexpected: %v\n", stopTag)
+				return nil, fmt.Errorf("stop_tag is unexpected: %v", stopTag)
 			}
 			stopTagsTokenMap.AddToken(token)
 		}
@@ -567,7 +568,7 @@ func (m IndexMapping) GetAnalyzer(fieldName string) (*analysis.Analyzer, error) 
 		for _, baseForm := range baseForms {
 			token, ok := baseForm.(string)
 			if !ok {
-				return nil, fmt.Errorf("stop_tag is unexpected: %v\n", baseForm)
+				return nil, fmt.Errorf("stop_tag is unexpected: %v", baseForm)
 			}
 			baseFormsTokenMap.AddToken(token)
 		}
@@ -618,7 +619,7 @@ func (m IndexMapping) GetAnalyzer(fieldName string) (*analysis.Analyzer, error) 
 		// }
 		fieldTokenizer = tokenizer.NewWhitespaceTokenizer()
 	default:
-		err := fmt.Errorf("unknown tokenizer: %s\n", tokenizerSetting.Name)
+		err := fmt.Errorf("unknown tokenizer: %s", tokenizerSetting.Name)
 		return nil, err
 	}
 
@@ -1004,7 +1005,7 @@ func (m IndexMapping) GetAnalyzer(fieldName string) (*analysis.Analyzer, error) 
 			for _, stopToken := range stopTokens {
 				token, ok := stopToken.(string)
 				if !ok {
-					return nil, fmt.Errorf("base_form is unexpected: %v\n", stopToken)
+					return nil, fmt.Errorf("base_form is unexpected: %v", stopToken)
 				}
 				stopTokenMap.AddToken(token)
 			}
@@ -1067,7 +1068,7 @@ func (m IndexMapping) GetAnalyzer(fieldName string) (*analysis.Analyzer, error) 
 			tokenFilter := token.NewUniqueTermFilter()
 			tokenFilters = append(tokenFilters, tokenFilter)
 		default:
-			err := fmt.Errorf("unknown token filter: %s\n", tokenFilterSetting.Name)
+			err := fmt.Errorf("unknown token filter: %s", tokenFilterSetting.Name)
 			return nil, err
 		}
 	}
@@ -1079,7 +1080,12 @@ func (m IndexMapping) GetAnalyzer(fieldName string) (*analysis.Analyzer, error) 
 	}, nil
 }
 
-func (m IndexMapping) MakeDocument(id string, fieldMap map[string]interface{}) (*bluge.Document, error) {
+func (m IndexMapping) MakeDocument(fieldMap map[string]interface{}) (*bluge.Document, error) {
+	id, ok := fieldMap[IdFieldName].(string)
+	if !ok {
+		return nil, errors.ErrDocumentIdDoesNotExist
+	}
+
 	// Create document.
 	doc := bluge.NewDocument(id)
 

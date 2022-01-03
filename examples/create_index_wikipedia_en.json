@@ -173,5 +173,6 @@
 			}
 		}
 	},
-	"num_shards": 10
+	"num_shards": 10,
+	"default_search_field": "_all"
 }

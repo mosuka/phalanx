@@ -7,6 +7,7 @@ import (
 	"github.com/blugelabs/bluge"
 	"github.com/mosuka/phalanx/directory"
 	"github.com/mosuka/phalanx/errors"
+	"github.com/mosuka/phalanx/mapping"
 	"github.com/mosuka/phalanx/metastore"
 	"go.uber.org/zap"
 )
@@ -90,6 +91,8 @@ func (i *IndexWriters) open(indexName string, shardName string, indexMetadata *m
 	}
 	if indexMetadata.DefaultSearchField != "" {
 		config.DefaultSearchField = indexMetadata.DefaultSearchField
+	} else {
+		config.DefaultSearchField = mapping.AllFieldName
 	}
 	// config.DefaultSearchAnalyzer = req.DefaultSearchAnalyzer
 	// config.DefaultSimilarity = req.DefaultSearchSimilarity

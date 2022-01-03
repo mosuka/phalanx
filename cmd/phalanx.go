@@ -26,7 +26,7 @@ const defaultEnvFile string = ".env"
 const defaultConfigFile string = ""
 
 const defaultHost string = "0.0.0.0"
-const defaultBindPort int = 3000
+const defaultBindPort int = 2000
 const defaultGrpcPort int = 5000
 const defaultHttpPort int = 8000
 

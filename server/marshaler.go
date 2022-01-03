@@ -1,8 +1,7 @@
-package marshaler
+package server
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"io/ioutil"
 
@@ -46,8 +45,6 @@ func (m *Marshaler) Marshal(v interface{}) ([]byte, error) {
 			resp["state"] = "unknown"
 		}
 		return json.Marshal(resp)
-	case *proto.MetricsResponse:
-		return value.Metrics, nil
 	case *proto.ClusterResponse:
 		resp := make(map[string]interface{})
 		resp["nodes"] = make(map[string]interface{})
@@ -117,19 +114,15 @@ func (m *Marshaler) Marshal(v interface{}) ([]byte, error) {
 		resp := make(map[string]interface{})
 		resp["index_name"] = value.IndexName
 		resp["hits"] = value.Hits
-		docSlice := make([]map[string]interface{}, 0)
-		for _, doc := range value.Documents {
-			docMap := make(map[string]interface{})
-			docMap["id"] = doc.Id
-			docMap["score"] = doc.Score
-			var fields map[string]interface{}
-			if err := json.Unmarshal(doc.Fields, &fields); err != nil {
+		docs := make([]map[string]interface{}, 0)
+		for _, docBytes := range value.Documents {
+			var doc map[string]interface{}
+			if err := json.Unmarshal(docBytes, &doc); err != nil {
 				return nil, err
 			}
-			docMap["fields"] = fields
-			docSlice = append(docSlice, docMap)
+			docs = append(docs, doc)
 		}
-		resp["documents"] = docSlice
+		resp["documents"] = docs
 		return json.Marshal(resp)
 	default:
 		return json.Marshal(value)
@@ -165,29 +158,6 @@ func (m *Marshaler) Unmarshal(data []byte, v interface{}) error {
 		if indexName, ok := m["index_name"].(string); ok {
 			value.IndexName = indexName
 		}
-		return nil
-	case *proto.Document:
-		var m map[string]interface{}
-		if err := json.Unmarshal(data, &m); err != nil {
-			return err
-		}
-		id, ok := m["id"].(string)
-		if !ok {
-			err := fmt.Errorf("document id does not exit or is not a string")
-			return err
-		}
-		fields := m["fields"].(map[string]interface{})
-		if !ok {
-			err := fmt.Errorf("%s fields do not exist or is not a map[string]interface{}", id)
-			return err
-		}
-		fieldsBytes, err := json.Marshal(fields)
-		if err != nil {
-			err := fmt.Errorf("%s failed to marshal fields", id)
-			return err
-		}
-		value.Id = id
-		value.Fields = fieldsBytes
 		return nil
 	default:
 		return json.Unmarshal(data, value)

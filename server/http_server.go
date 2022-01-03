@@ -10,7 +10,6 @@ import (
 	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/mosuka/phalanx/clients"
-	"github.com/mosuka/phalanx/marshaler"
 	"go.uber.org/zap"
 )
 
@@ -45,7 +44,7 @@ func NewHTTPIndexServerWithTLS(httpAddress string, grpcAddress string, certifica
 		return nil, err
 	}
 
-	marshaler := marshaler.NewMarshaler()
+	marshaler := NewMarshaler()
 
 	ctx, cancel := context.WithCancel(context.Background())
 
@@ -68,9 +67,9 @@ func NewHTTPIndexServerWithTLS(httpAddress string, grpcAddress string, certifica
 	router.GET("/readyz", readyz)
 	router.GET("/metrics", metrics)
 	router.GET("/cluster", cluster)
-	router.PUT("/v1/indexes/:index_name", putIndex)
+	router.PUT("/v1/indexes/:index_name", createIndex)
 	router.DELETE("/v1/indexes/:index_name", deleteIndex)
-	router.PUT("/v1/indexes/:index_name/documents", putDocuments)
+	router.PUT("/v1/indexes/:index_name/documents", addDocuments)
 	router.DELETE("/v1/indexes/:index_name/documents", deleteDocuments)
 	router.POST("/v1/indexes/:index_name/_search", search)
 
