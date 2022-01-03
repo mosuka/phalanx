@@ -149,70 +149,70 @@ This endpoint returns the latest cluster status.
 ```json
 {
   "indexer_assignment": {
-    "example_en": {
-      "shard-Dyb1CXqJ": "node-YA0Zso3w",
-      "shard-OSFMC5gL": "node-YA0Zso3w",
-      "shard-TQu8fyHA": "node-YA0Zso3w",
-      "shard-UfilJ5I4": "node-YA0Zso3w",
-      "shard-WLJEezNT": "node-YA0Zso3w",
-      "shard-eH6LOGpc": "node-YA0Zso3w",
-      "shard-jWU7v3MR": "node-YA0Zso3w",
-      "shard-sng0xmKr": "node-YA0Zso3w",
-      "shard-tKKy1LdN": "node-YA0Zso3w",
-      "shard-vpI7ExL5": "node-YA0Zso3w"
+    "wikipedia_en": {
+      "shard-73iAEf8K": "node-duIMwfjn",
+      "shard-CRzZVi2b": "node-duIMwfjn",
+      "shard-Wh7VO5Lp": "node-duIMwfjn",
+      "shard-YazeIhze": "node-duIMwfjn",
+      "shard-cXyt4esz": "node-duIMwfjn",
+      "shard-hUM3HWQW": "node-duIMwfjn",
+      "shard-jH3sTtc7": "node-duIMwfjn",
+      "shard-viI2Dm3V": "node-duIMwfjn",
+      "shard-y1tMwCEP": "node-duIMwfjn",
+      "shard-y7VRCIlU": "node-duIMwfjn"
     }
   },
   "indexes": {
-    "example_en": {
-      "index_lock_uri": "etcd://phalanx/locks/example_en",
-      "index_uri": "minio://phalanx/indexes/example_en",
+    "wikipedia_en": {
+      "index_lock_uri": "",
+      "index_uri": "file:///tmp/phalanx/indexes/wikipedia_en",
       "shards": {
-        "shard-Dyb1CXqJ": {
-          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-Dyb1CXqJ",
-          "shard_uri": "minio://phalanx/indexes/example_en/shard-Dyb1CXqJ"
+        "shard-73iAEf8K": {
+          "shard_lock_uri": "",
+          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-73iAEf8K"
         },
-        "shard-OSFMC5gL": {
-          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-OSFMC5gL",
-          "shard_uri": "minio://phalanx/indexes/example_en/shard-OSFMC5gL"
+        "shard-CRzZVi2b": {
+          "shard_lock_uri": "",
+          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-CRzZVi2b"
         },
-        "shard-TQu8fyHA": {
-          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-TQu8fyHA",
-          "shard_uri": "minio://phalanx/indexes/example_en/shard-TQu8fyHA"
+        "shard-Wh7VO5Lp": {
+          "shard_lock_uri": "",
+          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-Wh7VO5Lp"
         },
-        "shard-UfilJ5I4": {
-          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-UfilJ5I4",
-          "shard_uri": "minio://phalanx/indexes/example_en/shard-UfilJ5I4"
+        "shard-YazeIhze": {
+          "shard_lock_uri": "",
+          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-YazeIhze"
         },
-        "shard-WLJEezNT": {
-          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-WLJEezNT",
-          "shard_uri": "minio://phalanx/indexes/example_en/shard-WLJEezNT"
+        "shard-cXyt4esz": {
+          "shard_lock_uri": "",
+          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-cXyt4esz"
         },
-        "shard-eH6LOGpc": {
-          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-eH6LOGpc",
-          "shard_uri": "minio://phalanx/indexes/example_en/shard-eH6LOGpc"
+        "shard-hUM3HWQW": {
+          "shard_lock_uri": "",
+          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-hUM3HWQW"
         },
-        "shard-jWU7v3MR": {
-          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-jWU7v3MR",
-          "shard_uri": "minio://phalanx/indexes/example_en/shard-jWU7v3MR"
+        "shard-jH3sTtc7": {
+          "shard_lock_uri": "",
+          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-jH3sTtc7"
         },
-        "shard-sng0xmKr": {
-          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-sng0xmKr",
-          "shard_uri": "minio://phalanx/indexes/example_en/shard-sng0xmKr"
+        "shard-viI2Dm3V": {
+          "shard_lock_uri": "",
+          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-viI2Dm3V"
         },
-        "shard-tKKy1LdN": {
-          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-tKKy1LdN",
-          "shard_uri": "minio://phalanx/indexes/example_en/shard-tKKy1LdN"
+        "shard-y1tMwCEP": {
+          "shard_lock_uri": "",
+          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-y1tMwCEP"
         },
-        "shard-vpI7ExL5": {
-          "shard_lock_uri": "etcd://phalanx/locks/example_en/shard-vpI7ExL5",
-          "shard_uri": "minio://phalanx/indexes/example_en/shard-vpI7ExL5"
+        "shard-y7VRCIlU": {
+          "shard_lock_uri": "",
+          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-y7VRCIlU"
         }
       }
     }
   },
   "nodes": {
-    "node-YA0Zso3w": {
-      "addr": "172.19.0.4",
+    "node-duIMwfjn": {
+      "addr": "0.0.0.0",
       "meta": {
         "grpc_port": 5000,
         "http_port": 8000,
@@ -221,41 +221,41 @@ This endpoint returns the latest cluster status.
           "searcher"
         ]
       },
-      "port": 2000,
+      "port": 3000,
       "state": "alive"
     }
   },
   "searcher_assignment": {
-    "example_en": {
-      "shard-Dyb1CXqJ": [
-        "node-YA0Zso3w"
+    "wikipedia_en": {
+      "shard-73iAEf8K": [
+        "node-duIMwfjn"
       ],
-      "shard-OSFMC5gL": [
-        "node-YA0Zso3w"
+      "shard-CRzZVi2b": [
+        "node-duIMwfjn"
       ],
-      "shard-TQu8fyHA": [
-        "node-YA0Zso3w"
+      "shard-Wh7VO5Lp": [
+        "node-duIMwfjn"
       ],
-      "shard-UfilJ5I4": [
-        "node-YA0Zso3w"
+      "shard-YazeIhze": [
+        "node-duIMwfjn"
       ],
-      "shard-WLJEezNT": [
-        "node-YA0Zso3w"
+      "shard-cXyt4esz": [
+        "node-duIMwfjn"
       ],
-      "shard-eH6LOGpc": [
-        "node-YA0Zso3w"
+      "shard-hUM3HWQW": [
+        "node-duIMwfjn"
       ],
-      "shard-jWU7v3MR": [
-        "node-YA0Zso3w"
+      "shard-jH3sTtc7": [
+        "node-duIMwfjn"
       ],
-      "shard-sng0xmKr": [
-        "node-YA0Zso3w"
+      "shard-viI2Dm3V": [
+        "node-duIMwfjn"
       ],
-      "shard-tKKy1LdN": [
-        "node-YA0Zso3w"
+      "shard-y1tMwCEP": [
+        "node-duIMwfjn"
       ],
-      "shard-vpI7ExL5": [
-        "node-YA0Zso3w"
+      "shard-y7VRCIlU": [
+        "node-duIMwfjn"
       ]
     }
   }
@@ -281,6 +281,85 @@ This endpoint returns the latest cluster status.
 
 ```
 % curl -XPOST -H 'Content-type: text/plain' http://localhost:8000/v1/indexes/wikipedia_en/_search --data-binary @./examples/search.json | jq .
+```
+
+```json
+{
+  "documents": [
+    {
+      "_id": "1316",
+      "_score": 4.09425168678948,
+      "_timestamp": "2022-01-02T12:46:13Z",
+      "id": 1316,
+      "title": "Annales school"
+    },
+    {
+      "_id": "1164",
+      "_score": 3.8142450139472404,
+      "_timestamp": "2022-01-02T12:46:13Z",
+      "id": 1164,
+      "title": "Artificial intelligence"
+    },
+    {
+      "_id": "1902",
+      "_score": 3.485971543579737,
+      "_timestamp": "2022-01-02T12:46:13Z",
+      "id": 1902,
+      "title": "American Airlines Flight 77"
+    },
+    {
+      "_id": "1397",
+      "_score": 3.4334036711733162,
+      "_timestamp": "2022-01-02T12:46:13Z",
+      "id": 1397,
+      "title": "AOL"
+    },
+    {
+      "_id": "775",
+      "_score": 3.410320998122167,
+      "_timestamp": "2022-01-02T12:46:13Z",
+      "id": 775,
+      "title": "Algorithm"
+    },
+    {
+      "_id": "1074",
+      "_score": 3.054015403581521,
+      "_timestamp": "2022-01-02T12:46:13Z",
+      "id": 1074,
+      "title": "Royal Antigua and Barbuda Defence Force"
+    },
+    {
+      "_id": "1361",
+      "_score": 2.8482692170070774,
+      "_timestamp": "2022-01-02T12:46:13Z",
+      "id": 1361,
+      "title": "Anagram"
+    },
+    {
+      "_id": "1805",
+      "_score": 2.783279368389514,
+      "_timestamp": "2022-01-02T12:46:13Z",
+      "id": 1805,
+      "title": "Antibiotic"
+    },
+    {
+      "_id": "1924",
+      "_score": 2.7722489839906252,
+      "_timestamp": "2022-01-02T12:46:13Z",
+      "id": 1924,
+      "title": "Argo Navis"
+    },
+    {
+      "_id": "1274",
+      "_score": 2.7359659717085734,
+      "_timestamp": "2022-01-02T12:46:13Z",
+      "id": 1274,
+      "title": "Geography of Antarctica"
+    }
+  ],
+  "hits": 59,
+  "index_name": "wikipedia_en"
+}
 ```
 
 

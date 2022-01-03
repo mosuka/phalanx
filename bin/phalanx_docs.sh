@@ -66,4 +66,4 @@ if  [ -p /dev/stdin ]; then
     cat -
 else
     cat ${FILENAME}
-fi |  jq -c -r '.'${ID_FIELD}' as $id | {"id": $id | tostring, "fields": .}'
+fi | jq -c -r '.'${ID_FIELD}' as $id | . |= .+ {"_id": $id | tostring}'

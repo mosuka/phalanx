@@ -1,8 +1,11 @@
 {
-    "index_name": "wikipedia_en",
     "query": "search",
-    "field": "text",
     "boost": 1.0,
     "start": 0,
-    "num": 10
+    "num": 5,
+    "sort_by": "-_score",
+    "fields": [
+        "id",
+        "title"
+    ]
 }
