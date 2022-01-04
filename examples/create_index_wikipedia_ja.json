@@ -34,7 +34,7 @@
 					}
 				],
 				"tokenizer": {
-					"name": "japanese",
+					"name": "kagome",
 					"options": {
 						"dictionary": "IPADIC",
 						"stop_tags": [
@@ -208,5 +208,15 @@
 		}
 	},
 	"num_shards": 10,
-	"default_search_field": "_all"
+	"default_search_field": "_all",
+	"default_analyzer": {
+		"tokenizer": {
+			"name": "unicode"
+		},
+		"token_filters": [
+			{
+				"name": "lower_case"
+			}
+		]
+	}
 }

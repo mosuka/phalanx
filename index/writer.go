@@ -5,6 +5,7 @@ import (
 	"sync"
 
 	"github.com/blugelabs/bluge"
+	phalanxanalyzer "github.com/mosuka/phalanx/analysis/analyzer"
 	"github.com/mosuka/phalanx/directory"
 	"github.com/mosuka/phalanx/errors"
 	"github.com/mosuka/phalanx/mapping"
@@ -94,7 +95,12 @@ func (i *IndexWriters) open(indexName string, shardName string, indexMetadata *m
 	} else {
 		config.DefaultSearchField = mapping.AllFieldName
 	}
-	// config.DefaultSearchAnalyzer = req.DefaultSearchAnalyzer
+
+	config.DefaultSearchAnalyzer, err = phalanxanalyzer.NewAnalyzer(indexMetadata.DefaultAnalyzer)
+	if err != nil {
+		i.logger.Warn(err.Error(), zap.Any("default_analyzer", indexMetadata.DefaultAnalyzer))
+	}
+
 	// config.DefaultSimilarity = req.DefaultSearchSimilarity
 
 	// Open index writer.

@@ -108,6 +108,7 @@ message CreateIndexRequest {
     bytes index_mapping = 4 [json_name="index_mapping"];
     uint32 num_shards = 5 [json_name="num_shards"];
     string default_search_field = 6 [json_name="default_search_field"];
+    bytes default_analyzer = 7 [json_name="default_analyzer"];
 }
 
 message CreateIndexResponse {

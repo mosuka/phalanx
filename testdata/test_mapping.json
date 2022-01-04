@@ -239,7 +239,7 @@
 			]
 		}
 	},
-	"japanese_tokenizer_test": {
+	"kagome_tokenizer_test": {
 		"type": "text",
 		"options": {
 			"index": true,
@@ -253,7 +253,7 @@
 			"char_filters": [
 			],
 			"tokenizer": {
-				"name": "japanese",
+				"name": "kagome",
 				"options": {
 					"dictionary": "IPADIC",
 					"stop_tags": [
