@@ -210,11 +210,10 @@ func createIndex(c *gin.Context) {
 	req.IndexUri = indexUri
 
 	lockUri, ok := reqMap["lock_uri"].(string)
-	if !ok {
+	if ok {
 		// lock_uri is optional
-		req.LockUri = ""
+		req.LockUri = lockUri
 	}
-	req.LockUri = lockUri
 
 	indexMapping, ok := reqMap["index_mapping"].(map[string]interface{})
 	if ok {
@@ -234,6 +233,24 @@ func createIndex(c *gin.Context) {
 		numShards = 1
 	}
 	req.NumShards = uint32(numShards)
+
+	defaultSearchField, ok := reqMap["default_search_field"].(string)
+	if ok {
+		// default_search_field is optional
+		req.DefaultSearchField = defaultSearchField
+	}
+
+	defaultAnalyzer, ok := reqMap["default_analyzer"].(map[string]interface{})
+	if ok {
+		// default_analyzer is optional
+		defaultAnalyzerBytes, err := json.Marshal(defaultAnalyzer)
+		if err != nil {
+			resp := gin.H{"error": "index_uri is not specified or is not a string"}
+			c.JSON(http.StatusInternalServerError, resp)
+			return
+		}
+		req.DefaultAnalyzer = defaultAnalyzerBytes
+	}
 
 	clientCtx, clientCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer clientCancel()

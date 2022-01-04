@@ -13,6 +13,7 @@ import (
 	"github.com/blugelabs/bluge/numeric/geo"
 	querystr "github.com/blugelabs/query_string"
 	"github.com/jinzhu/copier"
+	"github.com/mosuka/phalanx/analysis/analyzer"
 	phalanxclients "github.com/mosuka/phalanx/clients"
 	phalanxcluster "github.com/mosuka/phalanx/cluster"
 	"github.com/mosuka/phalanx/directory"
@@ -493,8 +494,16 @@ func (s *IndexService) CreateIndex(req *proto.CreateIndexRequest) (*proto.Create
 	// Load the index mapping.
 	var indexMapping mapping.IndexMapping
 	if len(req.IndexMapping) > 0 {
-		// Unmarshal from the index mapping in a byte array to a map object.
 		if err := json.Unmarshal(req.IndexMapping, &indexMapping); err != nil {
+			s.logger.Error(err.Error())
+			return nil, err
+		}
+	}
+
+	// Load the defalt analyzer.
+	var defaultAnalyzer analyzer.AnalyzerSetting
+	if len(req.DefaultAnalyzer) > 0 {
+		if err := json.Unmarshal(req.DefaultAnalyzer, &defaultAnalyzer); err != nil {
 			s.logger.Error(err.Error())
 			return nil, err
 		}
@@ -508,6 +517,7 @@ func (s *IndexService) CreateIndex(req *proto.CreateIndexRequest) (*proto.Create
 		IndexMapping:        indexMapping,
 		IndexMappingVersion: time.Now().UTC().UnixNano(),
 		DefaultSearchField:  req.DefaultSearchField,
+		DefaultAnalyzer:     defaultAnalyzer,
 		ShardMetadataMap:    make(map[string]*phalanxmetastore.ShardMetadata),
 	}
 
@@ -1314,8 +1324,6 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 	close(responsesChan)
 
 	// Merge responses.
-
-	fmt.Println("merge")
 	resp := &proto.SearchResponse{}
 	resp.Documents = make([][]byte, 0)
 	resp.IndexName = req.IndexName
@@ -1370,17 +1378,10 @@ func mergeDocs(sortBy string, docs1 [][]byte, docs2 [][]byte) [][]byte {
 		doc2 := make(map[string]interface{})
 		json.Unmarshal(docs2[0], &doc2)
 
-		// sortValue1 := doc1["_score"].(float64)
-		// sortValue2 := doc2["_score"].(float64)
 		sortValue1 := doc1[field].(float64)
 		sortValue2 := doc2[field].(float64)
 
 		var doc []byte
-		// if sortValue1 > sortValue2 {
-		// 	doc, docs1 = docs1[0], docs1[1:]
-		// } else {
-		// 	doc, docs2 = docs2[0], docs2[1:]
-		// }
 		if order == sortOrderDesc {
 			fmt.Println("desc")
 			if sortValue1 > sortValue2 {

@@ -107,7 +107,7 @@ func TestAsciiFoldingCharFilter(t *testing.T) {
 	}
 	actual := a.CharFilters[0].Filter([]byte(`Ápple Àpple Äpple Âpple Ãpple Åpple`))
 	expected := []byte(`Apple Apple Apple Apple Apple Apple`)
-	if bytes.Compare(actual, expected) != 0 {
+	if !bytes.Equal(actual, expected) {
 		t.Fatalf("`%s` is not `%s`\n", string(actual), string(expected))
 	}
 }
@@ -125,7 +125,7 @@ func TestHtmlCharFilter(t *testing.T) {
 	}
 	actual := a.CharFilters[0].Filter([]byte(`<html><head><title>title</title></head><body>Body</body></html>`))
 	expected := []byte(`   title   Body  `)
-	if bytes.Compare(actual, expected) != 0 {
+	if !bytes.Equal(actual, expected) {
 		t.Fatalf("`%s` is not `%s`\n", string(actual), string(expected))
 	}
 }
@@ -143,7 +143,7 @@ func TestRegexpCharFilter(t *testing.T) {
 	}
 	actual := a.CharFilters[0].Filter([]byte(`I use Bleve.`))
 	expected := []byte(`I use Bluge.`)
-	if bytes.Compare(actual, expected) != 0 {
+	if !bytes.Equal(actual, expected) {
 		t.Fatalf("`%s` is not `%s`\n", string(actual), string(expected))
 	}
 }
@@ -161,7 +161,7 @@ func TestUnicodeNormalizeCharFilter(t *testing.T) {
 	}
 	actual := a.CharFilters[0].Filter([]byte(`ﾊﾟﾅｿﾆｯｸ`))
 	expected := []byte(`パナソニック`)
-	if bytes.Compare(actual, expected) != 0 {
+	if !bytes.Equal(actual, expected) {
 		t.Fatalf("`%s` is not `%s`\n", string(actual), string(expected))
 	}
 }
@@ -287,7 +287,7 @@ func TestJapaneseTokenizer(t *testing.T) {
 
 	mapping, _ := NewMapping(b)
 
-	a, err := mapping.GetAnalyzer("japanese_tokenizer_test")
+	a, err := mapping.GetAnalyzer("kagome_tokenizer_test")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}

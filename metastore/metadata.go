@@ -3,6 +3,7 @@ package metastore
 import (
 	"encoding/json"
 
+	"github.com/mosuka/phalanx/analysis/analyzer"
 	"github.com/mosuka/phalanx/mapping"
 )
 
@@ -34,6 +35,7 @@ type IndexMetadata struct {
 	IndexMapping        mapping.IndexMapping      `json:"index_mapping"`
 	IndexMappingVersion int64                     `json:"index_mapping_version"`
 	DefaultSearchField  string                    `json:"default_search_field"`
+	DefaultAnalyzer     analyzer.AnalyzerSetting  `json:"default_analyzer"`
 	ShardMetadataMap    map[string]*ShardMetadata `json:"-"`
 }
 
