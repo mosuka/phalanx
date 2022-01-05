@@ -1400,7 +1400,9 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 
 		if sizeValue, ok := opts["size"]; ok {
 			if size, ok := sizeValue.(float64); ok {
-				buckets = buckets[:int(size)]
+				if len(buckets) > int(size) {
+					buckets = buckets[:int(size)]
+				}
 			}
 		}
 
