@@ -3,7 +3,7 @@ module github.com/mosuka/phalanx
 go 1.17
 
 require (
-	github.com/blugelabs/bluge v0.1.8
+	github.com/blugelabs/bluge v0.1.9
 	github.com/blugelabs/bluge_segment_api v0.2.0
 	github.com/blugelabs/query_string v0.3.0
 	github.com/gin-contrib/cors v1.3.1

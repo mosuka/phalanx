@@ -616,27 +616,16 @@ func (s *IndexService) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddD
 	// Assign documents.
 	addDocumentsRequests := make(map[string]*proto.AddDocumentsRequest)
 	if isRootRequest {
-		for _, docBytes := range req.Documents {
-			var doc map[string]interface{}
-			if err := json.Unmarshal(docBytes, &doc); err != nil {
-				return nil, err
-			}
-
-			// Get document ID
-			docID, ok := doc[mapping.IdFieldName].(string)
-			if !ok {
-				return nil, errors.ErrDocumentIdDoesNotExist
-			}
-
-			shardName := s.metastore.GetResponsibleShard(req.IndexName, docID)
+		for _, doc := range req.Documents {
+			shardName := s.metastore.GetResponsibleShard(req.IndexName, doc.Id)
 			if _, ok := addDocumentsRequests[shardName]; !ok {
 				addDocumentsRequests[shardName] = &proto.AddDocumentsRequest{
 					IndexName: req.IndexName,
 					ShardName: shardName,
-					Documents: make([][]byte, 0),
+					Documents: make([]*proto.Document, 0),
 				}
 			}
-			addDocumentsRequests[shardName].Documents = append(addDocumentsRequests[shardName].Documents, docBytes)
+			addDocumentsRequests[shardName].Documents = append(addDocumentsRequests[shardName].Documents, doc)
 		}
 	} else {
 		addDocumentsRequests[req.ShardName] = req
@@ -675,15 +664,7 @@ func (s *IndexService) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddD
 
 						// Make batch.
 						batch := bluge.NewBatch()
-						for _, docBytes := range request.Documents {
-							// Convert JSON string to map.
-							var doc map[string]interface{}
-							if err := json.Unmarshal(docBytes, &doc); err != nil {
-								err := errors.ErrInvalidDocument
-								s.logger.Error(err.Error())
-								return err
-							}
-
+						for _, doc := range request.Documents {
 							// Get mapping.
 							indexMapping, err := s.metastore.GetMapping(request.IndexName)
 							if err != nil {
@@ -1033,7 +1014,7 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 				if nodeName == s.cluster.LocalNodeName() {
 					resp := &proto.SearchResponse{
 						IndexName: request.IndexName,
-						Documents: make([][]byte, 0),
+						Documents: make([]*proto.Document, 0),
 						Hits:      0,
 					}
 
@@ -1170,19 +1151,19 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 
 					// Make docs
 					for err == nil && docMatch != nil {
-						// Load stored doc.
-						// TODO: Filter only the doc that are needed.
-						doc := make(map[string]interface{})
+						// Load stored fields.
+						doc := &proto.Document{}
+						fields := make(map[string]interface{})
 						err := docMatch.VisitStoredFields(func(field string, value []byte) bool {
 							switch field {
 							case mapping.IdFieldName:
-								doc[field] = string(value)
+								doc.Id = string(value)
 							case mapping.TimestampFieldName:
 								timestamp, err := bluge.DecodeDateTime(value)
 								if err != nil {
 									s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.Any("field", field))
 								}
-								doc[field] = timestamp.Format(time.RFC3339)
+								doc.Timestamp = timestamp.UTC().UnixNano()
 							default:
 								exists := false
 								for _, fieldName := range request.Fields {
@@ -1200,25 +1181,25 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 									}
 									switch fieldType {
 									case mapping.TextField:
-										doc[field] = string(value)
+										fields[field] = string(value)
 									case mapping.NumericField:
 										f64Value, err := bluge.DecodeNumericFloat64(value)
 										if err != nil {
 											s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.Any("field", field))
 										}
-										doc[field] = f64Value
+										fields[field] = f64Value
 									case mapping.DatetimeField:
 										timestamp, err := bluge.DecodeDateTime(value)
 										if err != nil {
 											s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.Any("field", field))
 										}
-										doc[field] = timestamp.Format(time.RFC3339)
+										fields[field] = timestamp.Format(time.RFC3339)
 									case mapping.GeoPointField:
 										lat, lon, err := bluge.DecodeGeoLonLat(value)
 										if err != nil {
 											s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.Any("field", field))
 										}
-										doc[field] = geo.Point{Lat: lat, Lon: lon}
+										fields[field] = geo.Point{Lat: lat, Lon: lon}
 									}
 								}
 							}
@@ -1237,12 +1218,12 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 						}
 
 						// Set doc score.
-						doc[mapping.ScoreFieldName] = docMatch.Score
+						doc.Score = docMatch.Score
 
-						// Serialize doc.
-						docBytes, err := json.Marshal(doc)
+						// Serialize fields.
+						fieldsBytes, err := json.Marshal(fields)
 						if err != nil {
-							s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.Any("doc", doc))
+							s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.Any("doc", fields))
 							responsesChan <- searchResponse{
 								nodeName:   nodeName,
 								indexName:  request.IndexName,
@@ -1252,8 +1233,9 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 							}
 							return err
 						}
+						doc.Fields = fieldsBytes
 
-						resp.Documents = append(resp.Documents, docBytes)
+						resp.Documents = append(resp.Documents, doc)
 
 						docMatch, err = docMatchIter.Next()
 						if err != nil {
@@ -1368,7 +1350,7 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 
 	// Merge responses.
 	resp := &proto.SearchResponse{}
-	resp.Documents = make([][]byte, 0)
+	resp.Documents = make([]*proto.Document, 0)
 	resp.IndexName = req.IndexName
 	resp.Aggregations = make(map[string]*proto.AggregationResponse)
 	for response := range responsesChan {
@@ -1418,7 +1400,9 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 
 		if sizeValue, ok := opts["size"]; ok {
 			if size, ok := sizeValue.(float64); ok {
-				buckets = buckets[:int(size)]
+				if len(buckets) > int(size) {
+					buckets = buckets[:int(size)]
+				}
 			}
 		}
 
@@ -1440,7 +1424,7 @@ const (
 	sortOrderDesc
 )
 
-func mergeDocs(sortBy string, docs1 [][]byte, docs2 [][]byte) [][]byte {
+func mergeDocs(sortBy string, docs1 []*proto.Document, docs2 []*proto.Document) []*proto.Document {
 	if len(docs1) == 0 {
 		return docs2
 	}
@@ -1456,20 +1440,35 @@ func mergeDocs(sortBy string, docs1 [][]byte, docs2 [][]byte) [][]byte {
 		field = sortBy[1:]
 	}
 
-	retDocs := make([][]byte, 0)
+	retDocs := make([]*proto.Document, 0)
+
+	var sortValue1 float64
+	var sortValue2 float64
+
+	if field == mapping.ScoreFieldName {
+		sortValue1 = docs1[0].Score
+		sortValue2 = docs2[0].Score
+	} else {
+		fields1 := make(map[string]interface{})
+		json.Unmarshal(docs1[0].Fields, &fields1)
+
+		fields2 := make(map[string]interface{})
+		json.Unmarshal(docs2[0].Fields, &fields2)
+
+		var ok bool
+		sortValue1, ok = fields1[field].(float64)
+		if !ok {
+			sortValue1 = 0.0
+		}
+		sortValue2, ok = fields2[field].(float64)
+		if !ok {
+			sortValue2 = 0.0
+		}
+	}
 
 	for len(docs1) > 0 && len(docs2) > 0 {
 		// Add document with high scores to the list.
-		doc1 := make(map[string]interface{})
-		json.Unmarshal(docs1[0], &doc1)
-
-		doc2 := make(map[string]interface{})
-		json.Unmarshal(docs2[0], &doc2)
-
-		sortValue1 := doc1[field].(float64)
-		sortValue2 := doc2[field].(float64)
-
-		var doc []byte
+		var doc *proto.Document
 		if order == sortOrderDesc {
 			if sortValue1 > sortValue2 {
 				doc, docs1 = docs1[0], docs1[1:]

@@ -46,9 +46,9 @@ If you have started Phalanx to use the local file system, you can use this comma
 % curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/wikipedia_en --data-binary @./examples/create_index_wikipedia_en_local.json
 ```
 
-In `create_index_example_en_local.json` used in the above command, the URI of the local filesystem is specified in `index_uri` and `lock_uri`.
+In `create_index_wikipedia_en_local.json` used in the above command, the URI of the local filesystem is specified in `index_uri`.
 `index_mapping` defines what kind of fields the index has. `num_shards` specifies how many shards the index will be divided into.  
-Both of the above commands will create an index named `example_en`.
+Both of the above commands will create an index named `wikipedia_en`.
 
 
 ## Start Phalanx on local machine with MinIO and etcd
@@ -73,10 +73,10 @@ http://localhost:8080/etcdkeeper/
 If you have started Phalanx to use MinIO and etcd, use this command to create the index.
 
 ```
-% curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example_en --data-binary @./examples/create_index_example_en.json
+% curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/wikipedia_en --data-binary @./examples/create_index_wikipedia_en.json
 ```
 
-In the `create_index_example_en.json` used in the above command, `index_uri` is a MinIO URI and `lock_uri` is an etcd URI. This means that indexes will be created in MinIO, and locks for those indexes will be created in etcd. Phalanx uses etcd as a distributed lock manager.
+In the `create_index_wikipedia_en.json` used in the above command, `index_uri` is a MinIO URI and `lock_uri` is an etcd URI. This means that indexes will be created in MinIO, and locks for those indexes will be created in etcd. Phalanx uses etcd as a distributed lock manager.
 
 
 ## Health check
@@ -301,39 +301,49 @@ This endpoint returns the latest cluster status.
   },
   "documents": [
     {
-      "_id": "1316",
-      "_score": 4.16359472994851,
-      "_timestamp": "2022-01-05T02:59:20Z",
-      "id": 1316,
-      "title": "Annales school"
+      "fields": {
+        "id": 1316,
+        "title": "Annales school"
+      },
+      "id": "1316",
+      "score": 4.202233015754667,
+      "timestamp": 1641387370964624100
     },
     {
-      "_id": "1164",
-      "_score": 3.926891595709891,
-      "_timestamp": "2022-01-05T02:59:20Z",
-      "id": 1164,
-      "title": "Artificial intelligence"
+      "fields": {
+        "id": 1164,
+        "title": "Artificial intelligence"
+      },
+      "id": "1164",
+      "score": 3.684979417225831,
+      "timestamp": 1641387370944337200
     },
     {
-      "_id": "1397",
-      "_score": 3.518318285824467,
-      "_timestamp": "2022-01-05T02:59:20Z",
-      "id": 1397,
-      "title": "AOL"
+      "fields": {
+        "id": 1397,
+        "title": "AOL"
+      },
+      "id": "1397",
+      "score": 3.616048285209088,
+      "timestamp": 1641387370954038800
     },
     {
-      "_id": "775",
-      "_score": 3.4539237042117312,
-      "_timestamp": "2022-01-05T02:59:20Z",
-      "id": 775,
-      "title": "Algorithm"
+      "fields": {
+        "id": 775,
+        "title": "Algorithm"
+      },
+      "id": "775",
+      "score": 3.429643674018485,
+      "timestamp": 1641387370942956300
     },
     {
-      "_id": "1902",
-      "_score": 3.340805165149435,
-      "_timestamp": "2022-01-05T02:59:20Z",
-      "id": 1902,
-      "title": "American Airlines Flight 77"
+      "fields": {
+        "id": 1361,
+        "title": "Anagram"
+      },
+      "id": "1361",
+      "score": 3.097368070553906,
+      "timestamp": 1641387370953257000
     }
   ],
   "hits": 59,
@@ -344,7 +354,7 @@ This endpoint returns the latest cluster status.
 
 ## Delete index
 
-The following command will delete the index `example_en` with the specified name. This command will delete the index file on the object storage and the index metadata on the metastore.
+The following command will delete the index `wikipedia_en` with the specified name. This command will delete the index file on the object storage and the index metadata on the metastore.
 
 ```
 % curl -XDELETE http://localhost:8000/v1/indexes/wikipedia_en
