@@ -22,6 +22,7 @@ import (
 	"github.com/mosuka/phalanx/mapping"
 	phalanxmetastore "github.com/mosuka/phalanx/metastore"
 	"github.com/mosuka/phalanx/proto"
+	phalanxaggregations "github.com/mosuka/phalanx/search/aggregations"
 	"github.com/thanhpk/randstr"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -1092,8 +1093,38 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 						blugeRequest.SortBy([]string{"-_score"})
 					}
 
-					// TODO: add aggretations
-					// request.AddAggregation(name, aggregation)
+					// Set aggregations
+					for name, agg := range request.Aggregations {
+						switch agg.Type {
+						case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeTerms]:
+							opts := make(map[string]interface{})
+							if err := json.Unmarshal(agg.Options, &opts); err != nil {
+								s.logger.Error(err.Error(), zap.String("type", agg.Type), zap.String("options", string(agg.Options)))
+								responsesChan <- searchResponse{
+									nodeName:   nodeName,
+									indexName:  request.IndexName,
+									shardNames: request.ShardNames,
+									resp:       nil,
+									err:        err,
+								}
+								return err
+							}
+							termsAgg, err := phalanxaggregations.NewTermsAggregationWithOptions(opts)
+							if err != nil {
+								s.logger.Error(err.Error(), zap.String("type", agg.Type), zap.String("options", string(agg.Options)))
+								responsesChan <- searchResponse{
+									nodeName:   nodeName,
+									indexName:  request.IndexName,
+									shardNames: request.ShardNames,
+									resp:       nil,
+									err:        err,
+								}
+								return err
+							}
+
+							blugeRequest.AddAggregation(name, termsAgg)
+						}
+					}
 
 					docMatchIter, err := bluge.MultiSearch(ctx, blugeRequest, readers...)
 					if err != nil {
@@ -1238,6 +1269,18 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 						}
 					}
 
+					// Make aggregation responses.
+					resp.Aggregations = make(map[string]*proto.AggregationResponse)
+					for name := range request.Aggregations {
+						buckets := docMatchIter.Aggregations().Buckets(name)
+						resp.Aggregations[name] = &proto.AggregationResponse{
+							Buckets: make(map[string]float64),
+						}
+						for _, bucket := range buckets {
+							resp.Aggregations[name].Buckets[bucket.Name()] = float64(bucket.Count())
+						}
+					}
+
 					// Search successfull.
 					responsesChan <- searchResponse{
 						nodeName:   nodeName,
@@ -1327,19 +1370,64 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 	resp := &proto.SearchResponse{}
 	resp.Documents = make([][]byte, 0)
 	resp.IndexName = req.IndexName
+	resp.Aggregations = make(map[string]*proto.AggregationResponse)
 	for response := range responsesChan {
 		if response.err != nil {
 			s.logger.Error(response.err.Error(), zap.String("node_name", response.nodeName), zap.String("index_name", response.indexName), zap.Strings("shard_names", response.shardNames))
 		}
 
+		// Merge hits.
 		resp.Hits = resp.Hits + response.resp.Hits
+
+		// Merge documents.
 		resp.Documents = mergeDocs(req.SortBy, resp.Documents, response.resp.Documents)
+
+		// Merge aggregations.
+		for aggName, aggResp := range response.resp.Aggregations {
+			if _, ok := resp.Aggregations[aggName]; ok {
+				for bucketName, bucketCount := range aggResp.Buckets {
+					if _, ok := resp.Aggregations[aggName].Buckets[bucketName]; !ok {
+						resp.Aggregations[aggName].Buckets[bucketName] = 0.0
+					}
+					resp.Aggregations[aggName].Buckets[bucketName] = resp.Aggregations[aggName].Buckets[bucketName] + bucketCount
+				}
+			} else {
+				resp.Aggregations[aggName] = aggResp
+			}
+		}
 	}
 
+	// Extract the specified range of documents.
 	if int(req.Start+req.Num) > len(resp.Documents) {
 		resp.Documents = resp.Documents[req.Start:]
 	} else {
 		resp.Documents = resp.Documents[req.Start : req.Start+req.Num]
+	}
+
+	// Extract top n aggregations.
+	for aggName, aggResp := range resp.Aggregations {
+		aggReq := req.Aggregations[aggName]
+
+		buckets := phalanxaggregations.SortByCount(aggResp.Buckets)
+
+		opts := make(map[string]interface{})
+		if err := json.Unmarshal(aggReq.Options, &opts); err != nil {
+			s.logger.Error(err.Error(), zap.String("aggregation_name", aggName))
+			return nil, err
+		}
+
+		if sizeValue, ok := opts["size"]; ok {
+			if size, ok := sizeValue.(float64); ok {
+				buckets = buckets[:int(size)]
+			}
+		}
+
+		newBuckets := make(map[string]float64)
+		for _, bucket := range buckets {
+			newBuckets[bucket.Name] = bucket.Count
+		}
+
+		resp.Aggregations[aggName].Buckets = newBuckets
 	}
 
 	return resp, nil
@@ -1383,14 +1471,12 @@ func mergeDocs(sortBy string, docs1 [][]byte, docs2 [][]byte) [][]byte {
 
 		var doc []byte
 		if order == sortOrderDesc {
-			fmt.Println("desc")
 			if sortValue1 > sortValue2 {
 				doc, docs1 = docs1[0], docs1[1:]
 			} else {
 				doc, docs2 = docs2[0], docs2[1:]
 			}
 		} else {
-			fmt.Println("asc")
 			if sortValue1 < sortValue2 {
 				doc, docs1 = docs1[0], docs1[1:]
 			} else {

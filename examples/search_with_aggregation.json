@@ -1,0 +1,22 @@
+{
+    "query": "search",
+    "boost": 1.0,
+    "start": 0,
+    "num": 5,
+    "sort_by": "-_score",
+    "fields": [
+        "id",
+        "title"
+    ],
+    "aggregations": {
+        "text_terms": {
+            "type": "terms",
+            "options": {
+                "field": "text",
+                "min_length": 1,
+                "max_length": 20,
+                "size": 10
+            }
+        }
+    }
+}
