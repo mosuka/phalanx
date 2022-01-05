@@ -3,6 +3,7 @@ package server
 import (
 	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -12,6 +13,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/mosuka/phalanx/clients"
+	"github.com/mosuka/phalanx/errors"
+	"github.com/mosuka/phalanx/mapping"
 	"github.com/mosuka/phalanx/proto"
 )
 
@@ -257,13 +260,13 @@ func addDocumentsHandlerFunc(c *gin.Context) {
 
 	req := &proto.AddDocumentsRequest{}
 	req.IndexName = c.Param("index_name")
-	req.Documents = make([][]byte, 0)
+	req.Documents = make([]*proto.Document, 0)
 
 	reader := bufio.NewReader(c.Request.Body)
 	for {
 		finishReading := false
 		// Read a line from the request body
-		docBytes, err := reader.ReadBytes('\n')
+		fieldsBytes, err := reader.ReadBytes('\n')
 		if err != nil {
 			if err == io.EOF || err == io.ErrClosedPipe {
 				finishReading = true
@@ -272,8 +275,27 @@ func addDocumentsHandlerFunc(c *gin.Context) {
 				return
 			}
 		}
-		if len(docBytes) > 0 {
-			req.Documents = append(req.Documents, docBytes)
+		if len(fieldsBytes) > 0 {
+			// Deserialize bytes to fields map.
+			fields := make(map[string]interface{})
+			if err := json.Unmarshal(fieldsBytes, &fields); err != nil {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				return
+			}
+
+			// Get document ID
+			docID, ok := fields[mapping.IdFieldName].(string)
+			if !ok {
+				c.JSON(http.StatusInternalServerError, gin.H{"error": errors.ErrDocumentIdDoesNotExist.Error()})
+				return
+
+			}
+
+			doc := &proto.Document{
+				Id:     docID,
+				Fields: fieldsBytes,
+			}
+			req.Documents = append(req.Documents, doc)
 		}
 		if finishReading {
 			break

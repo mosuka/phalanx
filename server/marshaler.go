@@ -128,12 +128,20 @@ func (m *Marshaler) Marshal(v interface{}) ([]byte, error) {
 		resp["hits"] = value.Hits
 
 		docs := make([]map[string]interface{}, 0)
-		for _, docBytes := range value.Documents {
-			var doc map[string]interface{}
-			if err := json.Unmarshal(docBytes, &doc); err != nil {
+		for _, doc := range value.Documents {
+			var fields map[string]interface{}
+			if err := json.Unmarshal(doc.Fields, &fields); err != nil {
 				return nil, err
 			}
-			docs = append(docs, doc)
+
+			docMap := map[string]interface{}{
+				"id":        doc.Id,
+				"score":     doc.Score,
+				"timestamp": doc.Timestamp,
+				"fields":    fields,
+			}
+
+			docs = append(docs, docMap)
 		}
 		resp["documents"] = docs
 

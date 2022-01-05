@@ -12,6 +12,7 @@ import (
 	"github.com/blugelabs/bluge/numeric/geo"
 	phalanxanalyzer "github.com/mosuka/phalanx/analysis/analyzer"
 	"github.com/mosuka/phalanx/errors"
+	"github.com/mosuka/phalanx/proto"
 )
 
 const IdFieldName = "_id"
@@ -241,21 +242,26 @@ func (m IndexMapping) GetAnalyzer(fieldName string) (*analysis.Analyzer, error) 
 	return phalanxanalyzer.NewAnalyzer(fieldSetting.AnalyzerSetting)
 }
 
-func (m IndexMapping) MakeDocument(fieldMap map[string]interface{}) (*bluge.Document, error) {
-	id, ok := fieldMap[IdFieldName].(string)
-	if !ok {
-		return nil, errors.ErrDocumentIdDoesNotExist
-	}
+func (m IndexMapping) MakeDocument(srcDoc *proto.Document) (*bluge.Document, error) {
+	// id, ok := fieldMap[IdFieldName].(string)
+	// if !ok {
+	// 	return nil, errors.ErrDocumentIdDoesNotExist
+	// }
 
 	// Create document.
-	doc := bluge.NewDocument(id)
+	doc := bluge.NewDocument(srcDoc.Id)
 
 	// Add timestamp field.
 	timestampField := bluge.NewDateTimeField(TimestampFieldName, time.Now().UTC())
 	timestampField.FieldOptions = bluge.Index | bluge.Store | bluge.Sortable | bluge.Aggregatable
 	doc.AddField(timestampField)
 
-	for fieldName, fieldValueIntr := range fieldMap {
+	fieldsMap := make(map[string]interface{})
+	if err := json.Unmarshal(srcDoc.Fields, &fieldsMap); err != nil {
+		return nil, err
+	}
+
+	for fieldName, fieldValueIntr := range fieldsMap {
 		fieldValues := make([]interface{}, 0)
 		switch value := fieldValueIntr.(type) {
 		case []interface{}:
