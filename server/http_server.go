@@ -63,15 +63,15 @@ func NewHTTPIndexServerWithTLS(httpAddress string, grpcAddress string, certifica
 		router.Use(cors.New(corsConfig))
 	}
 
-	router.GET("/livez", livez)
-	router.GET("/readyz", readyz)
-	router.GET("/metrics", metrics)
-	router.GET("/cluster", cluster)
-	router.PUT("/v1/indexes/:index_name", createIndex)
-	router.DELETE("/v1/indexes/:index_name", deleteIndex)
-	router.PUT("/v1/indexes/:index_name/documents", addDocuments)
-	router.DELETE("/v1/indexes/:index_name/documents", deleteDocuments)
-	router.POST("/v1/indexes/:index_name/_search", search)
+	router.GET("/livez", livezHandlerFunc)
+	router.GET("/readyz", readyzHandlerFunc)
+	router.GET("/metrics", metricsHandlerFunc)
+	router.GET("/cluster", clusterHandlerFunc)
+	router.PUT("/v1/indexes/:index_name", createIndexHandlerFunc)
+	router.DELETE("/v1/indexes/:index_name", deleteIndexHandlerFunc)
+	router.PUT("/v1/indexes/:index_name/documents", addDocumentsHandlerFunc)
+	router.DELETE("/v1/indexes/:index_name/documents", deleteDocumentsHandlerFunc)
+	router.POST("/v1/indexes/:index_name/_search", searchHandlerFunc)
 
 	listener, err := net.Listen("tcp", httpAddress)
 	if err != nil {

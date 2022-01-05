@@ -280,81 +280,60 @@ This endpoint returns the latest cluster status.
 ## Search
 
 ```
-% curl -XPOST -H 'Content-type: text/plain' http://localhost:8000/v1/indexes/wikipedia_en/_search --data-binary @./examples/search.json | jq .
+% curl -XPOST -H 'Content-type: text/plain' http://localhost:8000/v1/indexes/wikipedia_en/_search --data-binary @./examples/search_with_aggregation.json | jq .
 ```
 
 ```json
 {
+  "aggregations": {
+    "text_terms": {
+      "also": 56,
+      "external": 57,
+      "from": 58,
+      "its": 56,
+      "links": 57,
+      "new": 57,
+      "one": 57,
+      "part": 56,
+      "search": 59,
+      "were": 57
+    }
+  },
   "documents": [
     {
       "_id": "1316",
-      "_score": 4.09425168678948,
-      "_timestamp": "2022-01-02T12:46:13Z",
+      "_score": 4.16359472994851,
+      "_timestamp": "2022-01-05T02:59:20Z",
       "id": 1316,
       "title": "Annales school"
     },
     {
       "_id": "1164",
-      "_score": 3.8142450139472404,
-      "_timestamp": "2022-01-02T12:46:13Z",
+      "_score": 3.926891595709891,
+      "_timestamp": "2022-01-05T02:59:20Z",
       "id": 1164,
       "title": "Artificial intelligence"
     },
     {
-      "_id": "1902",
-      "_score": 3.485971543579737,
-      "_timestamp": "2022-01-02T12:46:13Z",
-      "id": 1902,
-      "title": "American Airlines Flight 77"
-    },
-    {
       "_id": "1397",
-      "_score": 3.4334036711733162,
-      "_timestamp": "2022-01-02T12:46:13Z",
+      "_score": 3.518318285824467,
+      "_timestamp": "2022-01-05T02:59:20Z",
       "id": 1397,
       "title": "AOL"
     },
     {
       "_id": "775",
-      "_score": 3.410320998122167,
-      "_timestamp": "2022-01-02T12:46:13Z",
+      "_score": 3.4539237042117312,
+      "_timestamp": "2022-01-05T02:59:20Z",
       "id": 775,
       "title": "Algorithm"
     },
     {
-      "_id": "1074",
-      "_score": 3.054015403581521,
-      "_timestamp": "2022-01-02T12:46:13Z",
-      "id": 1074,
-      "title": "Royal Antigua and Barbuda Defence Force"
-    },
-    {
-      "_id": "1361",
-      "_score": 2.8482692170070774,
-      "_timestamp": "2022-01-02T12:46:13Z",
-      "id": 1361,
-      "title": "Anagram"
-    },
-    {
-      "_id": "1805",
-      "_score": 2.783279368389514,
-      "_timestamp": "2022-01-02T12:46:13Z",
-      "id": 1805,
-      "title": "Antibiotic"
-    },
-    {
-      "_id": "1924",
-      "_score": 2.7722489839906252,
-      "_timestamp": "2022-01-02T12:46:13Z",
-      "id": 1924,
-      "title": "Argo Navis"
-    },
-    {
-      "_id": "1274",
-      "_score": 2.7359659717085734,
-      "_timestamp": "2022-01-02T12:46:13Z",
-      "id": 1274,
-      "title": "Geography of Antarctica"
+      "_id": "1902",
+      "_score": 3.340805165149435,
+      "_timestamp": "2022-01-05T02:59:20Z",
+      "id": 1902,
+      "title": "American Airlines Flight 77"
     }
   ],
   "hits": 59,
@@ -394,7 +373,7 @@ See https://hub.docker.com/r/mosuka/phalanx/tags/
 
 ### Start on Docker
 
-Running a Blast data node on Docker. Start Blast node like so:
+You can run a Phalanx node on Docker as follows:
 
 ```bash
 % docker run --rm --name phalanx-node1 \

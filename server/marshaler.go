@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/json"
+	"fmt"
 	"io"
 	"io/ioutil"
 
@@ -25,6 +26,7 @@ func (m *Marshaler) Marshal(v interface{}) ([]byte, error) {
 	switch value := v.(type) {
 	case *proto.LivenessCheckResponse:
 		resp := make(map[string]interface{})
+
 		switch value.State {
 		case proto.LivenessState_LIVENESS_STATE_ALIVE:
 			resp["state"] = "alive"
@@ -33,9 +35,11 @@ func (m *Marshaler) Marshal(v interface{}) ([]byte, error) {
 		default:
 			resp["state"] = "unknown"
 		}
+
 		return json.Marshal(resp)
 	case *proto.ReadinessCheckResponse:
 		resp := make(map[string]interface{})
+
 		switch value.State {
 		case proto.ReadinessState_READINESS_STATE_READY:
 			resp["state"] = "ready"
@@ -44,9 +48,11 @@ func (m *Marshaler) Marshal(v interface{}) ([]byte, error) {
 		default:
 			resp["state"] = "unknown"
 		}
+
 		return json.Marshal(resp)
 	case *proto.ClusterResponse:
 		resp := make(map[string]interface{})
+
 		resp["nodes"] = make(map[string]interface{})
 		for name, node := range value.Nodes {
 			nodeInfo := make(map[string]interface{})
@@ -85,6 +91,7 @@ func (m *Marshaler) Marshal(v interface{}) ([]byte, error) {
 			nodeInfo["state"] = nodeState
 			resp["nodes"].(map[string]interface{})[name] = nodeInfo
 		}
+
 		resp["indexes"] = make(map[string]interface{})
 		for indexName, indexMeta := range value.Indexes {
 			indexInfo := make(map[string]interface{})
@@ -99,21 +106,27 @@ func (m *Marshaler) Marshal(v interface{}) ([]byte, error) {
 			}
 			resp["indexes"].(map[string]interface{})[indexName] = indexInfo
 		}
+
 		var indexerAssignment map[string]map[string]string
 		if err := json.Unmarshal(value.IndexerAssignment, &indexerAssignment); err != nil {
 			return nil, err
 		}
 		resp["indexer_assignment"] = indexerAssignment
+
 		var searcherAssignment map[string]map[string][]string
 		if err := json.Unmarshal(value.SearcherAssignment, &searcherAssignment); err != nil {
 			return nil, err
 		}
 		resp["searcher_assignment"] = searcherAssignment
+
 		return json.Marshal(resp)
 	case *proto.SearchResponse:
 		resp := make(map[string]interface{})
+
 		resp["index_name"] = value.IndexName
+
 		resp["hits"] = value.Hits
+
 		docs := make([]map[string]interface{}, 0)
 		for _, docBytes := range value.Documents {
 			var doc map[string]interface{}
@@ -123,6 +136,16 @@ func (m *Marshaler) Marshal(v interface{}) ([]byte, error) {
 			docs = append(docs, doc)
 		}
 		resp["documents"] = docs
+
+		resp["aggregations"] = make(map[string]interface{})
+		for aggName, aggResp := range value.Aggregations {
+			values := make(map[string]float64)
+			for name, count := range aggResp.Buckets {
+				values[name] = count
+			}
+			resp["aggregations"].(map[string]interface{})[aggName] = values
+		}
+
 		return json.Marshal(resp)
 	default:
 		return json.Marshal(value)
@@ -136,12 +159,19 @@ func (m *Marshaler) Unmarshal(data []byte, v interface{}) error {
 		if err := json.Unmarshal(data, &m); err != nil {
 			return err
 		}
+
 		if indexName, ok := m["index_name"].(string); ok {
 			value.IndexName = indexName
 		}
+
 		if indexUri, ok := m["index_uri"].(string); ok {
 			value.IndexUri = indexUri
 		}
+
+		if lockUri, ok := m["lock_uri"].(string); ok {
+			value.LockUri = lockUri
+		}
+
 		if indexMapping, ok := m["index_mapping"].(map[string]interface{}); ok {
 			indexMappingBytes, err := json.Marshal(indexMapping)
 			if err != nil {
@@ -149,15 +179,92 @@ func (m *Marshaler) Unmarshal(data []byte, v interface{}) error {
 			}
 			value.IndexMapping = indexMappingBytes
 		}
+
+		numShards, ok := m["num_shards"].(float64)
+		if ok {
+			value.NumShards = uint32(numShards)
+		} else {
+			value.NumShards = 1
+		}
+
+		if defaultSearchField, ok := m["default_search_field"].(string); ok {
+			value.DefaultSearchField = defaultSearchField
+		}
+
+		if defaultAnalyzer, ok := m["default_analyzer"].(map[string]interface{}); ok {
+			defaultAnalyuzerBytes, err := json.Marshal(defaultAnalyzer)
+			if err != nil {
+				return err
+			}
+			value.DefaultAnalyzer = defaultAnalyuzerBytes
+		}
+
 		return nil
-	case *proto.DeleteIndexRequest:
+	case *proto.SearchRequest:
 		var m map[string]interface{}
 		if err := json.Unmarshal(data, &m); err != nil {
 			return err
 		}
+
 		if indexName, ok := m["index_name"].(string); ok {
 			value.IndexName = indexName
 		}
+
+		if query, ok := m["query"].(string); ok {
+			value.Query = query
+		}
+
+		if boost, ok := m["boost"].(float64); ok {
+			value.Boost = boost
+		}
+
+		if start, ok := m["start"].(float64); ok {
+			value.Start = int32(start)
+		}
+
+		if num, ok := m["num"].(float64); ok {
+			value.Num = int32(num)
+		}
+
+		if sortBy, ok := m["sort_by"].(string); ok {
+			value.SortBy = sortBy
+		}
+
+		if fields, ok := m["fields"].([]interface{}); ok {
+			value.Fields = make([]string, len(fields))
+			for i, fieldValue := range fields {
+				field, ok := fieldValue.(string)
+				if !ok {
+					return fmt.Errorf("fields option has unexpected data: %v", fieldValue)
+				}
+				value.Fields[i] = field
+			}
+		}
+
+		if aggregations, ok := m["aggregations"].(map[string]interface{}); ok {
+			value.Aggregations = make(map[string]*proto.AggregationRequest)
+			for name, aggregation := range aggregations {
+				if agg, ok := aggregation.(map[string]interface{}); ok {
+					aggType, ok := agg["type"].(string)
+					if !ok {
+						return fmt.Errorf("aggregation type is not a string: %v", agg["type"])
+					}
+					aggOpts, ok := agg["options"].(map[string]interface{})
+					if !ok {
+						return fmt.Errorf("aggregation options is not a map: %v", agg["params"])
+					}
+					aggOptsBytes, err := json.Marshal(aggOpts)
+					if err != nil {
+						return err
+					}
+					value.Aggregations[name] = &proto.AggregationRequest{
+						Type:    aggType,
+						Options: aggOptsBytes,
+					}
+				}
+			}
+		}
+
 		return nil
 	default:
 		return json.Unmarshal(data, value)
