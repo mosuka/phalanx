@@ -57,6 +57,30 @@
                     }
                 }
             }
+        },
+        "sum_id": {
+            "type": "sum",
+            "options": {
+                "field": "id"
+            }
+        },
+        "min_id": {
+            "type": "min",
+            "options": {
+                "field": "id"
+            }
+        },
+        "max_id": {
+            "type": "max",
+            "options": {
+                "field": "id"
+            }
+        },
+        "avg_id": {
+            "type": "avg",
+            "options": {
+                "field": "id"
+            }
         }
     }
 }

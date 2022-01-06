@@ -9,6 +9,10 @@ const (
 	AggregationTypeTerms
 	AggregationTypeRange
 	AggregationTypeDateRange
+	AggregationTypeSum
+	AggregationTypeMin
+	AggregationTypeMax
+	AggregationTypeAvg
 )
 
 // Maps for AggregationType.
@@ -18,12 +22,20 @@ var (
 		AggregationTypeTerms:     "terms",
 		AggregationTypeRange:     "range",
 		AggregationTypeDateRange: "date_range",
+		AggregationTypeSum:       "sum",
+		AggregationTypeMin:       "min",
+		AggregationTypeMax:       "max",
+		AggregationTypeAvg:       "avg",
 	}
 	AggregationType_value = map[string]AggregationType{
 		"unknown":    AggregationTypeUnknown,
 		"terms":      AggregationTypeTerms,
 		"range":      AggregationTypeRange,
 		"date_range": AggregationTypeDateRange,
+		"sum":        AggregationTypeSum,
+		"min":        AggregationTypeMin,
+		"max":        AggregationTypeMax,
+		"avg":        AggregationTypeAvg,
 	}
 )
 

@@ -54,17 +54,17 @@ func NewRangeAggregationWithOptions(opts map[string]interface{}) (*aggregations.
 			return nil, fmt.Errorf("range %v option is unexpected: %v", name, rangeValue)
 		}
 
-		from, ok := rangeMap["low"].(float64)
+		low, ok := rangeMap["low"].(float64)
 		if !ok {
 			return nil, fmt.Errorf("range %v low option is unexpected: %v", name, rangeMap["low"])
 		}
 
-		to, ok := rangeMap["high"].(float64)
+		high, ok := rangeMap["high"].(float64)
 		if !ok {
 			return nil, fmt.Errorf("range %v high option is unexpected: %v", name, rangeMap["high"])
 		}
 
-		rangesAgg.AddRange(aggregations.NamedRange(name, from, to))
+		rangesAgg.AddRange(aggregations.NamedRange(name, low, high))
 	}
 
 	return rangesAgg, nil

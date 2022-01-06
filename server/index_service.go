@@ -1158,6 +1158,114 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 							}
 
 							blugeRequest.AddAggregation(name, dateRangeAgg)
+						case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeSum]:
+							opts := make(map[string]interface{})
+							if err := json.Unmarshal(agg.Options, &opts); err != nil {
+								s.logger.Error(err.Error(), zap.String("type", agg.Type), zap.String("options", string(agg.Options)))
+								responsesChan <- searchResponse{
+									nodeName:   nodeName,
+									indexName:  request.IndexName,
+									shardNames: request.ShardNames,
+									resp:       nil,
+									err:        err,
+								}
+								return err
+							}
+							sumAgg, err := phalanxaggregations.NewSumWithOptions(opts)
+							if err != nil {
+								s.logger.Error(err.Error(), zap.String("type", agg.Type), zap.String("options", string(agg.Options)))
+								responsesChan <- searchResponse{
+									nodeName:   nodeName,
+									indexName:  request.IndexName,
+									shardNames: request.ShardNames,
+									resp:       nil,
+									err:        err,
+								}
+								return err
+							}
+
+							blugeRequest.AddAggregation(name, sumAgg)
+						case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeMin]:
+							opts := make(map[string]interface{})
+							if err := json.Unmarshal(agg.Options, &opts); err != nil {
+								s.logger.Error(err.Error(), zap.String("type", agg.Type), zap.String("options", string(agg.Options)))
+								responsesChan <- searchResponse{
+									nodeName:   nodeName,
+									indexName:  request.IndexName,
+									shardNames: request.ShardNames,
+									resp:       nil,
+									err:        err,
+								}
+								return err
+							}
+							minAgg, err := phalanxaggregations.NewMinWithOptions(opts)
+							if err != nil {
+								s.logger.Error(err.Error(), zap.String("type", agg.Type), zap.String("options", string(agg.Options)))
+								responsesChan <- searchResponse{
+									nodeName:   nodeName,
+									indexName:  request.IndexName,
+									shardNames: request.ShardNames,
+									resp:       nil,
+									err:        err,
+								}
+								return err
+							}
+
+							blugeRequest.AddAggregation(name, minAgg)
+						case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeMax]:
+							opts := make(map[string]interface{})
+							if err := json.Unmarshal(agg.Options, &opts); err != nil {
+								s.logger.Error(err.Error(), zap.String("type", agg.Type), zap.String("options", string(agg.Options)))
+								responsesChan <- searchResponse{
+									nodeName:   nodeName,
+									indexName:  request.IndexName,
+									shardNames: request.ShardNames,
+									resp:       nil,
+									err:        err,
+								}
+								return err
+							}
+							maxAgg, err := phalanxaggregations.NewMaxWithOptions(opts)
+							if err != nil {
+								s.logger.Error(err.Error(), zap.String("type", agg.Type), zap.String("options", string(agg.Options)))
+								responsesChan <- searchResponse{
+									nodeName:   nodeName,
+									indexName:  request.IndexName,
+									shardNames: request.ShardNames,
+									resp:       nil,
+									err:        err,
+								}
+								return err
+							}
+
+							blugeRequest.AddAggregation(name, maxAgg)
+						case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeAvg]:
+							opts := make(map[string]interface{})
+							if err := json.Unmarshal(agg.Options, &opts); err != nil {
+								s.logger.Error(err.Error(), zap.String("type", agg.Type), zap.String("options", string(agg.Options)))
+								responsesChan <- searchResponse{
+									nodeName:   nodeName,
+									indexName:  request.IndexName,
+									shardNames: request.ShardNames,
+									resp:       nil,
+									err:        err,
+								}
+								return err
+							}
+							avgAgg, err := phalanxaggregations.NewAvgWithOptions(opts)
+							if err != nil {
+								s.logger.Error(err.Error(), zap.String("type", agg.Type), zap.String("options", string(agg.Options)))
+								responsesChan <- searchResponse{
+									nodeName:   nodeName,
+									indexName:  request.IndexName,
+									shardNames: request.ShardNames,
+									resp:       nil,
+									err:        err,
+								}
+								return err
+							}
+
+							blugeRequest.AddAggregation(name, avgAgg)
 						}
 					}
 
@@ -1307,13 +1415,32 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 
 					// Make aggregation responses.
 					resp.Aggregations = make(map[string]*proto.AggregationResponse)
-					for name := range request.Aggregations {
-						buckets := docMatchIter.Aggregations().Buckets(name)
-						resp.Aggregations[name] = &proto.AggregationResponse{
-							Buckets: make(map[string]float64),
-						}
-						for _, bucket := range buckets {
-							resp.Aggregations[name].Buckets[bucket.Name()] = float64(bucket.Count())
+					for name, agg := range request.Aggregations {
+						switch agg.Type {
+						case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeTerms]:
+							fallthrough
+						case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeRange]:
+							fallthrough
+						case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeDateRange]:
+							buckets := docMatchIter.Aggregations().Buckets(name)
+							resp.Aggregations[name] = &proto.AggregationResponse{
+								Buckets: make(map[string]float64),
+							}
+							for _, bucket := range buckets {
+								resp.Aggregations[name].Buckets[bucket.Name()] = float64(bucket.Count())
+							}
+						case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeSum]:
+							fallthrough
+						case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeMin]:
+							fallthrough
+						case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeMax]:
+							fallthrough
+						case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeAvg]:
+							metric := docMatchIter.Aggregations().Metric(name)
+							resp.Aggregations[name] = &proto.AggregationResponse{
+								Buckets: make(map[string]float64),
+							}
+							resp.Aggregations[name].Buckets["value"] = metric
 						}
 					}
 
@@ -1420,16 +1547,66 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 
 		// Merge aggregations.
 		for aggName, aggResp := range response.resp.Aggregations {
-			if _, ok := resp.Aggregations[aggName]; ok {
-				for bucketName, bucketCount := range aggResp.Buckets {
-					if _, ok := resp.Aggregations[aggName].Buckets[bucketName]; !ok {
-						resp.Aggregations[aggName].Buckets[bucketName] = 0.0
-					}
-					resp.Aggregations[aggName].Buckets[bucketName] = resp.Aggregations[aggName].Buckets[bucketName] + bucketCount
-				}
-			} else {
-				resp.Aggregations[aggName] = aggResp
+
+			aggReq, ok := req.Aggregations[aggName]
+			if !ok {
+				s.logger.Warn("Aggregation not found", zap.String("agg_name", aggName), zap.String("index_name", req.IndexName))
+				continue
 			}
+			switch aggReq.Type {
+			case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeTerms]:
+				fallthrough
+			case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeRange]:
+				fallthrough
+			case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeDateRange]:
+				fallthrough
+			case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeSum]:
+				if _, ok := resp.Aggregations[aggName]; ok {
+					for bucketName, bucketCount := range aggResp.Buckets {
+						if _, ok := resp.Aggregations[aggName].Buckets[bucketName]; !ok {
+							resp.Aggregations[aggName].Buckets[bucketName] = 0.0
+						}
+						resp.Aggregations[aggName].Buckets[bucketName] = resp.Aggregations[aggName].Buckets[bucketName] + bucketCount
+					}
+				} else {
+					resp.Aggregations[aggName] = aggResp
+				}
+			case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeMin]:
+				if _, ok := resp.Aggregations[aggName]; ok {
+					if _, ok := resp.Aggregations[aggName].Buckets["value"]; !ok {
+						resp.Aggregations[aggName].Buckets["value"] = aggResp.Buckets["value"]
+					} else {
+						if resp.Aggregations[aggName].Buckets["value"] > aggResp.Buckets["value"] {
+							resp.Aggregations[aggName].Buckets["value"] = aggResp.Buckets["value"]
+						}
+					}
+				} else {
+					resp.Aggregations[aggName] = aggResp
+				}
+			case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeMax]:
+				if _, ok := resp.Aggregations[aggName]; ok {
+					if _, ok := resp.Aggregations[aggName].Buckets["value"]; !ok {
+						resp.Aggregations[aggName].Buckets["value"] = aggResp.Buckets["value"]
+					} else {
+						if resp.Aggregations[aggName].Buckets["value"] < aggResp.Buckets["value"] {
+							resp.Aggregations[aggName].Buckets["value"] = aggResp.Buckets["value"]
+						}
+					}
+				} else {
+					resp.Aggregations[aggName] = aggResp
+				}
+			case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeAvg]:
+				if _, ok := resp.Aggregations[aggName]; ok {
+					if _, ok := resp.Aggregations[aggName].Buckets["value"]; !ok {
+						resp.Aggregations[aggName].Buckets["value"] = aggResp.Buckets["value"]
+					} else {
+						resp.Aggregations[aggName].Buckets["value"] = (resp.Aggregations[aggName].Buckets["value"] + aggResp.Buckets["value"]) / float64(2.0)
+					}
+				} else {
+					resp.Aggregations[aggName] = aggResp
+				}
+			}
+
 		}
 	}
 
