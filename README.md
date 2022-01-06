@@ -302,6 +302,11 @@ This endpoint returns the latest cluster status.
       "part": 56,
       "search": 59,
       "were": 57
+    },
+    "timestamp_date_range": {
+      "last_year": 59,
+      "this_year": 0,
+      "year_before_last": 0
     }
   },
   "documents": [
