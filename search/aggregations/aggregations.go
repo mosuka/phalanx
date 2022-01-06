@@ -8,19 +8,22 @@ const (
 	AggregationTypeUnknown AggregationType = iota
 	AggregationTypeTerms
 	AggregationTypeRange
+	AggregationTypeDateRange
 )
 
 // Maps for AggregationType.
 var (
 	AggregationType_name = map[AggregationType]string{
-		AggregationTypeUnknown: "unknown",
-		AggregationTypeTerms:   "terms",
-		AggregationTypeRange:   "range",
+		AggregationTypeUnknown:   "unknown",
+		AggregationTypeTerms:     "terms",
+		AggregationTypeRange:     "range",
+		AggregationTypeDateRange: "date_range",
 	}
 	AggregationType_value = map[string]AggregationType{
-		"unknown": AggregationTypeUnknown,
-		"terms":   AggregationTypeTerms,
-		"range":   AggregationTypeRange,
+		"unknown":    AggregationTypeUnknown,
+		"terms":      AggregationTypeTerms,
+		"range":      AggregationTypeRange,
+		"date_range": AggregationTypeDateRange,
 	}
 )
 

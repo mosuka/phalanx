@@ -1131,6 +1131,33 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 							}
 
 							blugeRequest.AddAggregation(name, rangeAgg)
+						case phalanxaggregations.AggregationType_name[phalanxaggregations.AggregationTypeDateRange]:
+							opts := make(map[string]interface{})
+							if err := json.Unmarshal(agg.Options, &opts); err != nil {
+								s.logger.Error(err.Error(), zap.String("type", agg.Type), zap.String("options", string(agg.Options)))
+								responsesChan <- searchResponse{
+									nodeName:   nodeName,
+									indexName:  request.IndexName,
+									shardNames: request.ShardNames,
+									resp:       nil,
+									err:        err,
+								}
+								return err
+							}
+							dateRangeAgg, err := phalanxaggregations.NewDateRangeAggregationWithOptions(opts)
+							if err != nil {
+								s.logger.Error(err.Error(), zap.String("type", agg.Type), zap.String("options", string(agg.Options)))
+								responsesChan <- searchResponse{
+									nodeName:   nodeName,
+									indexName:  request.IndexName,
+									shardNames: request.ShardNames,
+									resp:       nil,
+									err:        err,
+								}
+								return err
+							}
+
+							blugeRequest.AddAggregation(name, dateRangeAgg)
 						}
 					}
 

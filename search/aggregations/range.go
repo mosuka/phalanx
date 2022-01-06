@@ -8,21 +8,24 @@ import (
 )
 
 // Create new RangeAggregation with given options.
+// Each bucket represents the number of documents
+// that the condition between `low`` or more and less than `high`.
+// low <= number < high
 // Options example:
 // {
 //   "field": "id",
 //   "ranges": {
 //     "low": {
-//       "from": 0,
-//       "to": 500
+//       "low": 0,
+//       "high": 500
 //     },
 //     "medium": {
-//       "from": 500,
-//       "to": 1000
+//       "low": 500,
+//       "high": 1000
 //     },
 //     "high": {
-//       "from": 1000,
-//       "to": 1500
+//       "low": 1000,
+//       "high": 1500
 //     }
 //   }
 // }
@@ -51,14 +54,14 @@ func NewRangeAggregationWithOptions(opts map[string]interface{}) (*aggregations.
 			return nil, fmt.Errorf("range %v option is unexpected: %v", name, rangeValue)
 		}
 
-		from, ok := rangeMap["from"].(float64)
+		from, ok := rangeMap["low"].(float64)
 		if !ok {
-			return nil, fmt.Errorf("range %v from option is unexpected: %v", name, rangeMap["from"])
+			return nil, fmt.Errorf("range %v low option is unexpected: %v", name, rangeMap["low"])
 		}
 
-		to, ok := rangeMap["to"].(float64)
+		to, ok := rangeMap["high"].(float64)
 		if !ok {
-			return nil, fmt.Errorf("range %v to option is unexpected: %v", name, rangeMap["to"])
+			return nil, fmt.Errorf("range %v high option is unexpected: %v", name, rangeMap["high"])
 		}
 
 		rangesAgg.AddRange(aggregations.NamedRange(name, from, to))
