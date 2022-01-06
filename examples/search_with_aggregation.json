@@ -17,6 +17,26 @@
                 "max_length": 20,
                 "size": 10
             }
+        },
+        "id_range": {
+            "type": "range",
+            "options": {
+                "field": "id",
+                "ranges": {
+                    "low": {
+                        "from": 0,
+                        "to": 500
+                    },
+                    "medium": {
+                        "from": 500,
+                        "to": 1000
+                    },
+                    "high": {
+                        "from": 1000,
+                        "to": 1500
+                    }
+                }
+            }
         }
     }
 }
