@@ -286,6 +286,11 @@ This endpoint returns the latest cluster status.
 ```json
 {
   "aggregations": {
+    "id_range": {
+      "high": 28,
+      "low": 1,
+      "medium": 13
+    },
     "text_terms": {
       "also": 56,
       "external": 57,
