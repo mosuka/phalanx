@@ -288,23 +288,6 @@ This endpoint returns the latest cluster status.
 ```json
 {
   "aggregations": {
-    "id_range": {
-      "high": 28,
-      "low": 1,
-      "medium": 13
-    },
-    "text_terms": {
-      "also": 56,
-      "external": 57,
-      "from": 58,
-      "its": 56,
-      "links": 57,
-      "new": 57,
-      "one": 57,
-      "part": 56,
-      "search": 59,
-      "were": 57
-    },
     "timestamp_date_range": {
       "last_year": 59,
       "this_year": 0,
