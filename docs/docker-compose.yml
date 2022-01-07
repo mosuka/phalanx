@@ -1,0 +1,78 @@
+version: '3.7'
+
+services:
+  etcd:
+    container_name: etcd
+    image: quay.io/coreos/etcd:v3.5.1
+    entrypoint: /usr/local/bin/etcd
+    command:
+      - '--name=etcd'
+      - '--initial-advertise-peer-urls=http://etcd:2380'
+      - '--listen-peer-urls=http://0.0.0.0:2380'
+      - '--listen-client-urls=http://0.0.0.0:2379'
+      - '--advertise-client-urls=http://etcd:2379'
+      - '--initial-cluster-token=etcd-cluster'
+      - '--heartbeat-interval=250'
+      - '--election-timeout=1250'
+      - '--initial-cluster=etcd=http://etcd:2380'
+      - '--initial-cluster-state=new'
+    ports:
+      - "2379:2379"
+      - "2380:2380"
+    restart: always
+
+  etcdkeeper:
+    container_name: etcdkeeper
+    image: evildecay/etcdkeeper:v0.7.6
+    environment:
+      HOST: etcdkeeper
+    ports:
+      - "8080:8080"
+    depends_on:
+      - etcd
+    restart: always
+
+  minio:
+    container_name: minio
+    image: minio/minio:RELEASE.2021-09-24T00-24-24Z
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server ${MINIO_VOLUMES} ${MINIO_OPTS}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    restart: always
+
+  phalanx:
+    container_name: phalanx
+    image: mosuka/phalanx:latest
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_REGION_NAME: ${MINIO_REGION_NAME}
+      MINIO_SESSION_TOKEN: ${MINIO_SESSION_TOKEN}
+      MINIO_SECURE: ${MINIO_SECURE}
+      ETCD_ENDPOINTS: etcd:2379
+    command:
+      - '--host=phalanx'
+      - '--bind-port=2000'
+      - '--grpc-port=5000'
+      - '--http-port=8000'
+      - '--roles=indexer,searcher'
+      - '--index-metastore-uri=etcd://phalanx/metastore'
+      - '--log-level=info'
+    ports:
+      - "2000:2000"
+      - "5000:5000"
+      - "8000:8000"
+    depends_on:
+      - etcd
+      - minio
+    restart: always

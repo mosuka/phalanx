@@ -1,0 +1,222 @@
+{
+	"index_uri": "minio://phalanx/indexes/wikipedia_ja",
+	"lock_uri": "etcd://phalanx/locks/wikipedia_ja",
+	"index_mapping": {
+		"id": {
+			"type": "numeric",
+			"options": {
+				"index": true,
+				"store": true,
+				"sortable": false,
+				"aggregatable": false
+			}
+		},
+		"title": {
+			"type": "text",
+			"options": {
+				"index": true,
+				"store": true,
+				"term_positions": false,
+				"highlight": false,
+				"sortable": false,
+				"aggregatable": false
+			},
+			"analyzer": {
+				"char_filters": [
+					{
+						"name": "ascii_folding"
+					},
+					{
+						"name": "unicode_normalize",
+						"options": {
+							"form": "NFKC"
+						}
+					}
+				],
+				"tokenizer": {
+					"name": "kagome",
+					"options": {
+						"dictionary": "IPADIC",
+						"stop_tags": [
+							"接続詞",
+							"助詞",
+							"助詞-格助詞",
+							"助詞-格助詞-一般",
+							"助詞-格助詞-引用",
+							"助詞-格助詞-連語",
+							"助詞-接続助詞",
+							"助詞-係助詞",
+							"助詞-副助詞",
+							"助詞-間投助詞",
+							"助詞-並立助詞",
+							"助詞-終助詞",
+							"助詞-副助詞／並立助詞／終助詞",
+							"助詞-連体化",
+							"助詞-副詞化",
+							"助詞-特殊",
+							"助動詞",
+							"記号",
+							"記号-一般",
+							"記号-読点",
+							"記号-句点",
+							"記号-空白",
+							"記号-括弧開",
+							"記号-括弧閉",
+							"その他-間投",
+							"フィラー",
+							"非言語音"
+						],
+						"base_forms": [
+							"動詞",
+							"形容詞",
+							"形容動詞"
+						]
+					}
+				},
+				"token_filters": [
+					{
+						"name": "lower_case"
+					},
+					{
+						"name": "ngram",
+						"options": {
+							"min_length": 1,
+							"max_length": 2
+						}
+					}
+				]
+			}
+		},
+		"text": {
+			"type": "text",
+			"options": {
+				"index": true,
+				"store": true,
+				"term_positions": true,
+				"highlight": true,
+				"sortable": false,
+				"aggregatable": false
+			},
+			"analyzer": {
+				"char_filters": [
+					{
+						"name": "ascii_folding"
+					},
+					{
+						"name": "unicode_normalize",
+						"options": {
+							"form": "NFKC"
+						}
+					}
+				],
+				"tokenizer": {
+					"name": "japanese",
+					"options": {
+						"dictionary": "IPADIC",
+						"stop_tags": [
+							"接続詞",
+							"助詞",
+							"助詞-格助詞",
+							"助詞-格助詞-一般",
+							"助詞-格助詞-引用",
+							"助詞-格助詞-連語",
+							"助詞-接続助詞",
+							"助詞-係助詞",
+							"助詞-副助詞",
+							"助詞-間投助詞",
+							"助詞-並立助詞",
+							"助詞-終助詞",
+							"助詞-副助詞／並立助詞／終助詞",
+							"助詞-連体化",
+							"助詞-副詞化",
+							"助詞-特殊",
+							"助動詞",
+							"記号",
+							"記号-一般",
+							"記号-読点",
+							"記号-句点",
+							"記号-空白",
+							"記号-括弧開",
+							"記号-括弧閉",
+							"その他-間投",
+							"フィラー",
+							"非言語音"
+						],
+						"base_forms": [
+							"動詞",
+							"形容詞",
+							"形容動詞"
+						]
+					}
+				},
+				"token_filters": [
+					{
+						"name": "lower_case"
+					}
+				]
+			}
+		},
+		"ns": {
+			"type": "numeric",
+			"options": {
+				"index": true,
+				"store": true,
+				"sortable": false,
+				"aggregatable": false
+			}
+		},
+		"redirect": {
+			"type": "text",
+			"options": {
+				"index": true,
+				"store": true,
+				"term_positions": false,
+				"highlight": false,
+				"sortable": false,
+				"aggregatable": false
+			},
+			"analyzer": {
+				"char_filters": [
+					{
+						"name": "ascii_folding"
+					},
+					{
+						"name": "unicode_normalize",
+						"options": {
+							"form": "NFKC"
+						}
+					}
+				],
+				"tokenizer": {
+					"name": "single_token"
+				},
+				"token_filters": [
+					{
+						"name": "lower_case"
+					}
+				]
+			}
+		},
+		"timestamp": {
+			"type": "datetime",
+			"options": {
+				"index": true,
+				"store": true,
+				"sortable": true,
+				"aggregatable": true
+			}
+		}
+	},
+	"num_shards": 10,
+	"default_search_field": "_all",
+	"default_analyzer": {
+		"tokenizer": {
+			"name": "unicode"
+		},
+		"token_filters": [
+			{
+				"name": "lower_case"
+			}
+		]
+	}
+}
