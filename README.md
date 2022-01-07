@@ -6,7 +6,7 @@ Metrics for system operation can also be output in Prometheus exposition format,
 Phalanx is using object storage for the storage layer, it is only responsible for the computation layer, such as indexing and retrieval processes. Therefore, scaling is easy, and you can simply add new nodes to the cluster.  
 Currently, it is an alpha version and only supports [MinIO](https://min.io/) as the storage layer, but in the future it will support [Amazon S3](https://aws.amazon.com/s3/), [Google Cloud Storage](https://cloud.google.com/storage), and [Azure Blob Storage](https://azure.microsoft.com/en-us/services/storage/blobs/).  
 
-![phalanx_architecture](https://user-images.githubusercontent.com/970948/148484297-bc63d5b8-7944-4575-a86c-4b2c1ea0ec8d.png)
+![phalanx_architecture](https://user-images.githubusercontent.com/970948/148490562-71283c1d-1f33-42c9-9aac-0ed0a09c29b8.png)
 
 
 ## Build
