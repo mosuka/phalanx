@@ -1,0 +1,517 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Get started · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="docker.html" />
+    
+    
+    <link rel="prev" href="build.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="./">
+            
+                <a href="./">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="build.html">
+            
+                <a href="build.html">
+            
+                    
+                    Build
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.3" data-path="get_started.html">
+            
+                <a href="get_started.html">
+            
+                    
+                    Get started
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="docker.html">
+            
+                <a href="docker.html">
+            
+                    
+                    Docker
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href="." >Get started</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="getting-started">Getting started</h1>
+<h2 id="start-phalanx-on-a-local-machine-using-a-local-file-system">Start Phalanx on a local machine using a local file system</h2>
+<p>Phalanx can be started on a local machine using a local file system as a metastore. The following command starts with a configuration file:</p>
+<pre><code>% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx/metastore
+</code></pre><p>A metastore is a place where various information about an index is stored.  </p>
+<h3 id="create-index-on-local-file-system">Create index on local file system</h3>
+<p>If you have started Phalanx to use the local file system, you can use this command to create an index.</p>
+<pre><code>% curl -XPUT -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/wikipedia_en --data-binary @./examples/create_index_wikipedia_en_local.json
+</code></pre><p>In <code>create_index_wikipedia_en_local.json</code> used in the above command, the URI of the local filesystem is specified in <code>index_uri</code>.
+<code>index_mapping</code> defines what kind of fields the index has. <code>num_shards</code> specifies how many shards the index will be divided into.<br>Both of the above commands will create an index named <code>wikipedia_en</code>.</p>
+<h2 id="start-phalanx-on-local-machine-with-minio-and-etcd">Start Phalanx on local machine with MinIO and etcd</h2>
+<p>To experience Phalanx functionality, let&apos;s start Phalanx with MinIO and etcd. 
+This repository has a docker-compose.yml file. With it, you can easily launch Phalanx, MinIO and etcd on Docker.</p>
+<pre><code>% docker-compose up
+</code></pre><p>Once the container has been started, you can check the MinIO and etcd data in your browser at the following URL.</p>
+<ul>
+<li><p>MinIO<br><a href="http://localhost:9001/dashboard" target="_blank">http://localhost:9001/dashboard</a></p>
+</li>
+<li><p>ETCD Keeper<br><a href="http://localhost:8080/etcdkeeper/" target="_blank">http://localhost:8080/etcdkeeper/</a></p>
+</li>
+</ul>
+<h3 id="create-index-with-minio-and-etcd">Create index with MinIO and etcd</h3>
+<p>If you have started Phalanx to use MinIO and etcd, use this command to create the index.</p>
+<pre><code>% curl -XPUT -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/wikipedia_en --data-binary @./examples/create_index_wikipedia_en.json
+</code></pre><p>In the <code>create_index_wikipedia_en.json</code> used in the above command, <code>index_uri</code> is a MinIO URI and <code>lock_uri</code> is an etcd URI. This means that indexes will be created in MinIO, and locks for those indexes will be created in etcd. Phalanx uses etcd as a distributed lock manager.</p>
+<h2 id="health-check">Health check</h2>
+<p>These endpoints should be used for Phalanx health checks.</p>
+<h3 id="liveness-check">Liveness check</h3>
+<p>If Phalanx is running properly, it will return HTTP status 200.</p>
+<pre><code>% curl -XGET http://localhost:8000/livez | jq .
+</code></pre><pre><code class="lang-json">{
+  <span class="hljs-string">&quot;state&quot;</span>:<span class="hljs-string">&quot;alive&quot;</span>
+}
+</code></pre>
+<h3 id="readiness-check">Readiness check</h3>
+<p>If Phalanx is ready to accept the traffic, it will return HTTP Status 200.</p>
+<pre><code>% curl -XGET http://localhost:8000/readyz | jq .
+</code></pre><pre><code class="lang-json">{
+  <span class="hljs-string">&quot;state&quot;</span>:<span class="hljs-string">&quot;ready&quot;</span>
+}
+</code></pre>
+<p>But this endpoint is not yet fully implemented.</p>
+<h2 id="metrics-exposition">Metrics exposition</h2>
+<p>This endpoint returns Phalanx metrics in Prometheus exposition format.</p>
+<pre><code>% curl -XGET http://localhost:8000/metrics
+</code></pre><pre><code class="lang-text"># HELP phalanx_grpc_server_handled_total Total number of RPCs completed on the server, regardless of success or failure.
+# TYPE phalanx_grpc_server_handled_total counter
+phalanx_grpc_server_handled_total{grpc_code=&quot;Aborted&quot;,grpc_method=&quot;AddDocuments&quot;,grpc_service=&quot;index.Index&quot;,grpc_type=&quot;unary&quot;} 0
+phalanx_grpc_server_handled_total{grpc_code=&quot;Aborted&quot;,grpc_method=&quot;Cluster&quot;,grpc_service=&quot;index.Index&quot;,grpc_type=&quot;unary&quot;} 0
+...
+phalanx_grpc_server_started_total{grpc_method=&quot;Metrics&quot;,grpc_service=&quot;index.Index&quot;,grpc_type=&quot;unary&quot;} 1
+phalanx_grpc_server_started_total{grpc_method=&quot;ReadinessCheck&quot;,grpc_service=&quot;index.Index&quot;,grpc_type=&quot;unary&quot;} 0
+phalanx_grpc_server_started_total{grpc_method=&quot;Search&quot;,grpc_service=&quot;index.Index&quot;,grpc_type=&quot;unary&quot;} 0
+</code></pre>
+<h2 id="cluster-status">Cluster status</h2>
+<p>This endpoint returns the latest cluster status.</p>
+<ul>
+<li><code>nodes</code>: Lists the nodes that are joining in the cluster.</li>
+<li><code>indexes</code>: Lists the indexes served by the cluster.</li>
+<li><code>indexer_assignment</code>: Lists which node is responsible for the shard in the index.</li>
+<li><code>searcher_assignment</code>: Lists which nodes are responsible for the shard in the index.</li>
+</ul>
+<pre><code>% curl -XGET http://localhost:8000/cluster | jq .
+</code></pre><pre><code class="lang-json">{
+  <span class="hljs-string">&quot;indexer_assignment&quot;</span>: {
+    <span class="hljs-string">&quot;wikipedia_en&quot;</span>: {
+      <span class="hljs-string">&quot;shard-73iAEf8K&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
+      <span class="hljs-string">&quot;shard-CRzZVi2b&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
+      <span class="hljs-string">&quot;shard-Wh7VO5Lp&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
+      <span class="hljs-string">&quot;shard-YazeIhze&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
+      <span class="hljs-string">&quot;shard-cXyt4esz&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
+      <span class="hljs-string">&quot;shard-hUM3HWQW&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
+      <span class="hljs-string">&quot;shard-jH3sTtc7&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
+      <span class="hljs-string">&quot;shard-viI2Dm3V&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
+      <span class="hljs-string">&quot;shard-y1tMwCEP&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
+      <span class="hljs-string">&quot;shard-y7VRCIlU&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+    }
+  },
+  <span class="hljs-string">&quot;indexes&quot;</span>: {
+    <span class="hljs-string">&quot;wikipedia_en&quot;</span>: {
+      <span class="hljs-string">&quot;index_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+      <span class="hljs-string">&quot;index_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en&quot;</span>,
+      <span class="hljs-string">&quot;shards&quot;</span>: {
+        <span class="hljs-string">&quot;shard-73iAEf8K&quot;</span>: {
+          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-73iAEf8K&quot;</span>
+        },
+        <span class="hljs-string">&quot;shard-CRzZVi2b&quot;</span>: {
+          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-CRzZVi2b&quot;</span>
+        },
+        <span class="hljs-string">&quot;shard-Wh7VO5Lp&quot;</span>: {
+          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-Wh7VO5Lp&quot;</span>
+        },
+        <span class="hljs-string">&quot;shard-YazeIhze&quot;</span>: {
+          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-YazeIhze&quot;</span>
+        },
+        <span class="hljs-string">&quot;shard-cXyt4esz&quot;</span>: {
+          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-cXyt4esz&quot;</span>
+        },
+        <span class="hljs-string">&quot;shard-hUM3HWQW&quot;</span>: {
+          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-hUM3HWQW&quot;</span>
+        },
+        <span class="hljs-string">&quot;shard-jH3sTtc7&quot;</span>: {
+          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-jH3sTtc7&quot;</span>
+        },
+        <span class="hljs-string">&quot;shard-viI2Dm3V&quot;</span>: {
+          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-viI2Dm3V&quot;</span>
+        },
+        <span class="hljs-string">&quot;shard-y1tMwCEP&quot;</span>: {
+          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-y1tMwCEP&quot;</span>
+        },
+        <span class="hljs-string">&quot;shard-y7VRCIlU&quot;</span>: {
+          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-y7VRCIlU&quot;</span>
+        }
+      }
+    }
+  },
+  <span class="hljs-string">&quot;nodes&quot;</span>: {
+    <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>: {
+      <span class="hljs-string">&quot;addr&quot;</span>: <span class="hljs-string">&quot;0.0.0.0&quot;</span>,
+      <span class="hljs-string">&quot;meta&quot;</span>: {
+        <span class="hljs-string">&quot;grpc_port&quot;</span>: <span class="hljs-number">5000</span>,
+        <span class="hljs-string">&quot;http_port&quot;</span>: <span class="hljs-number">8000</span>,
+        <span class="hljs-string">&quot;roles&quot;</span>: [
+          <span class="hljs-string">&quot;indexer&quot;</span>,
+          <span class="hljs-string">&quot;searcher&quot;</span>
+        ]
+      },
+      <span class="hljs-string">&quot;port&quot;</span>: <span class="hljs-number">3000</span>,
+      <span class="hljs-string">&quot;state&quot;</span>: <span class="hljs-string">&quot;alive&quot;</span>
+    }
+  },
+  <span class="hljs-string">&quot;searcher_assignment&quot;</span>: {
+    <span class="hljs-string">&quot;wikipedia_en&quot;</span>: {
+      <span class="hljs-string">&quot;shard-73iAEf8K&quot;</span>: [
+        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      ],
+      <span class="hljs-string">&quot;shard-CRzZVi2b&quot;</span>: [
+        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      ],
+      <span class="hljs-string">&quot;shard-Wh7VO5Lp&quot;</span>: [
+        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      ],
+      <span class="hljs-string">&quot;shard-YazeIhze&quot;</span>: [
+        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      ],
+      <span class="hljs-string">&quot;shard-cXyt4esz&quot;</span>: [
+        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      ],
+      <span class="hljs-string">&quot;shard-hUM3HWQW&quot;</span>: [
+        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      ],
+      <span class="hljs-string">&quot;shard-jH3sTtc7&quot;</span>: [
+        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      ],
+      <span class="hljs-string">&quot;shard-viI2Dm3V&quot;</span>: [
+        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      ],
+      <span class="hljs-string">&quot;shard-y1tMwCEP&quot;</span>: [
+        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      ],
+      <span class="hljs-string">&quot;shard-y7VRCIlU&quot;</span>: [
+        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      ]
+    }
+  }
+}
+</code></pre>
+<h2 id="add--update-documents">Add / Update documents</h2>
+<pre><code>% ./bin/phalanx_docs.sh -i id ./testdata/enwiki-20211201-pages-articles-multistream-1000.jsonl | curl -XPUT -H &apos;Content-type: application/x-ndjson&apos; http://localhost:8000/v1/indexes/wikipedia_en/documents --data-binary @-
+</code></pre><h2 id="delete-documents">Delete documents</h2>
+<pre><code>% jq -r &apos;.id&apos; ./testdata/enwiki-20211201-pages-articles-multistream-1000.jsonl | curl -XDELETE -H &apos;Content-type: text/plain&apos; http://localhost:8000/v1/indexes/wikipedia_en/documents --data-binary @-
+</code></pre><h2 id="search">Search</h2>
+<pre><code>% curl -XPOST -H &apos;Content-type: text/plain&apos; http://localhost:8000/v1/indexes/wikipedia_en/_search --data-binary @./examples/search_with_aggregation.json | jq .
+</code></pre><pre><code class="lang-json">{
+  <span class="hljs-string">&quot;aggregations&quot;</span>: {
+    <span class="hljs-string">&quot;timestamp_date_range&quot;</span>: {
+      <span class="hljs-string">&quot;last_year&quot;</span>: <span class="hljs-number">59</span>,
+      <span class="hljs-string">&quot;this_year&quot;</span>: <span class="hljs-number">0</span>,
+      <span class="hljs-string">&quot;year_before_last&quot;</span>: <span class="hljs-number">0</span>
+    }
+  },
+  <span class="hljs-string">&quot;documents&quot;</span>: [
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">1316</span>,
+        <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Annales school&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1316&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">4.202233015754667</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641387370964624100</span>
+    },
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">1164</span>,
+        <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Artificial intelligence&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1164&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">3.684979417225831</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641387370944337200</span>
+    },
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">1397</span>,
+        <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;AOL&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1397&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">3.616048285209088</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641387370954038800</span>
+    },
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">775</span>,
+        <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Algorithm&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;775&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">3.429643674018485</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641387370942956300</span>
+    },
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">1361</span>,
+        <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Anagram&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1361&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">3.097368070553906</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641387370953257000</span>
+    }
+  ],
+  <span class="hljs-string">&quot;hits&quot;</span>: <span class="hljs-number">59</span>,
+  <span class="hljs-string">&quot;index_name&quot;</span>: <span class="hljs-string">&quot;wikipedia_en&quot;</span>
+}
+</code></pre>
+<h2 id="delete-index">Delete index</h2>
+<p>The following command will delete the index <code>wikipedia_en</code> with the specified name. This command will delete the index file on the object storage and the index metadata on the metastore.</p>
+<pre><code>% curl -XDELETE http://localhost:8000/v1/indexes/wikipedia_en
+</code></pre>
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="build.html" class="navigation navigation-prev " aria-label="Previous page: Build">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="docker.html" class="navigation navigation-next " aria-label="Next page: Docker">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Get started","level":"1.3","depth":1,"next":{"title":"Docker","level":"1.4","depth":1,"path":"docker.md","ref":"./docker.md","articles":[]},"previous":{"title":"Build","level":"1.2","depth":1,"path":"build.md","ref":"./build.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"get_started.md","mtime":"2022-01-07T14:28:36.609Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-07T14:29:33.729Z"},"basePath":".","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="gitbook/gitbook.js"></script>
+    <script src="gitbook/theme.js"></script>
+    
+        
+        <script src="gitbook/gitbook-plugin-hide-published-with/plugin.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+
