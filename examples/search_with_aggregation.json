@@ -18,26 +18,6 @@
                 "size": 10
             }
         },
-        "id_range": {
-            "type": "range",
-            "options": {
-                "field": "id",
-                "ranges": {
-                    "low": {
-                        "low": 0,
-                        "high": 500
-                    },
-                    "medium": {
-                        "low": 500,
-                        "high": 1000
-                    },
-                    "high": {
-                        "low": 1000,
-                        "high": 1500
-                    }
-                }
-            }
-        },
         "timestamp_date_range": {
             "type": "date_range",
             "options": {
@@ -56,30 +36,6 @@
                         "end": "2023-01-01T00:00:00Z"
                     }
                 }
-            }
-        },
-        "sum_id": {
-            "type": "sum",
-            "options": {
-                "field": "id"
-            }
-        },
-        "min_id": {
-            "type": "min",
-            "options": {
-                "field": "id"
-            }
-        },
-        "max_id": {
-            "type": "max",
-            "options": {
-                "field": "id"
-            }
-        },
-        "avg_id": {
-            "type": "avg",
-            "options": {
-                "field": "id"
             }
         }
     }
