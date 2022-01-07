@@ -6,8 +6,8 @@
 			"options": {
 				"index": true,
 				"store": true,
-				"sortable": true,
-				"aggregatable": true
+				"sortable": false,
+				"aggregatable": false
 			}
 		},
 		"title": {
@@ -17,8 +17,8 @@
 				"store": true,
 				"term_positions": false,
 				"highlight": false,
-				"sortable": true,
-				"aggregatable": true
+				"sortable": false,
+				"aggregatable": false
 			},
 			"analyzer": {
 				"char_filters": [
@@ -56,8 +56,8 @@
 				"store": true,
 				"term_positions": true,
 				"highlight": true,
-				"sortable": true,
-				"aggregatable": true
+				"sortable": false,
+				"aggregatable": false
 			},
 			"analyzer": {
 				"char_filters": [
@@ -126,8 +126,8 @@
 			"options": {
 				"index": true,
 				"store": true,
-				"sortable": true,
-				"aggregatable": true
+				"sortable": false,
+				"aggregatable": false
 			}
 		},
 		"redirect": {
@@ -137,8 +137,8 @@
 				"store": true,
 				"term_positions": false,
 				"highlight": false,
-				"sortable": true,
-				"aggregatable": true
+				"sortable": false,
+				"aggregatable": false
 			},
 			"analyzer": {
 				"char_filters": [
