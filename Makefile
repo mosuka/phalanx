@@ -88,10 +88,11 @@ build: show-env
 .PHONY: docs
 docs:
 	@echo ">> building document"
-	gitbook install
-	gitbook build
+	gitbook install ./docs_md
+	gitbook build ./docs_md
+	cp ./docs_md/README.md ./README.md
 	rm -rf docs
-	mv _book docs
+	mv ./docs_md/_book docs
 
 .PHONY: tag
 tag: show-env
