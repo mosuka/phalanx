@@ -9,15 +9,6 @@
         "title"
     ],
     "aggregations": {
-        "text_terms": {
-            "type": "terms",
-            "options": {
-                "field": "text",
-                "min_length": 1,
-                "max_length": 20,
-                "size": 10
-            }
-        },
         "timestamp_date_range": {
             "type": "date_range",
             "options": {
