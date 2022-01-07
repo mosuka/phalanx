@@ -1,4 +1,4 @@
 * [Introduction](./README.md)
-* [Build](./docs_md/build.md)
-* [Get started](./docs_md/get_started.md)
-* [Docker](./docs_md/docker.md)
+* [Build](./build.md)
+* [Get started](./get_started.md)
+* [Docker](./docker.md)
