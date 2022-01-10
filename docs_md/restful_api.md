@@ -1,18 +1,27 @@
-# Build
+# RESTful API
 
-Building Phalanx as following:
+## Create Index API
 
-```bash
-% git clone https://github.com/mosuka/phalanx.git
-% cd phalanx
-% make build
-```
 
-## Binary
+## Delete Index API
 
-You can see the binary file when build successful like so:
 
-```bash
-% ls ./bin
-phalanx
-```
+## Add / Update Documents API
+
+
+## Delete Documents API
+
+
+## Search API
+
+
+## Health Check API
+
+### Liveness Probe
+
+### Readiness Probe
+
+
+## Cluster Status API
+
+

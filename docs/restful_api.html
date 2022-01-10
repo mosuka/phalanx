@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>Docker · GitBook</title>
+        <title>RESTful API · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.3">
@@ -57,8 +57,10 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
+    <link rel="next" href="docker.html" />
     
-    <link rel="prev" href="restful_api.html" />
+    
+    <link rel="prev" href="get_started.html" />
     
 
     </head>
@@ -139,7 +141,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5" data-path="restful_api.html">
+        <li class="chapter active" data-level="1.5" data-path="restful_api.html">
             
                 <a href="restful_api.html">
             
@@ -152,7 +154,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.6" data-path="docker.html">
+        <li class="chapter " data-level="1.6" data-path="docker.html">
             
                 <a href="docker.html">
             
@@ -195,7 +197,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="." >Docker</a>
+        <a href="." >RESTful API</a>
     </h1>
 </div>
 
@@ -210,28 +212,16 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="docker">Docker</h1>
-<h2 id="build-docker-container-image">Build Docker container image</h2>
-<p>You can build the Docker container image like so:</p>
-<pre><code>% make docker-build
-</code></pre><h2 id="pull-docker-container-image-from-dockerio">Pull Docker container image from docker.io</h2>
-<p>You can also use the Docker container image already registered in docker.io like so:</p>
-<pre><code>% docker pull mosuka/phalanx:latest
-</code></pre><p>See <a href="https://hub.docker.com/r/mosuka/phalanx/tags/" target="_blank">https://hub.docker.com/r/mosuka/phalanx/tags/</a></p>
-<h2 id="start-on-docker">Start on Docker</h2>
-<p>You can run a Phalanx node on Docker as follows:</p>
-<pre><code class="lang-bash">% docker run --rm --name phalanx-node1 \
-    -p 2000:2000 \
-    -p 5000:5000 \
-    -p 8000:8000 \
-    mosuka/phalanx:latest start \
-      --host=0.0.0.0 \
-      --bind-port=2000 \
-      --grpc-port=5000 \
-      --http-port=8000 \
-      --roles=indexer,searcher \
-      --index-metastore-uri=file:///tmp/phalanx/metadata
-</code></pre>
+                                <h1 id="restful-api">RESTful API</h1>
+<h2 id="create-index-api">Create Index API</h2>
+<h2 id="delete-index-api">Delete Index API</h2>
+<h2 id="add--update-documents-api">Add / Update Documents API</h2>
+<h2 id="delete-documents-api">Delete Documents API</h2>
+<h2 id="search-api">Search API</h2>
+<h2 id="health-check-api">Health Check API</h2>
+<h3 id="liveness-probe">Liveness Probe</h3>
+<h3 id="readiness-probe">Readiness Probe</h3>
+<h2 id="cluster-status-api">Cluster Status API</h2>
 
                                 
                                 </section>
@@ -259,10 +249,14 @@
 
             
                 
-                <a href="restful_api.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page: RESTful API">
+                <a href="get_started.html" class="navigation navigation-prev " aria-label="Previous page: Get started">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
+                
+                <a href="docker.html" class="navigation navigation-next " aria-label="Next page: Docker">
+                    <i class="fa fa-angle-right"></i>
+                </a>
                 
             
         
@@ -271,7 +265,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Docker","level":"1.6","depth":1,"previous":{"title":"RESTful API","level":"1.5","depth":1,"path":"restful_api.md","ref":"./restful_api.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docker.md","mtime":"2022-01-07T14:28:36.609Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-10T15:43:26.353Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"RESTful API","level":"1.5","depth":1,"next":{"title":"Docker","level":"1.6","depth":1,"path":"docker.md","ref":"./docker.md","articles":[]},"previous":{"title":"Get started","level":"1.4","depth":1,"path":"get_started.md","ref":"./get_started.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"restful_api.md","mtime":"2022-01-10T15:42:51.192Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-10T15:43:26.353Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
