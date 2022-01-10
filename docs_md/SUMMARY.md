@@ -1,4 +1,6 @@
 * [Introduction](./README.md)
+* [Architecture](./architecture.md)
 * [Build](./build.md)
 * [Get started](./get_started.md)
+* [RESTful API](./restful_api.md)
 * [Docker](./docker.md)
