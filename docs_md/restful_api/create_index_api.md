@@ -59,8 +59,7 @@ Defaults to `_all`.
 
 
 - `<DEFAULT_ANALYZER>`: (Optional, JSON) Default analyuzer to use in the index.  
-Defaults to use [StandardAnalyzer](https://github.com/blugelabs/bluge/blob/master/analysis/analyzer/standard.go).　It will be the same as the next setting.  
-
+See [Analyzer](/analyzer.md) section. Defaults to use [StandardAnalyzer](https://github.com/blugelabs/bluge/blob/master/analysis/analyzer/standard.go) that will be the same as the next setting.  
 ```json
 {
   "tokenizer": {
@@ -74,4 +73,4 @@ Defaults to use [StandardAnalyzer](https://github.com/blugelabs/bluge/blob/maste
 }
 ```
 
-See [Analyzer](/analyzer.md) section.
+
