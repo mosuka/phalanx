@@ -8,6 +8,7 @@ This API creates a new index.
 PUT /v1/indexes/<INDEX_NAME>
 ```
 
+
 ## Path parameters
 
 - `<INDEX_NAME>`: (Required, string) Name of the index you want to create.
@@ -15,7 +16,7 @@ PUT /v1/indexes/<INDEX_NAME>
 
 ## Request body
 
-```json
+```
 {
     "index_uri": <INDEX_URI>,
     "lock_uri": <LOCK_URI>,
@@ -74,3 +75,67 @@ See [Analyzer](/analyzer.md) section. Defaults to use [StandardAnalyzer](https:/
 ```
 
 
+## Examples
+
+```
+% curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example --data-binary '
+{
+	"index_uri": "file:///tmp/phalanx/indexes/example",
+	"index_mapping": {
+		"id": {
+			"type": "numeric",
+			"options": {
+				"index": true,
+				"store": true,
+				"sortable": true,
+				"aggregatable": true
+			}
+		},
+		"text": {
+			"type": "text",
+			"options": {
+				"index": true,
+				"store": true,
+				"term_positions": true,
+				"highlight": true,
+				"sortable": true,
+				"aggregatable": true
+			},
+			"analyzer": {
+				"char_filters": [
+					{
+						"name": "ascii_folding"
+					},
+					{
+						"name": "unicode_normalize",
+						"options": {
+							"form": "NFKC"
+						}
+					}
+				],
+				"tokenizer": {
+					"name": "unicode"
+				},
+				"token_filters": [
+					{
+						"name": "lower_case"
+					}
+				]
+			}
+		}
+	},
+	"num_shards": 1,
+	"default_search_field": "_all",
+	"default_analyzer": {
+		"tokenizer": {
+			"name": "unicode"
+		},
+		"token_filters": [
+			{
+				"name": "lower_case"
+			}
+		]
+	}
+}
+'
+```

@@ -1,0 +1,546 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Search API · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="../docker.html" />
+    
+    
+    <link rel="prev" href="delete_documents_api.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../architecture.html">
+            
+                <a href="../architecture.html">
+            
+                    
+                    Architecture
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../build.html">
+            
+                <a href="../build.html">
+            
+                    
+                    Build
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../get_started.html">
+            
+                <a href="../get_started.html">
+            
+                    
+                    Get started
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../index_mapping.html">
+            
+                <a href="../index_mapping.html">
+            
+                    
+                    Index Mapping
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../analyzer.html">
+            
+                <a href="../analyzer.html">
+            
+                    
+                    Analyzer
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7" data-path="../restful_api.html">
+            
+                <a href="../restful_api.html">
+            
+                    
+                    RESTful API
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.7.1" data-path="create_index_api.html">
+            
+                <a href="create_index_api.html">
+            
+                    
+                    Create Index API
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.2" data-path="delete_index_api.html">
+            
+                <a href="delete_index_api.html">
+            
+                    
+                    Delete Index API
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.3" data-path="add_documents_api.html">
+            
+                <a href="add_documents_api.html">
+            
+                    
+                    Add Documents API
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7.4" data-path="delete_documents_api.html">
+            
+                <a href="delete_documents_api.html">
+            
+                    
+                    Delete Documents API
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.7.5" data-path="search_api.html">
+            
+                <a href="search_api.html">
+            
+                    
+                    Search API
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8" data-path="../docker.html">
+            
+                <a href="../docker.html">
+            
+                    
+                    Docker
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >Search API</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="search-api">Search API</h1>
+<p>This API searches documents from an index.</p>
+<h2 id="request">Request</h2>
+<pre><code>POST /v1/indexes/&lt;INDEX_NAME&gt;/_search
+</code></pre><h2 id="path-parameters">Path parameters</h2>
+<ul>
+<li><code>&lt;INDEX_NAME&gt;</code>: (Required, string) Name of the index you want to search documents.</li>
+</ul>
+<h2 id="request-body">Request body</h2>
+<pre><code>{
+    &quot;query&quot;: &lt;QUERY&gt;,
+    &quot;boost&quot;: &lt;BOOST&gt;,
+    &quot;start&quot;: &lt;START&gt;,
+    &quot;num&quot;: &lt;NUM_DOCS&gt;,
+    &quot;sort_by&quot;: &lt;SORT_BY&gt;,
+    &quot;fields&quot;: &lt;FIELDS&gt;,
+    &quot;aggregations&quot;: &lt;AGGREGATIONS&gt;
+}
+</code></pre><ul>
+<li><code>&lt;QUERY&gt;</code>: (Required, string) Query string.  </li>
+</ul>
+<ul>
+<li><code>&lt;BOOST&gt;</code>: (Optional, float) The factor by which scores are multiplied.</li>
+</ul>
+<ul>
+<li><code>&lt;START&gt;</code>: (Optional, integer) Starting document offset.<br>Defaults to <code>0</code>.</li>
+</ul>
+<ul>
+<li><code>&lt;NUM_DOCS&gt;</code>: (Optional, integer) Number of documents to retrieve from index.<br>Defaults to <code>10</code>.</li>
+</ul>
+<ul>
+<li><code>&lt;SORT_BY&gt;</code>: (Optional, string) Field name and order to sort.<br>If omitted, it will be listed in order of the same score as <code>-_score</code>.</li>
+</ul>
+<ul>
+<li><code>&lt;FIELDS&gt;</code>: (Optional, array of strings) Field names to retrieve from document.  </li>
+</ul>
+<ul>
+<li><code>&lt;AGGREGATIONS&gt;</code>: (Optional, JSON) Default analyuzer to use in the index.<br>See <a href="../aggregations.md">Aggregations</a> section.  </li>
+</ul>
+<h2 id="response-body">Response body</h2>
+<pre><code>{
+  &quot;aggregations&quot;: &lt;AGGREGATIONS&gt;,
+  &quot;documents&quot;: &lt;DOCUMENTS&gt;,
+  &quot;hits&quot;: &lt;NUM_HITS&gt;,
+  &quot;index_name&quot;: &lt;INDEX_NAME&gt;
+}
+</code></pre><ul>
+<li><code>&lt;AGGREGATIONS&gt;</code>: (Optional, JSON) Aggregation response.  </li>
+</ul>
+<ul>
+<li><code>&lt;DOCUMENTS&gt;</code>: (array of JSON) List of retrieved documents.<br>The JSON of the document is in the following format:<pre><code>{
+  &quot;fields&quot;: {
+      &lt;FIELD_NAME&gt;: &lt;FIELD_VALUE&gt;,
+      ...
+  },
+  &quot;id&quot;: &lt;DOC_ID&gt;,
+  &quot;score&quot;: &lt;SCORE&gt;,
+  &quot;timestamp&quot;: &lt;TIMESTAMP&gt;
+}
+</code></pre><ul>
+<li><code>&lt;FIELD_NAME&gt;</code>: </li>
+<li><code>&lt;FIELD_VALUE&gt;</code>: </li>
+<li><code>&lt;DOC_ID&gt;</code>: </li>
+<li><code>&lt;SCORE&gt;</code>: </li>
+<li><code>&lt;TIMESTAMP&gt;</code>: </li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><code>&lt;NUM_HITS&gt;</code>: (integer) Total number of documents that match the search query.  </li>
+</ul>
+<ul>
+<li><code>&lt;INDEX_NAME&gt;</code>: (Required, string) Name of the index.</li>
+</ul>
+<h2 id="examples">Examples</h2>
+<pre><code>% curl -XPOST -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/example/_search --data-binary &apos;
+{
+    &quot;query&quot;: &quot;text:document&quot;,
+    &quot;boost&quot;: 1.0,
+    &quot;start&quot;: 0,
+    &quot;num&quot;: 10,
+    &quot;sort_by&quot;: &quot;-_score&quot;,
+    &quot;fields&quot;: [
+        &quot;id&quot;,
+        &quot;text&quot;
+    ],
+    &quot;aggregations&quot;: {
+        &quot;timestamp_date_range&quot;: {
+            &quot;type&quot;: &quot;date_range&quot;,
+            &quot;options&quot;: {
+                &quot;field&quot;: &quot;_timestamp&quot;,
+                &quot;ranges&quot;: {
+                    &quot;year_before_last&quot;: {
+                        &quot;start&quot;: &quot;2020-01-01T00:00:00Z&quot;,
+                        &quot;end&quot;: &quot;2021-01-01T00:00:00Z&quot;
+                    },
+                    &quot;last_year&quot;: {
+                        &quot;start&quot;: &quot;2021-01-01T00:00:00Z&quot;,
+                        &quot;end&quot;: &quot;2022-01-01T00:00:00Z&quot;
+                    },
+                    &quot;this_year&quot;: {
+                        &quot;start&quot;: &quot;2022-01-01T00:00:00Z&quot;,
+                        &quot;end&quot;: &quot;2023-01-01T00:00:00Z&quot;
+                    }
+                }
+            }
+        }
+    }
+}
+&apos;
+</code></pre><pre><code class="lang-json">{
+  <span class="hljs-string">&quot;aggregations&quot;</span>: {
+    <span class="hljs-string">&quot;timestamp_date_range&quot;</span>: {
+      <span class="hljs-string">&quot;last_year&quot;</span>: <span class="hljs-number">0</span>,
+      <span class="hljs-string">&quot;this_year&quot;</span>: <span class="hljs-number">3</span>,
+      <span class="hljs-string">&quot;year_before_last&quot;</span>: <span class="hljs-number">0</span>
+    }
+  },
+  <span class="hljs-string">&quot;documents&quot;</span>: [
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">1</span>,
+        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 1.&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.06069608755660118</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641992086513383200</span>
+    },
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">2</span>,
+        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 2.&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;2&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.06069608755660118</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641992086513395500</span>
+    },
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">3</span>,
+        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 3.&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;3&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.06069608755660118</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641992086513399600</span>
+    }
+  ],
+  <span class="hljs-string">&quot;hits&quot;</span>: <span class="hljs-number">3</span>,
+  <span class="hljs-string">&quot;index_name&quot;</span>: <span class="hljs-string">&quot;example&quot;</span>
+}
+</code></pre>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="delete_documents_api.html" class="navigation navigation-prev " aria-label="Previous page: Delete Documents API">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="../docker.html" class="navigation navigation-next " aria-label="Next page: Docker">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Search API","level":"1.7.5","depth":2,"next":{"title":"Docker","level":"1.8","depth":1,"path":"docker.md","ref":"docker.md","articles":[]},"previous":{"title":"Delete Documents API","level":"1.7.4","depth":2,"path":"restful_api/delete_documents_api.md","ref":"restful_api/delete_documents_api.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"restful_api/search_api.md","mtime":"2022-01-12T13:11:32.026Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-12T13:11:56.120Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-hide-published-with/plugin.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+

@@ -253,7 +253,7 @@ This endpoint returns the latest cluster status.
 ## Search
 
 ```
-% curl -XPOST -H 'Content-type: text/plain' http://localhost:8000/v1/indexes/wikipedia_en/_search --data-binary @./examples/search_with_aggregation.json | jq .
+% curl -XPOST -H 'Content-type: application/json' http://localhost:8000/v1/indexes/wikipedia_en/_search --data-binary @./examples/search_with_aggregation.json | jq .
 ```
 
 ```json

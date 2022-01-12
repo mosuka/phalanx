@@ -276,6 +276,11 @@ func addDocumentsHandlerFunc(c *gin.Context) {
 			}
 		}
 		if len(fieldsBytes) > 0 {
+			if strings.Trim(string(fieldsBytes), "\n") == "" {
+				// Empty line will be skipped.
+				continue
+			}
+
 			// Deserialize bytes to fields map.
 			fields := make(map[string]interface{})
 			if err := json.Unmarshal(fieldsBytes, &fields); err != nil {
@@ -344,6 +349,11 @@ func deleteDocumentsHandlerFunc(c *gin.Context) {
 			}
 		}
 		if len(docIdBytes) > 0 {
+			if strings.Trim(string(docIdBytes), "\n") == "" {
+				// Empty line will be skipped.
+				continue
+			}
+
 			req.Ids = append(req.Ids, strings.TrimSpace(string(docIdBytes)))
 		}
 		if finishReading {

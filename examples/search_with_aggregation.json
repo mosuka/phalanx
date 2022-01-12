@@ -1,18 +1,18 @@
 {
-    "query": "search",
+    "query": "example",
     "boost": 1.0,
     "start": 0,
-    "num": 5,
+    "num": 10,
     "sort_by": "-_score",
     "fields": [
         "id",
-        "title"
+        "text"
     ],
     "aggregations": {
         "timestamp_date_range": {
             "type": "date_range",
             "options": {
-                "field": "timestamp",
+                "field": "_timestamp",
                 "ranges": {
                     "year_before_last": {
                         "start": "2020-01-01T00:00:00Z",

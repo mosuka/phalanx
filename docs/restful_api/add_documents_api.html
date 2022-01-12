@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>Create Index API · GitBook</title>
+        <title>Add Documents API · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.3">
@@ -57,10 +57,10 @@
     <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="delete_index_api.html" />
+    <link rel="next" href="delete_documents_api.html" />
     
     
-    <link rel="prev" href="../restful_api.html" />
+    <link rel="prev" href="delete_index_api.html" />
     
 
     </head>
@@ -181,7 +181,7 @@
             <ul class="articles">
                 
     
-        <li class="chapter active" data-level="1.7.1" data-path="create_index_api.html">
+        <li class="chapter " data-level="1.7.1" data-path="create_index_api.html">
             
                 <a href="create_index_api.html">
             
@@ -207,7 +207,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7.3" data-path="add_documents_api.html">
+        <li class="chapter active" data-level="1.7.3" data-path="add_documents_api.html">
             
                 <a href="add_documents_api.html">
             
@@ -294,7 +294,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href=".." >Create Index API</a>
+        <a href=".." >Add Documents API</a>
     </h1>
 </div>
 
@@ -309,124 +309,28 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="create-index-api">Create Index API</h1>
-<p>This API creates a new index.</p>
+                                <h1 id="add-documents-api">Add Documents API</h1>
+<p>This API adds or updates documents.</p>
 <h2 id="request">Request</h2>
-<pre><code>PUT /v1/indexes/&lt;INDEX_NAME&gt;
+<pre><code>PUT /v1/indexes/&lt;INDEX_NAME&gt;/documents
 </code></pre><h2 id="path-parameters">Path parameters</h2>
 <ul>
-<li><code>&lt;INDEX_NAME&gt;</code>: (Required, string) Name of the index you want to create.</li>
+<li><code>&lt;INDEX_NAME&gt;</code>: (Required, string) Name of the index you want to add or update documents.</li>
 </ul>
 <h2 id="request-body">Request body</h2>
-<pre><code>{
-    &quot;index_uri&quot;: &lt;INDEX_URI&gt;,
-    &quot;lock_uri&quot;: &lt;LOCK_URI&gt;,
-    &quot;index_mapping&quot;: {
-        &lt;INDEX_MAPPING&gt;
-    },
-    &quot;num_shards&quot;: &lt;NUM_SHARDS&gt;,
-    &quot;default_search_field&quot;: &lt;DEFAULT_SEARCH_FIELD&gt;,
-    &quot;default_analyzer&quot;: {
-        &lt;DEFAULT_ANALYZER&gt;
-    }
-}
+<pre><code>&lt;DOCUMENTS&gt;
 </code></pre><ul>
-<li><code>&lt;INDEX_URI&gt;</code>: (Required, string) Path of the index.<br>Specifies the path to create the index. It currently supports the following:<ul>
-<li>Local file system:<br>e.g., <code>file:///var/lib/phalanx/indexes/wikipedia_en</code>  </li>
-<li><a href="https://min.io/" target="_blank">MinIO</a>:<br>e.g., <code>minio://phalanx/indexes/wikipedia_en</code>  </li>
-</ul>
-</li>
-</ul>
-<ul>
-<li><code>&lt;LOCK_URI&gt;</code>: (Optional, string) Path of the lock objects.<br>Specifies the path to create the locks. It currently supports the following:<ul>
-<li>Local file system:<br>e.g., <code>file:///var/lib/phalanx/locks/wikipedia_en</code>  </li>
-<li><a href="https://etcd.io/" target="_blank">etcd</a>:<br>e.g., <code>etcd://phalanx/locks/wikipedia_en</code>  </li>
-</ul>
-</li>
-</ul>
-<ul>
-<li><code>&lt;INDEX_MAPPING&gt;</code>: (Required, JSON) Mapping for fields in the index.<br>See <a href="../index_mapping.html">Index Mapping</a> section.</li>
-</ul>
-<ul>
-<li><code>&lt;NUM_SHARDS&gt;</code>: (Optional, integer) Number of shards in the index.<br>Defaults to 1.</li>
-</ul>
-<ul>
-<li><code>&lt;DEFAULT_SEARCH_FIELD&gt;</code>: (Optional, string) Default search field in the index.<br>Defaults to <code>_all</code>.</li>
-</ul>
-<ul>
-<li><code>&lt;DEFAULT_ANALYZER&gt;</code>: (Optional, JSON) Default analyuzer to use in the index.<br>See <a href="../analyzer.html">Analyzer</a> section. Defaults to use <a href="https://github.com/blugelabs/bluge/blob/master/analysis/analyzer/standard.go" target="_blank">StandardAnalyzer</a> that will be the same as the next setting.  <pre><code class="lang-json">{
-  <span class="hljs-string">&quot;tokenizer&quot;</span>: {
-      <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;unicode&quot;</span>
-  },
-  <span class="hljs-string">&quot;token_filters&quot;</span>: [
-      {
-          <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;lower_case&quot;</span>
-      }
-  ]
-}
+<li><code>&lt;DOCUMENTS&gt;</code>: (Required, string) Documents to add or update.<br>The documents are in JSONL format, as below.  <pre><code class="lang-json">{<span class="hljs-string">&quot;_id&quot;</span>:<span class="hljs-string">&quot;1&quot;</span>, <span class="hljs-string">&quot;id&quot;</span>:<span class="hljs-number">1</span>, <span class="hljs-string">&quot;text&quot;</span>:<span class="hljs-string">&quot;This is an example document 1.&quot;</span>}
+{<span class="hljs-string">&quot;_id&quot;</span>:<span class="hljs-string">&quot;2&quot;</span>, <span class="hljs-string">&quot;id&quot;</span>:<span class="hljs-number">2</span>, <span class="hljs-string">&quot;text&quot;</span>:<span class="hljs-string">&quot;This is an example document 2.&quot;</span>}
+{<span class="hljs-string">&quot;_id&quot;</span>:<span class="hljs-string">&quot;3&quot;</span>, <span class="hljs-string">&quot;id&quot;</span>:<span class="hljs-number">3</span>, <span class="hljs-string">&quot;text&quot;</span>:<span class="hljs-string">&quot;This is an example document 3.&quot;</span>}
 </code></pre>
-</li>
+Each document must have an <code>_id</code> field representing a unique key.</li>
 </ul>
 <h2 id="examples">Examples</h2>
-<pre><code>% curl -XPUT -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/example --data-binary &apos;
-{
-    &quot;index_uri&quot;: &quot;file:///tmp/phalanx/indexes/example&quot;,
-    &quot;index_mapping&quot;: {
-        &quot;id&quot;: {
-            &quot;type&quot;: &quot;numeric&quot;,
-            &quot;options&quot;: {
-                &quot;index&quot;: true,
-                &quot;store&quot;: true,
-                &quot;sortable&quot;: true,
-                &quot;aggregatable&quot;: true
-            }
-        },
-        &quot;text&quot;: {
-            &quot;type&quot;: &quot;text&quot;,
-            &quot;options&quot;: {
-                &quot;index&quot;: true,
-                &quot;store&quot;: true,
-                &quot;term_positions&quot;: true,
-                &quot;highlight&quot;: true,
-                &quot;sortable&quot;: true,
-                &quot;aggregatable&quot;: true
-            },
-            &quot;analyzer&quot;: {
-                &quot;char_filters&quot;: [
-                    {
-                        &quot;name&quot;: &quot;ascii_folding&quot;
-                    },
-                    {
-                        &quot;name&quot;: &quot;unicode_normalize&quot;,
-                        &quot;options&quot;: {
-                            &quot;form&quot;: &quot;NFKC&quot;
-                        }
-                    }
-                ],
-                &quot;tokenizer&quot;: {
-                    &quot;name&quot;: &quot;unicode&quot;
-                },
-                &quot;token_filters&quot;: [
-                    {
-                        &quot;name&quot;: &quot;lower_case&quot;
-                    }
-                ]
-            }
-        }
-    },
-    &quot;num_shards&quot;: 1,
-    &quot;default_search_field&quot;: &quot;_all&quot;,
-    &quot;default_analyzer&quot;: {
-        &quot;tokenizer&quot;: {
-            &quot;name&quot;: &quot;unicode&quot;
-        },
-        &quot;token_filters&quot;: [
-            {
-                &quot;name&quot;: &quot;lower_case&quot;
-            }
-        ]
-    }
-}
+<pre><code>% curl -XPUT -H &apos;Content-type: application/x-ndjson&apos; http://localhost:8000/v1/indexes/example/documents --data-binary &apos;
+{&quot;_id&quot;:&quot;1&quot;, &quot;id&quot;:1, &quot;text&quot;:&quot;This is an example document 1.&quot;}
+{&quot;_id&quot;:&quot;2&quot;, &quot;id&quot;:2, &quot;text&quot;:&quot;This is an example document 2.&quot;}
+{&quot;_id&quot;:&quot;3&quot;, &quot;id&quot;:3, &quot;text&quot;:&quot;This is an example document 3.&quot;}
 &apos;
 </code></pre>
                                 
@@ -455,12 +359,12 @@
 
             
                 
-                <a href="../restful_api.html" class="navigation navigation-prev " aria-label="Previous page: RESTful API">
+                <a href="delete_index_api.html" class="navigation navigation-prev " aria-label="Previous page: Delete Index API">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
                 
-                <a href="delete_index_api.html" class="navigation navigation-next " aria-label="Next page: Delete Index API">
+                <a href="delete_documents_api.html" class="navigation navigation-next " aria-label="Next page: Delete Documents API">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -471,7 +375,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Create Index API","level":"1.7.1","depth":2,"next":{"title":"Delete Index API","level":"1.7.2","depth":2,"path":"restful_api/delete_index_api.md","ref":"restful_api/delete_index_api.md","articles":[]},"previous":{"title":"RESTful API","level":"1.7","depth":1,"path":"restful_api.md","ref":"restful_api.md","articles":[{"title":"Create Index API","level":"1.7.1","depth":2,"path":"restful_api/create_index_api.md","ref":"restful_api/create_index_api.md","articles":[]},{"title":"Delete Index API","level":"1.7.2","depth":2,"path":"restful_api/delete_index_api.md","ref":"restful_api/delete_index_api.md","articles":[]},{"title":"Add Documents API","level":"1.7.3","depth":2,"path":"restful_api/add_documents_api.md","ref":"restful_api/add_documents_api.md","articles":[]},{"title":"Delete Documents API","level":"1.7.4","depth":2,"path":"restful_api/delete_documents_api.md","ref":"restful_api/delete_documents_api.md","articles":[]},{"title":"Search API","level":"1.7.5","depth":2,"path":"restful_api/search_api.md","ref":"restful_api/search_api.md","articles":[]}]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"restful_api/create_index_api.md","mtime":"2022-01-12T13:11:19.866Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-12T13:11:56.120Z"},"basePath":"..","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Add Documents API","level":"1.7.3","depth":2,"next":{"title":"Delete Documents API","level":"1.7.4","depth":2,"path":"restful_api/delete_documents_api.md","ref":"restful_api/delete_documents_api.md","articles":[]},"previous":{"title":"Delete Index API","level":"1.7.2","depth":2,"path":"restful_api/delete_index_api.md","ref":"restful_api/delete_index_api.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"restful_api/add_documents_api.md","mtime":"2022-01-12T13:11:08.186Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-12T13:11:56.120Z"},"basePath":"..","book":{"language":""}});
         });
     </script>
 </div>
