@@ -4,6 +4,7 @@
 * [Get started](/get_started.md)
 * [Index Mapping](/index_mapping.md)
 * [Analyzer](/analyzer.md)
+* [Aggregations](/aggregations.md)
 * [RESTful API](/restful_api.md)
   * [Create Index API](/restful_api/create_index_api.md)
   * [Delete Index API](/restful_api/delete_index_api.md)
