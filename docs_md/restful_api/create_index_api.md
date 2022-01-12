@@ -62,14 +62,14 @@ Defaults to `_all`.
 See [Analyzer](/analyzer.md) section. Defaults to use [StandardAnalyzer](https://github.com/blugelabs/bluge/blob/master/analysis/analyzer/standard.go) that will be the same as the next setting.  
 ```json
 {
-  "tokenizer": {
-    "name": "unicode"
-  },
-  "token_filters": [
-    {
-      "name": "lower_case"
-    }
-  ]
+    "tokenizer": {
+        "name": "unicode"
+    },
+    "token_filters": [
+        {
+            "name": "lower_case"
+        }
+    ]
 }
 ```
 
