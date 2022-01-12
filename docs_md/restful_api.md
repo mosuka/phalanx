@@ -1,27 +1,3 @@
 # RESTful API
 
-## Create Index API
-
-
-## Delete Index API
-
-
-## Add / Update Documents API
-
-
-## Delete Documents API
-
-
-## Search API
-
-
-## Health Check API
-
-### Liveness Probe
-
-### Readiness Probe
-
-
-## Cluster Status API
-
-
+* [Create Index API](/restful_api/create_index_api.md)
