@@ -1,13 +1,5 @@
 # Docker
 
-## Build Docker container image
-
-You can build the Docker container image like so:
-
-```
-% make docker-build
-```
-
 ## Pull Docker container image from docker.io
 
 You can also use the Docker container image already registered in docker.io like so:

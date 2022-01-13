@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>Docker · GitBook</title>
+        <title>Run with MinIO and etcd · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.3">
@@ -57,8 +57,10 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
+    <link rel="next" href="index_mapping.html" />
     
-    <link rel="prev" href="restful_api/search_api.html" />
+    
+    <link rel="prev" href="get_started.html" />
     
 
     </head>
@@ -139,7 +141,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5" data-path="run_with_minio_etcd.html">
+        <li class="chapter active" data-level="1.5" data-path="run_with_minio_etcd.html">
             
                 <a href="run_with_minio_etcd.html">
             
@@ -320,7 +322,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.10" data-path="docker.html">
+        <li class="chapter " data-level="1.10" data-path="docker.html">
             
                 <a href="docker.html">
             
@@ -363,7 +365,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="." >Docker</a>
+        <a href="." >Run with MinIO and etcd</a>
     </h1>
 </div>
 
@@ -378,26 +380,84 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="docker">Docker</h1>
-<h2 id="pull-docker-container-image-from-dockerio">Pull Docker container image from docker.io</h2>
-<p>You can also use the Docker container image already registered in docker.io like so:</p>
-<pre><code>% docker pull mosuka/phalanx:latest
-</code></pre><p>See <a href="https://hub.docker.com/r/mosuka/phalanx/tags/" target="_blank">https://hub.docker.com/r/mosuka/phalanx/tags/</a></p>
-<h2 id="start-on-docker">Start on Docker</h2>
-<p>You can run a Phalanx node on Docker as follows:</p>
-<pre><code class="lang-bash">% docker run --rm --name phalanx-node1 \
-    -p 2000:2000 \
-    -p 5000:5000 \
-    -p 8000:8000 \
-    mosuka/phalanx:latest start \
-      --host=0.0.0.0 \
-      --bind-port=2000 \
-      --grpc-port=5000 \
-      --http-port=8000 \
-      --roles=indexer,searcher \
-      --index-metastore-uri=file:///tmp/phalanx/metadata
+                                <h1 id="run-with-minio-and-etcd">Run with MinIO and etcd</h1>
+<p>To experience Phalanx functionality, let&apos;s start Phalanx with <a href="https://min.io/" target="_blank">MinIO</a> and <a href="https://etcd.io/" target="_blank">etcd</a>. 
+This repository has a docker-compose.yml file. With it, you can easily launch MinIO and etcd on Docker.</p>
+<pre><code>% docker-compose up etcd etcdkeeper minio
+</code></pre><p>Once the container has been started, you can check the MinIO and etcd data in your browser at the following URL.</p>
+<ul>
+<li><p>MinIO<br><a href="http://localhost:9001/dashboard" target="_blank">http://localhost:9001/dashboard</a></p>
+</li>
+<li><p>ETCD Keeper<br><a href="http://localhost:8080/etcdkeeper/" target="_blank">http://localhost:8080/etcdkeeper/</a></p>
+</li>
+</ul>
+<h2 id="start-phalanx-with-etcd-metastore">Start Phalanx with etcd metastore</h2>
+<p>Start Phalanx with etcd specified as the metastore:</p>
+<pre><code>% ./bin/phalanx --index-metastore-uri=etcd://phalanx/metastore
+</code></pre><h3 id="create-index-with-minio-and-etcd">Create index with MinIO and etcd</h3>
+<p>If you have started Phalanx to use MinIO and etcd, you can use this command to create an index.</p>
+<pre><code>% curl -XPUT -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/example --data-binary &apos;
+{
+    &quot;index_uri&quot;: &quot;minio://phalanx/indexes/example&quot;,
+    &quot;lock_uri&quot;: &quot;etcd://phalanx/locks/example&quot;,
+    &quot;index_mapping&quot;: {
+        &quot;id&quot;: {
+            &quot;type&quot;: &quot;numeric&quot;,
+            &quot;options&quot;: {
+                &quot;index&quot;: true,
+                &quot;store&quot;: true,
+                &quot;sortable&quot;: true,
+                &quot;aggregatable&quot;: true
+            }
+        },
+        &quot;text&quot;: {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;options&quot;: {
+                &quot;index&quot;: true,
+                &quot;store&quot;: true,
+                &quot;term_positions&quot;: true,
+                &quot;highlight&quot;: true,
+                &quot;sortable&quot;: true,
+                &quot;aggregatable&quot;: true
+            },
+            &quot;analyzer&quot;: {
+                &quot;char_filters&quot;: [
+                    {
+                        &quot;name&quot;: &quot;ascii_folding&quot;
+                    },
+                    {
+                        &quot;name&quot;: &quot;unicode_normalize&quot;,
+                        &quot;options&quot;: {
+                            &quot;form&quot;: &quot;NFKC&quot;
+                        }
+                    }
+                ],
+                &quot;tokenizer&quot;: {
+                    &quot;name&quot;: &quot;unicode&quot;
+                },
+                &quot;token_filters&quot;: [
+                    {
+                        &quot;name&quot;: &quot;lower_case&quot;
+                    }
+                ]
+            }
+        }
+    },
+    &quot;num_shards&quot;: 1,
+    &quot;default_search_field&quot;: &quot;_all&quot;,
+    &quot;default_analyzer&quot;: {
+        &quot;tokenizer&quot;: {
+            &quot;name&quot;: &quot;unicode&quot;
+        },
+        &quot;token_filters&quot;: [
+            {
+                &quot;name&quot;: &quot;lower_case&quot;
+            }
+        ]
+    }
+}
+&apos;
 </code></pre>
-
                                 
                                 </section>
                             
@@ -424,10 +484,14 @@
 
             
                 
-                <a href="restful_api/search_api.html" class="navigation navigation-prev navigation-unique" aria-label="Previous page: Search API">
+                <a href="get_started.html" class="navigation navigation-prev " aria-label="Previous page: Get started">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
+                
+                <a href="index_mapping.html" class="navigation navigation-next " aria-label="Next page: Index Mapping">
+                    <i class="fa fa-angle-right"></i>
+                </a>
                 
             
         
@@ -436,7 +500,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Docker","level":"1.10","depth":1,"previous":{"title":"Search API","level":"1.9.5","depth":2,"path":"restful_api/search_api.md","ref":"restful_api/search_api.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"docker.md","mtime":"2022-01-13T12:12:51.132Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-13T12:59:43.708Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Run with MinIO and etcd","level":"1.5","depth":1,"next":{"title":"Index Mapping","level":"1.6","depth":1,"path":"index_mapping.md","ref":"index_mapping.md","articles":[]},"previous":{"title":"Get started","level":"1.4","depth":1,"path":"get_started.md","ref":"get_started.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"run_with_minio_etcd.md","mtime":"2022-01-13T12:58:32.719Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-13T12:59:43.708Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>

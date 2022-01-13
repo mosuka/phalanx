@@ -2,6 +2,7 @@
 * [Architecture](/architecture.md)
 * [Build](/build.md)
 * [Get started](/get_started.md)
+* [Run with MinIO and etcd](/run_with_minio_etcd.md)
 * [Index Mapping](/index_mapping.md)
 * [Analyzer](/analyzer.md)
   * [Char filters](/analyzer/char_filters.md)

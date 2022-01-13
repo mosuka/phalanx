@@ -57,7 +57,7 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="index_mapping.html" />
+    <link rel="next" href="run_with_minio_etcd.html" />
     
     
     <link rel="prev" href="build.html" />
@@ -141,7 +141,20 @@
             
         </li>
     
-        <li class="chapter " data-level="1.5" data-path="index_mapping.html">
+        <li class="chapter " data-level="1.5" data-path="run_with_minio_etcd.html">
+            
+                <a href="run_with_minio_etcd.html">
+            
+                    
+                    Run with MinIO and etcd
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="index_mapping.html">
             
                 <a href="index_mapping.html">
             
@@ -154,7 +167,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.6" data-path="analyzer.html">
+        <li class="chapter " data-level="1.7" data-path="analyzer.html">
             
                 <a href="analyzer.html">
             
@@ -168,7 +181,7 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.6.1" data-path="analyzer/char_filters.html">
+        <li class="chapter " data-level="1.7.1" data-path="analyzer/char_filters.html">
             
                 <a href="analyzer/char_filters.html">
             
@@ -181,7 +194,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.6.2" data-path="analyzer/tokenizers.html">
+        <li class="chapter " data-level="1.7.2" data-path="analyzer/tokenizers.html">
             
                 <a href="analyzer/tokenizers.html">
             
@@ -194,7 +207,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.6.3" data-path="analyzer/token_filters.html">
+        <li class="chapter " data-level="1.7.3" data-path="analyzer/token_filters.html">
             
                 <a href="analyzer/token_filters.html">
             
@@ -212,7 +225,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7" data-path="aggregations.html">
+        <li class="chapter " data-level="1.8" data-path="aggregations.html">
             
                 <a href="aggregations.html">
             
@@ -225,7 +238,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.8" data-path="restful_api.html">
+        <li class="chapter " data-level="1.9" data-path="restful_api.html">
             
                 <a href="restful_api.html">
             
@@ -239,7 +252,7 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.8.1" data-path="restful_api/create_index_api.html">
+        <li class="chapter " data-level="1.9.1" data-path="restful_api/create_index_api.html">
             
                 <a href="restful_api/create_index_api.html">
             
@@ -252,7 +265,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.8.2" data-path="restful_api/delete_index_api.html">
+        <li class="chapter " data-level="1.9.2" data-path="restful_api/delete_index_api.html">
             
                 <a href="restful_api/delete_index_api.html">
             
@@ -265,7 +278,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.8.3" data-path="restful_api/add_documents_api.html">
+        <li class="chapter " data-level="1.9.3" data-path="restful_api/add_documents_api.html">
             
                 <a href="restful_api/add_documents_api.html">
             
@@ -278,7 +291,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.8.4" data-path="restful_api/delete_documents_api.html">
+        <li class="chapter " data-level="1.9.4" data-path="restful_api/delete_documents_api.html">
             
                 <a href="restful_api/delete_documents_api.html">
             
@@ -291,7 +304,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.8.5" data-path="restful_api/search_api.html">
+        <li class="chapter " data-level="1.9.5" data-path="restful_api/search_api.html">
             
                 <a href="restful_api/search_api.html">
             
@@ -309,7 +322,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.9" data-path="docker.html">
+        <li class="chapter " data-level="1.10" data-path="docker.html">
             
                 <a href="docker.html">
             
@@ -374,25 +387,67 @@
 </code></pre><p>A metastore is a place where various information about an index is stored.  </p>
 <h3 id="create-index-on-local-file-system">Create index on local file system</h3>
 <p>If you have started Phalanx to use the local file system, you can use this command to create an index.</p>
-<pre><code>% curl -XPUT -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/wikipedia_en --data-binary @./examples/create_index_wikipedia_en_local.json
-</code></pre><p>In <code>create_index_wikipedia_en_local.json</code> used in the above command, the URI of the local filesystem is specified in <code>index_uri</code>.
-<code>index_mapping</code> defines what kind of fields the index has. <code>num_shards</code> specifies how many shards the index will be divided into.<br>Both of the above commands will create an index named <code>wikipedia_en</code>.</p>
-<h2 id="start-phalanx-on-local-machine-with-minio-and-etcd">Start Phalanx on local machine with MinIO and etcd</h2>
-<p>To experience Phalanx functionality, let&apos;s start Phalanx with MinIO and etcd. 
-This repository has a docker-compose.yml file. With it, you can easily launch Phalanx, MinIO and etcd on Docker.</p>
-<pre><code>% docker-compose up
-</code></pre><p>Once the container has been started, you can check the MinIO and etcd data in your browser at the following URL.</p>
-<ul>
-<li><p>MinIO<br><a href="http://localhost:9001/dashboard" target="_blank">http://localhost:9001/dashboard</a></p>
-</li>
-<li><p>ETCD Keeper<br><a href="http://localhost:8080/etcdkeeper/" target="_blank">http://localhost:8080/etcdkeeper/</a></p>
-</li>
-</ul>
-<h3 id="create-index-with-minio-and-etcd">Create index with MinIO and etcd</h3>
-<p>If you have started Phalanx to use MinIO and etcd, use this command to create the index.</p>
-<pre><code>% curl -XPUT -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/wikipedia_en --data-binary @./examples/create_index_wikipedia_en.json
-</code></pre><p>In the <code>create_index_wikipedia_en.json</code> used in the above command, <code>index_uri</code> is a MinIO URI and <code>lock_uri</code> is an etcd URI. This means that indexes will be created in MinIO, and locks for those indexes will be created in etcd. Phalanx uses etcd as a distributed lock manager.</p>
-<h2 id="health-check">Health check</h2>
+<pre><code>% curl -XPUT -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/example --data-binary &apos;
+{
+    &quot;index_uri&quot;: &quot;file:///tmp/phalanx/indexes/example&quot;,
+    &quot;index_mapping&quot;: {
+        &quot;id&quot;: {
+            &quot;type&quot;: &quot;numeric&quot;,
+            &quot;options&quot;: {
+                &quot;index&quot;: true,
+                &quot;store&quot;: true,
+                &quot;sortable&quot;: true,
+                &quot;aggregatable&quot;: true
+            }
+        },
+        &quot;text&quot;: {
+            &quot;type&quot;: &quot;text&quot;,
+            &quot;options&quot;: {
+                &quot;index&quot;: true,
+                &quot;store&quot;: true,
+                &quot;term_positions&quot;: true,
+                &quot;highlight&quot;: true,
+                &quot;sortable&quot;: true,
+                &quot;aggregatable&quot;: true
+            },
+            &quot;analyzer&quot;: {
+                &quot;char_filters&quot;: [
+                    {
+                        &quot;name&quot;: &quot;ascii_folding&quot;
+                    },
+                    {
+                        &quot;name&quot;: &quot;unicode_normalize&quot;,
+                        &quot;options&quot;: {
+                            &quot;form&quot;: &quot;NFKC&quot;
+                        }
+                    }
+                ],
+                &quot;tokenizer&quot;: {
+                    &quot;name&quot;: &quot;unicode&quot;
+                },
+                &quot;token_filters&quot;: [
+                    {
+                        &quot;name&quot;: &quot;lower_case&quot;
+                    }
+                ]
+            }
+        }
+    },
+    &quot;num_shards&quot;: 1,
+    &quot;default_search_field&quot;: &quot;_all&quot;,
+    &quot;default_analyzer&quot;: {
+        &quot;tokenizer&quot;: {
+            &quot;name&quot;: &quot;unicode&quot;
+        },
+        &quot;token_filters&quot;: [
+            {
+                &quot;name&quot;: &quot;lower_case&quot;
+            }
+        ]
+    }
+}
+&apos;
+</code></pre><h2 id="health-check">Health check</h2>
 <p>These endpoints should be used for Phalanx health checks.</p>
 <h3 id="liveness-check">Liveness check</h3>
 <p>If Phalanx is running properly, it will return HTTP status 200.</p>
@@ -545,73 +600,97 @@ phalanx_grpc_server_started_total{grpc_method=&quot;Search&quot;,grpc_service=&q
 }
 </code></pre>
 <h2 id="add--update-documents">Add / Update documents</h2>
-<pre><code>% ./bin/phalanx_docs.sh -i id ./testdata/enwiki-20211201-pages-articles-multistream-1000.jsonl | curl -XPUT -H &apos;Content-type: application/x-ndjson&apos; http://localhost:8000/v1/indexes/wikipedia_en/documents --data-binary @-
+<pre><code>% curl -XPUT -H &apos;Content-type: application/x-ndjson&apos; http://localhost:8000/v1/indexes/example/documents --data-binary &apos;
+{&quot;_id&quot;:&quot;1&quot;, &quot;id&quot;:1, &quot;text&quot;:&quot;This is an example document 1.&quot;}
+{&quot;_id&quot;:&quot;2&quot;, &quot;id&quot;:2, &quot;text&quot;:&quot;This is an example document 2.&quot;}
+{&quot;_id&quot;:&quot;3&quot;, &quot;id&quot;:3, &quot;text&quot;:&quot;This is an example document 3.&quot;}
+&apos;
 </code></pre><h2 id="delete-documents">Delete documents</h2>
-<pre><code>% jq -r &apos;.id&apos; ./testdata/enwiki-20211201-pages-articles-multistream-1000.jsonl | curl -XDELETE -H &apos;Content-type: text/plain&apos; http://localhost:8000/v1/indexes/wikipedia_en/documents --data-binary @-
+<pre><code>% curl -XDELETE -H &apos;Content-type: text/plain&apos; http://localhost:8000/v1/indexes/example/documents --data-binary &apos;
+1
+2
+3
+&apos;
 </code></pre><h2 id="search">Search</h2>
-<pre><code>% curl -XPOST -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/wikipedia_en/_search --data-binary @./examples/search_with_aggregation.json | jq .
+<pre><code>% curl -XPOST -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/example/_search --data-binary &apos;
+{
+    &quot;query&quot;: &quot;text:document&quot;,
+    &quot;boost&quot;: 1.0,
+    &quot;start&quot;: 0,
+    &quot;num&quot;: 10,
+    &quot;sort_by&quot;: &quot;-_score&quot;,
+    &quot;fields&quot;: [
+        &quot;id&quot;,
+        &quot;text&quot;
+    ],
+    &quot;aggregations&quot;: {
+        &quot;timestamp_date_range&quot;: {
+            &quot;type&quot;: &quot;date_range&quot;,
+            &quot;options&quot;: {
+                &quot;field&quot;: &quot;_timestamp&quot;,
+                &quot;ranges&quot;: {
+                    &quot;year_before_last&quot;: {
+                        &quot;start&quot;: &quot;2020-01-01T00:00:00Z&quot;,
+                        &quot;end&quot;: &quot;2021-01-01T00:00:00Z&quot;
+                    },
+                    &quot;last_year&quot;: {
+                        &quot;start&quot;: &quot;2021-01-01T00:00:00Z&quot;,
+                        &quot;end&quot;: &quot;2022-01-01T00:00:00Z&quot;
+                    },
+                    &quot;this_year&quot;: {
+                        &quot;start&quot;: &quot;2022-01-01T00:00:00Z&quot;,
+                        &quot;end&quot;: &quot;2023-01-01T00:00:00Z&quot;
+                    }
+                }
+            }
+        }
+    }
+}
+&apos;
 </code></pre><pre><code class="lang-json">{
   <span class="hljs-string">&quot;aggregations&quot;</span>: {
     <span class="hljs-string">&quot;timestamp_date_range&quot;</span>: {
-      <span class="hljs-string">&quot;last_year&quot;</span>: <span class="hljs-number">59</span>,
-      <span class="hljs-string">&quot;this_year&quot;</span>: <span class="hljs-number">0</span>,
+      <span class="hljs-string">&quot;last_year&quot;</span>: <span class="hljs-number">0</span>,
+      <span class="hljs-string">&quot;this_year&quot;</span>: <span class="hljs-number">3</span>,
       <span class="hljs-string">&quot;year_before_last&quot;</span>: <span class="hljs-number">0</span>
     }
   },
   <span class="hljs-string">&quot;documents&quot;</span>: [
     {
       <span class="hljs-string">&quot;fields&quot;</span>: {
-        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">1316</span>,
-        <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Annales school&quot;</span>
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">1</span>,
+        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 1.&quot;</span>
       },
-      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1316&quot;</span>,
-      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">4.202233015754667</span>,
-      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641387370964624100</span>
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.06069608755660118</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641992086513383200</span>
     },
     {
       <span class="hljs-string">&quot;fields&quot;</span>: {
-        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">1164</span>,
-        <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Artificial intelligence&quot;</span>
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">2</span>,
+        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 2.&quot;</span>
       },
-      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1164&quot;</span>,
-      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">3.684979417225831</span>,
-      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641387370944337200</span>
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;2&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.06069608755660118</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641992086513395500</span>
     },
     {
       <span class="hljs-string">&quot;fields&quot;</span>: {
-        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">1397</span>,
-        <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;AOL&quot;</span>
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">3</span>,
+        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 3.&quot;</span>
       },
-      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1397&quot;</span>,
-      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">3.616048285209088</span>,
-      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641387370954038800</span>
-    },
-    {
-      <span class="hljs-string">&quot;fields&quot;</span>: {
-        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">775</span>,
-        <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Algorithm&quot;</span>
-      },
-      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;775&quot;</span>,
-      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">3.429643674018485</span>,
-      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641387370942956300</span>
-    },
-    {
-      <span class="hljs-string">&quot;fields&quot;</span>: {
-        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">1361</span>,
-        <span class="hljs-string">&quot;title&quot;</span>: <span class="hljs-string">&quot;Anagram&quot;</span>
-      },
-      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1361&quot;</span>,
-      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">3.097368070553906</span>,
-      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641387370953257000</span>
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;3&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.06069608755660118</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641992086513399600</span>
     }
   ],
-  <span class="hljs-string">&quot;hits&quot;</span>: <span class="hljs-number">59</span>,
-  <span class="hljs-string">&quot;index_name&quot;</span>: <span class="hljs-string">&quot;wikipedia_en&quot;</span>
+  <span class="hljs-string">&quot;hits&quot;</span>: <span class="hljs-number">3</span>,
+  <span class="hljs-string">&quot;index_name&quot;</span>: <span class="hljs-string">&quot;example&quot;</span>
 }
 </code></pre>
 <h2 id="delete-index">Delete index</h2>
 <p>The following command will delete the index <code>wikipedia_en</code> with the specified name. This command will delete the index file on the object storage and the index metadata on the metastore.</p>
-<pre><code>% curl -XDELETE http://localhost:8000/v1/indexes/wikipedia_en
+<pre><code>% curl -XDELETE http://localhost:8000/v1/indexes/example
 </code></pre>
                                 
                                 </section>
@@ -644,7 +723,7 @@ phalanx_grpc_server_started_total{grpc_method=&quot;Search&quot;,grpc_service=&q
                 </a>
                 
                 
-                <a href="index_mapping.html" class="navigation navigation-next " aria-label="Next page: Index Mapping">
+                <a href="run_with_minio_etcd.html" class="navigation navigation-next " aria-label="Next page: Run with MinIO and etcd">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -655,7 +734,7 @@ phalanx_grpc_server_started_total{grpc_method=&quot;Search&quot;,grpc_service=&q
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Get started","level":"1.4","depth":1,"next":{"title":"Index Mapping","level":"1.5","depth":1,"path":"index_mapping.md","ref":"index_mapping.md","articles":[]},"previous":{"title":"Build","level":"1.3","depth":1,"path":"build.md","ref":"build.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"get_started.md","mtime":"2022-01-12T12:02:45.863Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-13T08:17:57.632Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Get started","level":"1.4","depth":1,"next":{"title":"Run with MinIO and etcd","level":"1.5","depth":1,"path":"run_with_minio_etcd.md","ref":"run_with_minio_etcd.md","articles":[]},"previous":{"title":"Build","level":"1.3","depth":1,"path":"build.md","ref":"build.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"get_started.md","mtime":"2022-01-13T12:47:42.537Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-13T12:59:43.708Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>

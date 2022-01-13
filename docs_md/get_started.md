@@ -15,42 +15,67 @@ A metastore is a place where various information about an index is stored.
 If you have started Phalanx to use the local file system, you can use this command to create an index.
 
 ```
-% curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/wikipedia_en --data-binary @./examples/create_index_wikipedia_en_local.json
+% curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example --data-binary '
+{
+	"index_uri": "file:///tmp/phalanx/indexes/example",
+	"index_mapping": {
+		"id": {
+			"type": "numeric",
+			"options": {
+				"index": true,
+				"store": true,
+				"sortable": true,
+				"aggregatable": true
+			}
+		},
+		"text": {
+			"type": "text",
+			"options": {
+				"index": true,
+				"store": true,
+				"term_positions": true,
+				"highlight": true,
+				"sortable": true,
+				"aggregatable": true
+			},
+			"analyzer": {
+				"char_filters": [
+					{
+						"name": "ascii_folding"
+					},
+					{
+						"name": "unicode_normalize",
+						"options": {
+							"form": "NFKC"
+						}
+					}
+				],
+				"tokenizer": {
+					"name": "unicode"
+				},
+				"token_filters": [
+					{
+						"name": "lower_case"
+					}
+				]
+			}
+		}
+	},
+	"num_shards": 1,
+	"default_search_field": "_all",
+	"default_analyzer": {
+		"tokenizer": {
+			"name": "unicode"
+		},
+		"token_filters": [
+			{
+				"name": "lower_case"
+			}
+		]
+	}
+}
+'
 ```
-
-In `create_index_wikipedia_en_local.json` used in the above command, the URI of the local filesystem is specified in `index_uri`.
-`index_mapping` defines what kind of fields the index has. `num_shards` specifies how many shards the index will be divided into.  
-Both of the above commands will create an index named `wikipedia_en`.
-
-
-
-## Start Phalanx on local machine with MinIO and etcd
-
-To experience Phalanx functionality, let's start Phalanx with MinIO and etcd. 
-This repository has a docker-compose.yml file. With it, you can easily launch Phalanx, MinIO and etcd on Docker.
-
-```
-% docker-compose up
-```
-
-Once the container has been started, you can check the MinIO and etcd data in your browser at the following URL.
-
-- MinIO  
-http://localhost:9001/dashboard
-
-- ETCD Keeper  
-http://localhost:8080/etcdkeeper/
-
-### Create index with MinIO and etcd
-
-If you have started Phalanx to use MinIO and etcd, use this command to create the index.
-
-```
-% curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/wikipedia_en --data-binary @./examples/create_index_wikipedia_en.json
-```
-
-In the `create_index_wikipedia_en.json` used in the above command, `index_uri` is a MinIO URI and `lock_uri` is an etcd URI. This means that indexes will be created in MinIO, and locks for those indexes will be created in etcd. Phalanx uses etcd as a distributed lock manager.
-
 
 ## Health check
 
@@ -239,81 +264,105 @@ This endpoint returns the latest cluster status.
 ## Add / Update documents
 
 ```
-% ./bin/phalanx_docs.sh -i id ./testdata/enwiki-20211201-pages-articles-multistream-1000.jsonl | curl -XPUT -H 'Content-type: application/x-ndjson' http://localhost:8000/v1/indexes/wikipedia_en/documents --data-binary @-
+% curl -XPUT -H 'Content-type: application/x-ndjson' http://localhost:8000/v1/indexes/example/documents --data-binary '
+{"_id":"1", "id":1, "text":"This is an example document 1."}
+{"_id":"2", "id":2, "text":"This is an example document 2."}
+{"_id":"3", "id":3, "text":"This is an example document 3."}
+'
 ```
 
 
 ## Delete documents
 
 ```
-% jq -r '.id' ./testdata/enwiki-20211201-pages-articles-multistream-1000.jsonl | curl -XDELETE -H 'Content-type: text/plain' http://localhost:8000/v1/indexes/wikipedia_en/documents --data-binary @-
+% curl -XDELETE -H 'Content-type: text/plain' http://localhost:8000/v1/indexes/example/documents --data-binary '
+1
+2
+3
+'
 ```
 
 
 ## Search
 
 ```
-% curl -XPOST -H 'Content-type: application/json' http://localhost:8000/v1/indexes/wikipedia_en/_search --data-binary @./examples/search_with_aggregation.json | jq .
+% curl -XPOST -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example/_search --data-binary '
+{
+    "query": "text:document",
+    "boost": 1.0,
+    "start": 0,
+    "num": 10,
+    "sort_by": "-_score",
+    "fields": [
+        "id",
+        "text"
+    ],
+    "aggregations": {
+        "timestamp_date_range": {
+            "type": "date_range",
+            "options": {
+                "field": "_timestamp",
+                "ranges": {
+                    "year_before_last": {
+                        "start": "2020-01-01T00:00:00Z",
+                        "end": "2021-01-01T00:00:00Z"
+                    },
+                    "last_year": {
+                        "start": "2021-01-01T00:00:00Z",
+                        "end": "2022-01-01T00:00:00Z"
+                    },
+                    "this_year": {
+                        "start": "2022-01-01T00:00:00Z",
+                        "end": "2023-01-01T00:00:00Z"
+                    }
+                }
+            }
+        }
+    }
+}
+'
 ```
 
 ```json
 {
   "aggregations": {
     "timestamp_date_range": {
-      "last_year": 59,
-      "this_year": 0,
+      "last_year": 0,
+      "this_year": 3,
       "year_before_last": 0
     }
   },
   "documents": [
     {
       "fields": {
-        "id": 1316,
-        "title": "Annales school"
+        "id": 1,
+        "text": "This is an example document 1."
       },
-      "id": "1316",
-      "score": 4.202233015754667,
-      "timestamp": 1641387370964624100
+      "id": "1",
+      "score": 0.06069608755660118,
+      "timestamp": 1641992086513383200
     },
     {
       "fields": {
-        "id": 1164,
-        "title": "Artificial intelligence"
+        "id": 2,
+        "text": "This is an example document 2."
       },
-      "id": "1164",
-      "score": 3.684979417225831,
-      "timestamp": 1641387370944337200
+      "id": "2",
+      "score": 0.06069608755660118,
+      "timestamp": 1641992086513395500
     },
     {
       "fields": {
-        "id": 1397,
-        "title": "AOL"
+        "id": 3,
+        "text": "This is an example document 3."
       },
-      "id": "1397",
-      "score": 3.616048285209088,
-      "timestamp": 1641387370954038800
-    },
-    {
-      "fields": {
-        "id": 775,
-        "title": "Algorithm"
-      },
-      "id": "775",
-      "score": 3.429643674018485,
-      "timestamp": 1641387370942956300
-    },
-    {
-      "fields": {
-        "id": 1361,
-        "title": "Anagram"
-      },
-      "id": "1361",
-      "score": 3.097368070553906,
-      "timestamp": 1641387370953257000
+      "id": "3",
+      "score": 0.06069608755660118,
+      "timestamp": 1641992086513399600
     }
   ],
-  "hits": 59,
-  "index_name": "wikipedia_en"
+  "hits": 3,
+  "index_name": "example"
 }
 ```
 
@@ -323,5 +372,5 @@ This endpoint returns the latest cluster status.
 The following command will delete the index `wikipedia_en` with the specified name. This command will delete the index file on the object storage and the index metadata on the metastore.
 
 ```
-% curl -XDELETE http://localhost:8000/v1/indexes/wikipedia_en
+% curl -XDELETE http://localhost:8000/v1/indexes/example
 ```
