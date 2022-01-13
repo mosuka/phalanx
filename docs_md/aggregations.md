@@ -21,6 +21,12 @@ The format of the analyzer definition is as follows:
 
 ## Bucket
 
+The following bucket aggregations are supported:
+
+- Terms
+- Range
+- Date Range
+
 ### Terms
 
 The terms aggregation typically operates on field data. Each term seen becomes it’s own bucket, and by default the count metric is applied to each bucket. Finally, at the conclusion of the search, these buckets are sorted by their counts descending, and the top N buckets are returned as part of the result.  
