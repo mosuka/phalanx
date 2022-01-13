@@ -8,7 +8,7 @@ The format of the field definition to be included in the index is as follows:
     <FIELD_NAME>: {
         "type": <FIELD_TYPE>,
         "options": <FIELD_OPTIONS>,
-        [ "analyzer": <ANALYZER> ]
+        "analyzer": <ANALYZER>
     }
     ...
 }

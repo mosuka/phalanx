@@ -1,0 +1,604 @@
+
+<!DOCTYPE HTML>
+<html lang="" >
+    <head>
+        <meta charset="UTF-8">
+        <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+        <title>Tokenizers · GitBook</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="description" content="">
+        <meta name="generator" content="GitBook 3.2.3">
+        
+        
+        
+    
+    <link rel="stylesheet" href="../gitbook/style.css">
+
+    
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-highlight/website.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-search/search.css">
+                
+            
+                
+                <link rel="stylesheet" href="../gitbook/gitbook-plugin-fontsettings/website.css">
+                
+            
+        
+
+    
+
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+        
+    
+
+        
+    
+    
+    <meta name="HandheldFriendly" content="true"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <link rel="apple-touch-icon-precomposed" sizes="152x152" href="../gitbook/images/apple-touch-icon-precomposed-152.png">
+    <link rel="shortcut icon" href="../gitbook/images/favicon.ico" type="image/x-icon">
+
+    
+    <link rel="next" href="token_filters.html" />
+    
+    
+    <link rel="prev" href="char_filters.html" />
+    
+
+    </head>
+    <body>
+        
+<div class="book">
+    <div class="book-summary">
+        
+            
+<div id="book-search-input" role="search">
+    <input type="text" placeholder="Type to search" />
+</div>
+
+            
+                <nav role="navigation">
+                
+
+
+<ul class="summary">
+    
+    
+
+    
+
+    
+        
+        
+    
+        <li class="chapter " data-level="1.1" data-path="../">
+            
+                <a href="../">
+            
+                    
+                    Introduction
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.2" data-path="../architecture.html">
+            
+                <a href="../architecture.html">
+            
+                    
+                    Architecture
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.3" data-path="../build.html">
+            
+                <a href="../build.html">
+            
+                    
+                    Build
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.4" data-path="../get_started.html">
+            
+                <a href="../get_started.html">
+            
+                    
+                    Get started
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.5" data-path="../index_mapping.html">
+            
+                <a href="../index_mapping.html">
+            
+                    
+                    Index Mapping
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6" data-path="../analyzer.html">
+            
+                <a href="../analyzer.html">
+            
+                    
+                    Analyzer
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.6.1" data-path="char_filters.html">
+            
+                <a href="char_filters.html">
+            
+                    
+                    Char filters
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter active" data-level="1.6.2" data-path="tokenizers.html">
+            
+                <a href="tokenizers.html">
+            
+                    
+                    Tokenizers
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.6.3" data-path="token_filters.html">
+            
+                <a href="token_filters.html">
+            
+                    
+                    Token filters
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7" data-path="../aggregations.html">
+            
+                <a href="../aggregations.html">
+            
+                    
+                    Aggregations
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8" data-path="../restful_api.html">
+            
+                <a href="../restful_api.html">
+            
+                    
+                    RESTful API
+            
+                </a>
+            
+
+            
+            <ul class="articles">
+                
+    
+        <li class="chapter " data-level="1.8.1" data-path="../restful_api/create_index_api.html">
+            
+                <a href="../restful_api/create_index_api.html">
+            
+                    
+                    Create Index API
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8.2" data-path="../restful_api/delete_index_api.html">
+            
+                <a href="../restful_api/delete_index_api.html">
+            
+                    
+                    Delete Index API
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8.3" data-path="../restful_api/add_documents_api.html">
+            
+                <a href="../restful_api/add_documents_api.html">
+            
+                    
+                    Add Documents API
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8.4" data-path="../restful_api/delete_documents_api.html">
+            
+                <a href="../restful_api/delete_documents_api.html">
+            
+                    
+                    Delete Documents API
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.8.5" data-path="../restful_api/search_api.html">
+            
+                <a href="../restful_api/search_api.html">
+            
+                    
+                    Search API
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+            </ul>
+            
+        </li>
+    
+        <li class="chapter " data-level="1.9" data-path="../docker.html">
+            
+                <a href="../docker.html">
+            
+                    
+                    Docker
+            
+                </a>
+            
+
+            
+        </li>
+    
+
+    
+
+    <li class="divider"></li>
+
+    <li>
+        <a href="https://www.gitbook.com" target="blank" class="gitbook-link">
+            Published with GitBook
+        </a>
+    </li>
+</ul>
+
+
+                </nav>
+            
+        
+    </div>
+
+    <div class="book-body">
+        
+            <div class="body-inner">
+                
+                    
+
+<div class="book-header" role="navigation">
+    
+
+    <!-- Title -->
+    <h1>
+        <i class="fa fa-circle-o-notch fa-spin"></i>
+        <a href=".." >Tokenizers</a>
+    </h1>
+</div>
+
+
+
+
+                    <div class="page-wrapper" tabindex="-1" role="main">
+                        <div class="page-inner">
+                            
+<div id="book-search-results">
+    <div class="search-noresults">
+    
+                                <section class="normal markdown-section">
+                                
+                                <h1 id="tokenizers">Tokenizers</h1>
+<p>A tokenizer receives a stream of characters, breaks it up into individual tokens (usually individual words), and outputs a stream of tokens.  </p>
+<p>The format of the char filter definition is as follows:</p>
+<pre><code>{
+    &quot;name&quot;: &lt;TOKENIZER_NAME&gt;,
+    &quot;options&quot;: &lt;TOKENIZER_OPTIONS&gt;
+}
+</code></pre><ul>
+<li><code>&lt;TOKENIZER_NAME&gt;</code>: </li>
+<li><code>&lt;TOKENIZER_OPTIONS&gt;</code>: </li>
+</ul>
+<p>The following char filters are available:</p>
+<ul>
+<li>Character</li>
+<li>Exception</li>
+<li>Kagome</li>
+<li>Letter</li>
+<li>Regular Expression</li>
+<li>Single Token</li>
+<li>Unicode</li>
+<li>Web</li>
+<li>Whitespace</li>
+</ul>
+<h2 id="character">Character</h2>
+<p>Outputs tokens with the specified rune. The following parameters can be set for <code>rune</code>.  </p>
+<ul>
+<li><code>graphic</code>: Such characters include letters, marks, numbers, punctuation, symbols, and spaces.</li>
+<li><code>print</code>: Such characters include letters, marks, numbers, punctuation, symbols, and the ASCII space character.</li>
+<li><code>control</code>: Control characters.</li>
+<li><code>letter</code>: Letter characters.</li>
+<li><code>mark</code>: Mark characters.</li>
+<li><code>number</code>: Number characters.</li>
+<li><code>punct</code>: Unicode punctuation characters.</li>
+<li><code>space</code>: space character as defined by Unicode&apos;s White Space property; in the Latin-1 space this is &apos;\t&apos;, &apos;\n&apos;, &apos;\v&apos;, &apos;\f&apos;, &apos;\r&apos;, &apos; &apos;, U+0085 (NEL), U+00A0 (NBSP).</li>
+<li><code>symbol</code>: Symbolic characters</li>
+</ul>
+<p>Example:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;unicode_normalize&quot;</span>,
+    <span class="hljs-string">&quot;options&quot;</span>: {
+        <span class="hljs-string">&quot;rune&quot;</span>: <span class="hljs-string">&quot;letter&quot;</span>
+    }    
+}
+</code></pre>
+<h2 id="exception">Exception</h2>
+<p>Split strings that match multiple regular expression patterns into tokens with UnicodeTokenizer.  </p>
+<p>Example:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;exception&quot;</span>,
+    <span class="hljs-string">&quot;options&quot;</span>: {
+        <span class="hljs-string">&quot;patterns&quot;</span>: [
+            <span class="hljs-string">&quot;[hH][tT][tT][pP][sS]?://(\S)*&quot;</span>,
+            <span class="hljs-string">&quot;[fF][iI][lL][eE]://(\S)*&quot;</span>,
+            <span class="hljs-string">&quot;[fF][tT][pP]://(\S)*&quot;</span>,
+            <span class="hljs-string">&quot;\S+@\S+&quot;</span>
+        ]
+    }    
+}
+</code></pre>
+<h2 id="kagome">Kagome</h2>
+<p>It uses Kagome, a Japanese morphological analyzer, to split the text into text and tokens.  </p>
+<ul>
+<li><code>dictionary</code>: You can set <code>IPADIC</code> or <code>UniDIC</code>.</li>
+<li><code>stop_tags</code>: You can specify the Japanese part of speech to be removed. The specified part of speech will not be output as a token.</li>
+<li><code>base_form</code>: Converts the token of the specified Japanese part of speech to its base form. Example, convert <code>&#x7F8E;&#x3057;&#x304F;</code> to <code>&#x7F8E;&#x3057;&#x3044;</code>.</li>
+</ul>
+<p>Example:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;kagome&quot;</span>,
+    <span class="hljs-string">&quot;options&quot;</span>: {
+        <span class="hljs-string">&quot;dictionary&quot;</span>: <span class="hljs-string">&quot;IPADIC&quot;</span>,
+        <span class="hljs-string">&quot;stop_tags&quot;</span>: [
+            <span class="hljs-string">&quot;&#x63A5;&#x7D9A;&#x8A5E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x683C;&#x52A9;&#x8A5E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x683C;&#x52A9;&#x8A5E;-&#x4E00;&#x822C;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x683C;&#x52A9;&#x8A5E;-&#x5F15;&#x7528;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x683C;&#x52A9;&#x8A5E;-&#x9023;&#x8A9E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x63A5;&#x7D9A;&#x52A9;&#x8A5E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x4FC2;&#x52A9;&#x8A5E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x526F;&#x52A9;&#x8A5E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x9593;&#x6295;&#x52A9;&#x8A5E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x4E26;&#x7ACB;&#x52A9;&#x8A5E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x7D42;&#x52A9;&#x8A5E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x526F;&#x52A9;&#x8A5E;&#xFF0F;&#x4E26;&#x7ACB;&#x52A9;&#x8A5E;&#xFF0F;&#x7D42;&#x52A9;&#x8A5E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x9023;&#x4F53;&#x5316;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x526F;&#x8A5E;&#x5316;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x8A5E;-&#x7279;&#x6B8A;&quot;</span>,
+            <span class="hljs-string">&quot;&#x52A9;&#x52D5;&#x8A5E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x8A18;&#x53F7;&quot;</span>,
+            <span class="hljs-string">&quot;&#x8A18;&#x53F7;-&#x4E00;&#x822C;&quot;</span>,
+            <span class="hljs-string">&quot;&#x8A18;&#x53F7;-&#x8AAD;&#x70B9;&quot;</span>,
+            <span class="hljs-string">&quot;&#x8A18;&#x53F7;-&#x53E5;&#x70B9;&quot;</span>,
+            <span class="hljs-string">&quot;&#x8A18;&#x53F7;-&#x7A7A;&#x767D;&quot;</span>,
+            <span class="hljs-string">&quot;&#x8A18;&#x53F7;-&#x62EC;&#x5F27;&#x958B;&quot;</span>,
+            <span class="hljs-string">&quot;&#x8A18;&#x53F7;-&#x62EC;&#x5F27;&#x9589;&quot;</span>,
+            <span class="hljs-string">&quot;&#x305D;&#x306E;&#x4ED6;-&#x9593;&#x6295;&quot;</span>,
+            <span class="hljs-string">&quot;&#x30D5;&#x30A3;&#x30E9;&#x30FC;&quot;</span>,
+            <span class="hljs-string">&quot;&#x975E;&#x8A00;&#x8A9E;&#x97F3;&quot;</span>
+        ],
+        <span class="hljs-string">&quot;base_forms&quot;</span>: [
+            <span class="hljs-string">&quot;&#x52D5;&#x8A5E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x5F62;&#x5BB9;&#x8A5E;&quot;</span>,
+            <span class="hljs-string">&quot;&#x5F62;&#x5BB9;&#x52D5;&#x8A5E;&quot;</span>
+        ]
+    }    
+}
+</code></pre>
+<h2 id="letter">Letter</h2>
+<p>This is the same as specifying <code>letter</code> for <code>rune</code> option in the Character tokenizer.  </p>
+<p>Example:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;letter&quot;</span>
+}
+</code></pre>
+<h2 id="regular-expression">Regular Expression</h2>
+<p>Outputs strings that matches the specified regular expression as a token.  </p>
+<p>Example:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;regexp&quot;</span>,
+    <span class="hljs-string">&quot;pattern&quot;</span>: <span class="hljs-string">&quot;[0-9a-zA-Z_]*&quot;</span>
+}
+</code></pre>
+<h2 id="single-token">Single Token</h2>
+<p>Output text as a single token.  </p>
+<p>Example:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;single_token&quot;</span>,
+}
+</code></pre>
+<h2 id="unicode">Unicode</h2>
+<p>Output tokens based on Unicode character categories.  </p>
+<p>Example:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;unicode&quot;</span>,
+}
+</code></pre>
+<h2 id="web">Web</h2>
+<p>Extracts E-mail, URL, Twitter handle, and Twitter hashtag from web content based on Exception tokenizer and outputs the token.  </p>
+<p>Example:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;web&quot;</span>,
+}
+</code></pre>
+<h2 id="whitespace">Whitespace</h2>
+<p>Outputs tokens by splitting the text in whitespace.  </p>
+<p>Example:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;whitespace&quot;</span>,
+}
+</code></pre>
+
+                                
+                                </section>
+                            
+    </div>
+    <div class="search-results">
+        <div class="has-results">
+            
+            <h1 class="search-results-title"><span class='search-results-count'></span> results matching "<span class='search-query'></span>"</h1>
+            <ul class="search-results-list"></ul>
+            
+        </div>
+        <div class="no-results">
+            
+            <h1 class="search-results-title">No results matching "<span class='search-query'></span>"</h1>
+            
+        </div>
+    </div>
+</div>
+
+                        </div>
+                    </div>
+                
+            </div>
+
+            
+                
+                <a href="char_filters.html" class="navigation navigation-prev " aria-label="Previous page: Char filters">
+                    <i class="fa fa-angle-left"></i>
+                </a>
+                
+                
+                <a href="token_filters.html" class="navigation navigation-next " aria-label="Next page: Token filters">
+                    <i class="fa fa-angle-right"></i>
+                </a>
+                
+            
+        
+    </div>
+
+    <script>
+        var gitbook = gitbook || [];
+        gitbook.push(function() {
+            gitbook.page.hasChanged({"page":{"title":"Tokenizers","level":"1.6.2","depth":2,"next":{"title":"Token filters","level":"1.6.3","depth":2,"path":"analyzer/token_filters.md","ref":"analyzer/token_filters.md","articles":[]},"previous":{"title":"Char filters","level":"1.6.1","depth":2,"path":"analyzer/char_filters.md","ref":"analyzer/char_filters.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"analyzer/tokenizers.md","mtime":"2022-01-13T06:34:22.969Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-13T08:17:57.632Z"},"basePath":"..","book":{"language":""}});
+        });
+    </script>
+</div>
+
+        
+    <script src="../gitbook/gitbook.js"></script>
+    <script src="../gitbook/theme.js"></script>
+    
+        
+        <script src="../gitbook/gitbook-plugin-hide-published-with/plugin.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search-engine.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-search/search.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/lunr.min.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-lunr/search-lunr.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-sharing/buttons.js"></script>
+        
+    
+        
+        <script src="../gitbook/gitbook-plugin-fontsettings/fontsettings.js"></script>
+        
+    
+
+    </body>
+</html>
+
