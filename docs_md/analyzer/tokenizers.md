@@ -68,7 +68,7 @@ Example:
 
 ## Kagome
 
-It uses Kagome, a Japanese morphological analyzer, to split the text into text and tokens.  
+Use [Kagome](https://github.com/ikawaha/kagome), a morphological analyzer for Japanese, to split Japanese text into tokens.
 
 - `dictionary`: You can set `IPADIC` or `UniDIC`.
 - `stop_tags`: You can specify the Japanese part of speech to be removed. The specified part of speech will not be output as a token.
