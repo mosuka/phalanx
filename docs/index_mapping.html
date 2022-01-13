@@ -323,7 +323,88 @@
                                 <section class="normal markdown-section">
                                 
                                 <h1 id="index-mapping">Index Mapping</h1>
-
+<p>Index mapping is the definition of how documents and the fields they contain are stored and indexed.  </p>
+<p>The format of the field definition to be included in the index is as follows:</p>
+<pre><code>{
+    &lt;FIELD_NAME&gt;: {
+        &quot;type&quot;: &lt;FIELD_TYPE&gt;,
+        &quot;options&quot;: &lt;FIELD_OPTIONS&gt;,
+        [ &quot;analyzer&quot;: &lt;ANALYZER&gt; ]
+    }
+    ...
+}
+</code></pre><ul>
+<li><code>&lt;FIELD_NAME&gt;</code>: The name of the field you want to include in the index.  </li>
+</ul>
+<ul>
+<li><code>&lt;FIELD_TYPE&gt;</code>: The type of field you want to include in the index.<br>The following types can be defined:<ul>
+<li><code>text</code>: Unstructured natural language text or keywords.</li>
+<li><code>numeric</code>: Numeric types, such as long and double, used to express amounts.</li>
+<li><code>datetime</code>: DateTime string, such as date and time, formatted in RFC3339.</li>
+<li><code>geo_point</code>: Latitude and longitude points.</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><code>&lt;FIELD_OPTIONS&gt;</code>:  Specifies the options for how the field values are registered in the index.
+The options that can be set differ for each field type.<ul>
+<li><code>index</code>: (Optional, boolean) Whether or not to register the value in the index. Set to true if you want to search by the value of the field. (<code>text</code>, <code>numeric</code>, <code>datetime</code>, <code>geo_point</code>)</li>
+<li><code>store</code>: (Optional, boolean) Whether or not to store the original value. Set to true if you want to return the field values of document retrieved. (<code>text</code>, <code>numeric</code>, <code>datetime</code>, <code>geo_point</code>)</li>
+<li><code>term_positions</code>: (Optional, boolean) Set to true if you want to include information such as the position of the term in the index. (<code>text</code>)</li>
+<li><code>highlight</code>: (Optional, boolean) Set to true if you want to highlight the terms in the matching part of the query. (<code>text</code>)</li>
+<li><code>sortable</code>: (Optional, boolean) Set to true if you want to sort by field value. (<code>text</code>, <code>numeric</code>, <code>datetime</code>, <code>geo_point</code>)</li>
+<li><code>aggregatable</code>: (Optional, boolean) Set to true if you want to aggregate the values of the fields.&#x3000;(<code>text</code>, <code>numeric</code>, <code>datetime</code>, <code>geo_point</code>)</li>
+</ul>
+</li>
+</ul>
+<ul>
+<li><code>&lt;ANALYZER&gt;</code>: (Optional, JSON) You only need to define an analyzer if you define a <code>text</code> field.<br>The Analyzer defines how to analyze the value of a text field. See <a href="analyzer.html">Analyzer</a> section.</li>
+</ul>
+<h2 id="example">Example</h2>
+<pre><code>{
+    &quot;id&quot;: {
+        &quot;type&quot;: &quot;numeric&quot;,
+        &quot;options&quot;: {
+            &quot;index&quot;: true,
+            &quot;store&quot;: true,
+            &quot;sortable&quot;: true,
+            &quot;aggregatable&quot;: true
+        }
+    },
+    &quot;text&quot;: {
+        &quot;type&quot;: &quot;text&quot;,
+        &quot;options&quot;: {
+            &quot;index&quot;: true,
+            &quot;store&quot;: true,
+            &quot;term_positions&quot;: true,
+            &quot;highlight&quot;: true,
+            &quot;sortable&quot;: true,
+            &quot;aggregatable&quot;: true
+        },
+        &quot;analyzer&quot;: {
+            &quot;char_filters&quot;: [
+                {
+                    &quot;name&quot;: &quot;ascii_folding&quot;
+                },
+                {
+                    &quot;name&quot;: &quot;unicode_normalize&quot;,
+                    &quot;options&quot;: {
+                        &quot;form&quot;: &quot;NFKC&quot;
+                    }
+                }
+            ],
+            &quot;tokenizer&quot;: {
+                &quot;name&quot;: &quot;unicode&quot;
+            },
+            &quot;token_filters&quot;: [
+                {
+                    &quot;name&quot;: &quot;lower_case&quot;
+                }
+            ]
+        }
+    }
+}
+</code></pre>
                                 
                                 </section>
                             
@@ -366,7 +447,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Index Mapping","level":"1.5","depth":1,"next":{"title":"Analyzer","level":"1.6","depth":1,"path":"analyzer.md","ref":"analyzer.md","articles":[]},"previous":{"title":"Get started","level":"1.4","depth":1,"path":"get_started.md","ref":"get_started.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"index_mapping.md","mtime":"2022-01-12T04:04:46.855Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-12T13:14:59.820Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Index Mapping","level":"1.5","depth":1,"next":{"title":"Analyzer","level":"1.6","depth":1,"path":"analyzer.md","ref":"analyzer.md","articles":[]},"previous":{"title":"Get started","level":"1.4","depth":1,"path":"get_started.md","ref":"get_started.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"index_mapping.md","mtime":"2022-01-13T02:32:36.524Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-13T02:33:32.280Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
