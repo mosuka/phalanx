@@ -536,18 +536,17 @@ func (s *IndexService) CreateIndex(req *proto.CreateIndexRequest) (*proto.Create
 		// If the index lock is omitted, the shard lock is also omitted.
 		shardLockUri := ""
 		if req.LockUri != "" {
-			// Parse URI.
+			// Parse lock URI.
 			lu, err := url.Parse(req.LockUri)
 			if err != nil {
 				return nil, err
 			}
 			lu.Path = path.Join(lu.Path, shardName)
 
-			//shardLockUri = fmt.Sprintf("%s/%s", req.LockUri, shardName)
 			shardLockUri = lu.String()
 		}
 
-		// Parse URI.
+		// Parse index URI.
 		iu, err := url.Parse(req.IndexUri)
 		if err != nil {
 			return nil, err
@@ -555,8 +554,7 @@ func (s *IndexService) CreateIndex(req *proto.CreateIndexRequest) (*proto.Create
 		iu.Path = path.Join(iu.Path, shardName)
 
 		shardMetadata := &phalanxmetastore.ShardMetadata{
-			ShardName: shardName,
-			//ShardUri:     fmt.Sprintf("%s/%s", req.IndexUri, shardName),
+			ShardName:    shardName,
 			ShardUri:     iu.String(),
 			ShardLockUri: shardLockUri,
 		}

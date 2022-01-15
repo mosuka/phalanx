@@ -2,25 +2,24 @@ package clients
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 	"os"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/credentials"
-	"github.com/aws/aws-sdk-go-v2/service/s3"
+	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/mosuka/phalanx/errors"
 )
 
-func NewS3ClientWithUri(uri string) (*s3.Client, error) {
+func NewDynamoDBClientWithUri(uri string) (*dynamodb.Client, error) {
 	// Parse URI.
 	u, err := url.Parse(uri)
 	if err != nil {
 		return nil, err
 	}
 
-	if u.Scheme != "s3" {
+	if u.Scheme != "dynamodb" {
 		return nil, errors.ErrInvalidUri
 	}
 
@@ -82,7 +81,7 @@ func NewS3ClientWithUri(uri string) (*s3.Client, error) {
 	}
 
 	endpoint := os.Getenv("AWS_ENDPOINT_URL")
-	if str := u.Query().Get("endpoint"); str != "" {
+	if str := u.Query().Get("endpoint_url"); str != "" {
 		endpoint = str
 	}
 	if endpoint != "" {
@@ -96,17 +95,5 @@ func NewS3ClientWithUri(uri string) (*s3.Client, error) {
 		cfg.EndpointResolverWithOptions = customResolver
 	}
 
-	usePathStyle := false
-	usePathStyleStr := os.Getenv("AWS_USE_PATH_STYLE")
-	if str := u.Query().Get("use_path_style"); str != "" {
-		usePathStyleStr = str
-	}
-	if usePathStyleStr == "true" {
-		fmt.Println("AWS_USE_PATH_STYLE is set to true. Using path style.")
-		usePathStyle = true
-	}
-
-	return s3.NewFromConfig(cfg, func(options *s3.Options) {
-		options.UsePathStyle = usePathStyle
-	}), nil
+	return dynamodb.NewFromConfig(cfg), nil
 }
