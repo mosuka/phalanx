@@ -46,4 +46,6 @@ var (
 
 	ErrNodeDoesNotFound = errors.New("node not found")
 	ErrInvalidData      = errors.New("invalid data")
+
+	ErrInvalidCredentials = errors.New("invalid credentials")
 )

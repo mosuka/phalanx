@@ -21,7 +21,14 @@ const (
 	SchemeTypeMem
 	SchemeTypeFile
 	SchemeTypeMinio
+	SchemeTypeS3
 )
+
+type uint64Slice []uint64
+
+func (e uint64Slice) Len() int           { return len(e) }
+func (e uint64Slice) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
+func (e uint64Slice) Less(i, j int) bool { return e[i] < e[j] }
 
 // Enum value maps for SchemeType.
 var (
@@ -30,12 +37,14 @@ var (
 		SchemeTypeMem:     "mem",
 		SchemeTypeFile:    "file",
 		SchemeTypeMinio:   "minio",
+		SchemeTypeS3:      "s3",
 	}
 	SchemeType_value = map[string]SchemeType{
 		"unknown": SchemeTypeUnknown,
 		"mem":     SchemeTypeMem,
 		"file":    SchemeTypeFile,
 		"minio":   SchemeTypeMinio,
+		"s3":      SchemeTypeS3,
 	}
 )
 
@@ -64,6 +73,8 @@ func NewIndexConfigWithUri(uri string, lockUri string, logger *zap.Logger) (blug
 		return FileSystemIndexConfig(uri, directoryLogger), nil
 	case SchemeType_name[SchemeTypeMinio]:
 		return MinioIndexConfig(uri, lockUri, directoryLogger), nil
+	case SchemeType_name[SchemeTypeS3]:
+		return S3IndexConfig(uri, lockUri, directoryLogger), nil
 	default:
 		err := errors.ErrUnsupportedDirectoryType
 		directoryLogger.Error(err.Error(), zap.String("scheme", u.Scheme))

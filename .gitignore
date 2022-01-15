@@ -8,6 +8,8 @@
 bin/phalanx
 dist/
 
+.env
+
 *.pem
 *.csr
 
