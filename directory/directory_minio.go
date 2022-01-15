@@ -23,13 +23,6 @@ import (
 	"go.uber.org/zap"
 )
 
-type uint64Slice []uint64
-
-func (e uint64Slice) Len() int           { return len(e) }
-func (e uint64Slice) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
-func (e uint64Slice) Less(i, j int) bool { return e[i] < e[j] }
-
-// func MinioIndexConfig(uri string, lockManager lock.LockManager, logger *zap.Logger) bluge.Config {
 func MinioIndexConfig(uri string, lockUri string, logger *zap.Logger) bluge.Config {
 	return bluge.DefaultConfigWithDirectory(func() index.Directory {
 		return NewMinioDirectoryWithUri(uri, lockUri, logger)
@@ -47,7 +40,6 @@ type MinioDirectory struct {
 	logger         *zap.Logger
 }
 
-// func NewMinioDirectoryWithUri(uri string, lockManager lock.LockManager, logger *zap.Logger) *MinioDirectory {
 func NewMinioDirectoryWithUri(uri string, lockUri string, logger *zap.Logger) *MinioDirectory {
 	directoryLogger := logger.Named("minio")
 
@@ -120,8 +112,7 @@ func (d *MinioDirectory) Setup(readOnly bool) error {
 			Region: region,
 		}
 
-		err = d.client.MakeBucket(ctx, d.bucket, opts)
-		if err != nil {
+		if err = d.client.MakeBucket(ctx, d.bucket, opts); err != nil {
 			d.logger.Error(err.Error(), zap.String("region", region), zap.String("bucket", d.bucket))
 			return err
 		}
@@ -236,8 +227,7 @@ func (d *MinioDirectory) Remove(kind string, id uint64) error {
 	ctx, cancel := context.WithTimeout(d.ctx, d.requestTimeout)
 	defer cancel()
 
-	err := d.client.RemoveObject(ctx, d.bucket, path, opts)
-	if err != nil {
+	if err := d.client.RemoveObject(ctx, d.bucket, path, opts); err != nil {
 		d.logger.Error(err.Error(), zap.String("bucket", d.bucket), zap.String("path", path), zap.Any("opts", opts))
 		return err
 	}

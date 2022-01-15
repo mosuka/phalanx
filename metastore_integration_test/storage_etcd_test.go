@@ -3,16 +3,19 @@
 package metastore_integration_test
 
 import (
+	"fmt"
 	"reflect"
 	"sort"
 	"testing"
 
 	"github.com/mosuka/phalanx/logging"
 	"github.com/mosuka/phalanx/metastore"
+	"github.com/thanhpk/randstr"
 )
 
 func TestEtcdStorageWithUri(t *testing.T) {
-	uri := "etcd://phalanx-test/metastore?endpoints=localhost:2379"
+	tmpDir := randstr.String(8)
+	uri := fmt.Sprintf("etcd://phalanx-test/metastore/newtest/%s?endpoints=localhost:2379", tmpDir)
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	etcdStorage, err := metastore.NewEtcdStorageWithUri(uri, logger)
@@ -23,7 +26,8 @@ func TestEtcdStorageWithUri(t *testing.T) {
 }
 
 func TestEtcdStoragePut(t *testing.T) {
-	uri := "etcd://phalanx-test/metastore/puttest?endpoints=localhost:2379"
+	tmpDir := randstr.String(8)
+	uri := fmt.Sprintf("etcd://phalanx-test/metastore/puttest/%s?endpoints=localhost:2379", tmpDir)
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	etcdStorage, err := metastore.NewEtcdStorageWithUri(uri, logger)
@@ -39,7 +43,8 @@ func TestEtcdStoragePut(t *testing.T) {
 }
 
 func TestEtcdStorageGet(t *testing.T) {
-	uri := "etcd://phalanx-test/metastore/gettest?endpoints=localhost:2379"
+	tmpDir := randstr.String(8)
+	uri := fmt.Sprintf("etcd://phalanx-test/metastore/gettest/%s?endpoints=localhost:2379", tmpDir)
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	etcdStorage, err := metastore.NewEtcdStorageWithUri(uri, logger)
@@ -61,7 +66,8 @@ func TestEtcdStorageGet(t *testing.T) {
 }
 
 func TestEtcdStorageDelete(t *testing.T) {
-	uri := "etcd://phalanx-test/metastore/deletetest?endpoints=localhost:2379"
+	tmpDir := randstr.String(8)
+	uri := fmt.Sprintf("etcd://phalanx-test/metastore/deletetest/%s?endpoints=localhost:2379", tmpDir)
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	etcdStorage, err := metastore.NewEtcdStorageWithUri(uri, logger)
@@ -82,7 +88,8 @@ func TestEtcdStorageDelete(t *testing.T) {
 }
 
 func TestEtcdStorageExists(t *testing.T) {
-	uri := "etcd://phalanx-test/metastore/existstest?endpoints=localhost:2379"
+	tmpDir := randstr.String(8)
+	uri := fmt.Sprintf("etcd://phalanx-test/metastore/existstest/%s?endpoints=localhost:2379", tmpDir)
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	etcdStorage, err := metastore.NewEtcdStorageWithUri(uri, logger)
@@ -116,7 +123,8 @@ func TestEtcdStorageExists(t *testing.T) {
 }
 
 func TestEtcdStorageList(t *testing.T) {
-	uri := "etcd://phalanx-test/metastore/listtest?endpoints=localhost:2379"
+	tmpDir := randstr.String(8)
+	uri := fmt.Sprintf("etcd://phalanx-test/metastore/listtest/%s?endpoints=localhost:2379", tmpDir)
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	etcdStorage, err := metastore.NewEtcdStorageWithUri(uri, logger)

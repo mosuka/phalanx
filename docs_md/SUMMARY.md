@@ -3,6 +3,7 @@
 * [Build](/build.md)
 * [Get started](/get_started.md)
 * [Run with MinIO and etcd](/run_with_minio_etcd.md)
+* [Run with AWS](/run_with_aws.md)
 * [Index Mapping](/index_mapping.md)
 * [Analyzer](/analyzer.md)
   * [Char filters](/analyzer/char_filters.md)

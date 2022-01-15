@@ -57,8 +57,6 @@ func NewCluster(host string, bindPort int, nodeMetadata NodeMetadata, isSeedNode
 	// }
 	// members.UpdateNode(10 * time.Second)
 
-	fmt.Println("cluster created", memberList.LocalNode().Name)
-
 	return &Cluster{
 		memberList:           memberList,
 		nodeEventDeliegate:   nodeEventDeliegate,
