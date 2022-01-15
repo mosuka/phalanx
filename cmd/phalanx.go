@@ -77,11 +77,11 @@ var (
 		Long:  "Phalanx server",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Check version flag.
-			version_flag, err := cmd.Flags().GetBool("version")
+			versionFlag, err := cmd.Flags().GetBool("version")
 			if err != nil {
 				return err
 			}
-			if version_flag {
+			if versionFlag {
 				fmt.Printf("Phalanx version: %s\n", version.Version)
 				return nil
 			}

@@ -11,21 +11,21 @@ type SchemeType int
 
 const (
 	SchemeTypeUnknown SchemeType = iota
-	// SchemeTypeFile
 	SchemeTypeEtcd
+	SchemeTypeDynamoDB
 )
 
 // Enum value maps for SchemeType.
 var (
 	SchemeType_name = map[SchemeType]string{
-		SchemeTypeUnknown: "unknown",
-		// SchemeTypeFile:    "file",
-		SchemeTypeEtcd: "etcd",
+		SchemeTypeUnknown:  "unknown",
+		SchemeTypeEtcd:     "etcd",
+		SchemeTypeDynamoDB: "dynamodb",
 	}
 	SchemeType_value = map[string]SchemeType{
 		"unknown": SchemeTypeUnknown,
-		// "file":    SchemeTypeFile,
-		"etcd": SchemeTypeEtcd,
+		"etcd":    SchemeTypeEtcd,
+		"dynamo":  SchemeTypeDynamoDB,
 	}
 )
 
@@ -44,10 +44,10 @@ func NewLockManagerWithUri(uri string, logger *zap.Logger) (LockManager, error) 
 	}
 
 	switch u.Scheme {
-	// case SchemeType_name[SchemeTypeFile]:
-	// 	return NewFileSystemLockManagerWithUri(uri, logger)
 	case SchemeType_name[SchemeTypeEtcd]:
 		return NewEtcdLockManagerWithUri(uri, logger)
+	case SchemeType_name[SchemeTypeDynamoDB]:
+		return NewDynamoDBLockManagerWithUri(uri, logger)
 	default:
 		err := errors.ErrUnsupportedLockManagerType
 		lockManagerLogger.Error(err.Error(), zap.String("scheme", u.Scheme))

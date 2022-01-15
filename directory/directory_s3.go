@@ -5,8 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	phalanxerrors "github.com/mosuka/phalanx/errors"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -15,12 +13,14 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/blugelabs/bluge"
 	"github.com/blugelabs/bluge/index"
 	segment "github.com/blugelabs/bluge_segment_api"
 	"github.com/mosuka/phalanx/clients"
+	phalanxerrors "github.com/mosuka/phalanx/errors"
 	"github.com/mosuka/phalanx/lock"
 	"go.uber.org/zap"
 )
@@ -82,15 +82,11 @@ func (d *S3Directory) fileName(kind string, id uint64) string {
 func (d *S3Directory) Setup(readOnly bool) error {
 	d.logger.Info("setup", zap.String("bucket", d.bucket), zap.String("path", d.path))
 
-	//ctx, cancel := context.WithTimeout(d.ctx, d.requestTimeout)
-	//defer cancel()
-
 	input := &s3.CreateBucketInput{
 		Bucket: aws.String(d.bucket),
 	}
 
-	_, err := d.client.CreateBucket(d.ctx, input)
-	if err != nil {
+	if _, err := d.client.CreateBucket(d.ctx, input); err != nil {
 		var bne *types.BucketAlreadyExists
 		if errors.As(err, &bne) {
 			d.logger.Info(err.Error(), zap.String("bucket", d.bucket))

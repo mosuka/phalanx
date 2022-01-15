@@ -13,85 +13,77 @@ import (
 	"github.com/thanhpk/randstr"
 )
 
-func TestEtcdLockManagerWithUri(t *testing.T) {
+func TestNewDynamoDBLockManagerWithUri(t *testing.T) {
 	err := godotenv.Load(filepath.FromSlash("../.env"))
 	if err != nil {
 		t.Errorf("Failed to load .env file")
 	}
 
 	tmpDir := randstr.String(8)
-	uri := fmt.Sprintf("etcd://phalanx-test/locks/%s", tmpDir)
+	uri := fmt.Sprintf("dynamodb://phalanx-locks-test/%s", tmpDir)
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	etcdLock, err := lock.NewEtcdLockManagerWithUri(uri, logger)
+	dynamoLock, err := lock.NewDynamoDBLockManagerWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("error %v\n", err)
 	}
-	defer etcdLock.Close()
+	defer dynamoLock.Close()
 }
 
-func TestEtcdLockManagerLock(t *testing.T) {
+func TestDynamoDBLockManagerLock(t *testing.T) {
 	err := godotenv.Load(filepath.FromSlash("../.env"))
 	if err != nil {
 		t.Errorf("Failed to load .env file")
 	}
 
 	tmpDir := randstr.String(8)
-	uri := fmt.Sprintf("etcd://phalanx-test/locks/%s", tmpDir)
+	uri := fmt.Sprintf("dynamodb://phalanx-locks-test/%s", tmpDir)
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	etcdLock, err := lock.NewEtcdLockManagerWithUri(uri, logger)
+	dynamoLock, err := lock.NewDynamoDBLockManagerWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
-	defer etcdLock.Close()
+	defer dynamoLock.Close()
 
-	rev, err := etcdLock.Lock()
-	if err != nil {
+	if _, err := dynamoLock.Lock(); err != nil {
 		t.Fatalf("%v\n", err)
 	}
-	if rev == 0 {
-		t.Fatalf("expecting the revision greater than 0.\n")
-	}
 
-	defer etcdLock.Unlock()
+	defer dynamoLock.Unlock()
 }
 
-func TestEtcdLockManagerLockTimeout(t *testing.T) {
+func TestDynamoDBLockManagerLockTimeout(t *testing.T) {
 	err := godotenv.Load(filepath.FromSlash("../.env"))
 	if err != nil {
 		t.Errorf("Failed to load .env file")
 	}
 
 	tmpDir := randstr.String(8)
-	uri := fmt.Sprintf("etcd://phalanx-test/locks/%s", tmpDir)
+	uri := fmt.Sprintf("dynamodb://phalanx-locks-test/%s", tmpDir)
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	etcdLock1, err := lock.NewEtcdLockManagerWithUri(uri, logger)
+	dynamoLock1, err := lock.NewDynamoDBLockManagerWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
-	defer etcdLock1.Close()
+	defer dynamoLock1.Close()
 
-	etcdLock2, err := lock.NewEtcdLockManagerWithUri(uri, logger)
+	dynamoLock2, err := lock.NewDynamoDBLockManagerWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
-	defer etcdLock2.Close()
+	defer dynamoLock2.Close()
 
-	rev, err := etcdLock1.Lock()
-	if err != nil {
+	if _, err := dynamoLock1.Lock(); err != nil {
 		t.Fatalf("%v\n", err)
 	}
-	if rev == 0 {
-		t.Fatalf("expecting the revision greater than 0.\n")
-	}
 
-	_, err = etcdLock2.Lock()
+	_, err = dynamoLock2.Lock()
 	if err == nil {
 		t.Fatalf("expect error: contextdeadline exceeded\n")
 	}
 
-	defer etcdLock1.Unlock()
-	defer etcdLock2.Unlock()
+	defer dynamoLock1.Unlock()
+	defer dynamoLock2.Unlock()
 }

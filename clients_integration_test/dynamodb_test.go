@@ -10,15 +10,15 @@ import (
 	"github.com/mosuka/phalanx/clients"
 )
 
-func TestNewS3ClientWithUri(t *testing.T) {
+func TestNewDynamoDBClientWithUri(t *testing.T) {
 	err := godotenv.Load(filepath.FromSlash("../.env"))
 	if err != nil {
 		t.Errorf("Failed to load .env file")
 	}
 
-	uri := "s3://phalanx-locks-test/indexname/shardname"
+	uri := "dynamodb://phalanx-locks-test/index/shard"
 
-	if _, err := clients.NewS3ClientWithUri(uri); err != nil {
+	if _, err := clients.NewDynamoDBClientWithUri(uri); err != nil {
 		t.Fatalf("error %v\n", err)
 	}
 }
