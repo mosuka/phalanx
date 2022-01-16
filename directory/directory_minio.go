@@ -66,7 +66,7 @@ func NewMinioDirectoryWithUri(uri string, lockUri string, logger *zap.Logger) *M
 		bucket:         u.Host,
 		path:           u.Path,
 		ctx:            context.Background(),
-		requestTimeout: 3 * time.Second,
+		requestTimeout: 10 * time.Second,
 		lockUri:        lockUri,
 		lockManager:    nil,
 		logger:         directoryLogger,
