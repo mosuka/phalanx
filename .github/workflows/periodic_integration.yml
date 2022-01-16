@@ -50,5 +50,25 @@ jobs:
       - name: Get dependcies
         run: go get -v -t -d ./...
 
+      - name: Create .env file
+      - shell: bash
+        run: |
+          touch .env
+          echo "MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}" >> .env
+          echo "MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}" >> .env
+          echo "MINIO_VOLUMES=${{ secrets.MINIO_VOLUMES }}" >> .env
+          echo "MINIO_OPTS=${{ secrets.MINIO_OPTS }}" >> .env
+          echo "MINIO_REGION_NAME=${{ secrets.MINIO_REGION_NAME }}" >> .env
+          echo "MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }}" >> .env
+          echo "MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }}" >> .env
+          echo "MINIO_ENDPOINT=${{ secrets.MINIO_ENDPOINT }}" >> .env
+          echo "MINIO_SECURE=${{ secrets.MINIO_SECURE }}" >> .env
+          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
+          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}" >> .env
+          echo "AWS_ENDPOINT_URL=${{ secrets.AWS_ENDPOINT_URL }}" >> .env
+          echo "AWS_USE_PATH_STYLE=${{ secrets.AWS_USE_PATH_STYLE }}" >> .env
+          echo "ETCD_ENDPOINTS=${{ secrets.ETCD_ENDPOINTS }}" >> .env
+
       - name: Test
         run: go test -v -tags=integration ./...
