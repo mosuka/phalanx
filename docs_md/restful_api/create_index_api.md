@@ -34,17 +34,17 @@ PUT /v1/indexes/<INDEX_NAME>
 - `<INDEX_URI>`: (Required, string) Path of the index.  
 Specifies the path to create the index. It currently supports the following:
   - Local file system:  
-  e.g., `file:///var/lib/phalanx/indexes/wikipedia_en`  
+  e.g., `file:///var/lib/phalanx-indexes/wikipedia_en`  
   - [MinIO](https://min.io/):  
-  e.g., `minio://phalanx/indexes/wikipedia_en`  
+  e.g., `minio://phalanx-indexes/wikipedia_en`  
 
 
 - `<LOCK_URI>`: (Optional, string) Path of the lock objects.  
 Specifies the path to create the locks. It currently supports the following:
   - Local file system:  
-  e.g., `file:///var/lib/phalanx/locks/wikipedia_en`  
+  e.g., `file:///var/lib/phalanx-locks/wikipedia_en`  
   - [etcd](https://etcd.io/):  
-  e.g., `etcd://phalanx/locks/wikipedia_en`  
+  e.g., `etcd://phalanx-locks/wikipedia_en`  
 
 
 - `<INDEX_MAPPING>`: (Required, JSON) Mapping for fields in the index.  
@@ -80,7 +80,7 @@ See [Analyzer](/analyzer.md) section. Defaults to use [StandardAnalyzer](https:/
 ```
 % curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example --data-binary '
 {
-	"index_uri": "file:///tmp/phalanx/indexes/example",
+	"index_uri": "file:///tmp/phalanx-indexes/example",
 	"index_mapping": {
 		"id": {
 			"type": "numeric",

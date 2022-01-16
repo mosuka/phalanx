@@ -17,12 +17,26 @@ jobs:
 
     services:
       etcd:
-        image: quay.io/coreos/etcd:v3.5.1
+        image: quay.io/coreos/etcd:latest
         env:
           ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
           ETCD_ADVERTISE_CLIENT_URLS: http://0.0.0.0:2379
         ports:
           - 2379:2379
+      minio:
+        image: minio/minio:latest
+        env:
+          MINIO_ROOT_USER: minio
+          MINIO_ROOT_PASSWORD: miniosecret
+        ports:
+          - 9000:9000
+      localstack:
+        image: localstack/localstack:latest
+        env:
+          SERVICES: s3,dynamodb
+          DEFAULT_REGION: ap-northeast-1
+        ports:
+          - 4566:4566
 
     steps:
       - name: Install Go

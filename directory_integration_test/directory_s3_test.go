@@ -1,3 +1,5 @@
+//go:build integration
+
 package directory_integration_test_test
 
 import (
@@ -27,6 +29,11 @@ func TestNewS3DirectoryWithUri(t *testing.T) {
 }
 
 func TestS3DirectorySetup(t *testing.T) {
+	err := godotenv.Load(filepath.FromSlash("../.env"))
+	if err != nil {
+		t.Errorf("Failed to load .env file")
+	}
+
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
 	uri := "s3://phalanx-test/indexes/test"

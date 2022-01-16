@@ -57,7 +57,7 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="index_mapping.html" />
+    <link rel="next" href="run_with_aws.html" />
     
     
     <link rel="prev" href="get_started.html" />
@@ -154,7 +154,20 @@
             
         </li>
     
-        <li class="chapter " data-level="1.6" data-path="index_mapping.html">
+        <li class="chapter " data-level="1.6" data-path="run_with_aws.html">
+            
+                <a href="run_with_aws.html">
+            
+                    
+                    Run with AWS
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7" data-path="index_mapping.html">
             
                 <a href="index_mapping.html">
             
@@ -167,7 +180,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7" data-path="analyzer.html">
+        <li class="chapter " data-level="1.8" data-path="analyzer.html">
             
                 <a href="analyzer.html">
             
@@ -181,7 +194,7 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.7.1" data-path="analyzer/char_filters.html">
+        <li class="chapter " data-level="1.8.1" data-path="analyzer/char_filters.html">
             
                 <a href="analyzer/char_filters.html">
             
@@ -194,7 +207,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7.2" data-path="analyzer/tokenizers.html">
+        <li class="chapter " data-level="1.8.2" data-path="analyzer/tokenizers.html">
             
                 <a href="analyzer/tokenizers.html">
             
@@ -207,7 +220,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7.3" data-path="analyzer/token_filters.html">
+        <li class="chapter " data-level="1.8.3" data-path="analyzer/token_filters.html">
             
                 <a href="analyzer/token_filters.html">
             
@@ -225,7 +238,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.8" data-path="aggregations.html">
+        <li class="chapter " data-level="1.9" data-path="aggregations.html">
             
                 <a href="aggregations.html">
             
@@ -238,7 +251,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.9" data-path="restful_api.html">
+        <li class="chapter " data-level="1.10" data-path="restful_api.html">
             
                 <a href="restful_api.html">
             
@@ -252,7 +265,7 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.9.1" data-path="restful_api/create_index_api.html">
+        <li class="chapter " data-level="1.10.1" data-path="restful_api/create_index_api.html">
             
                 <a href="restful_api/create_index_api.html">
             
@@ -265,7 +278,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.9.2" data-path="restful_api/delete_index_api.html">
+        <li class="chapter " data-level="1.10.2" data-path="restful_api/delete_index_api.html">
             
                 <a href="restful_api/delete_index_api.html">
             
@@ -278,7 +291,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.9.3" data-path="restful_api/add_documents_api.html">
+        <li class="chapter " data-level="1.10.3" data-path="restful_api/add_documents_api.html">
             
                 <a href="restful_api/add_documents_api.html">
             
@@ -291,7 +304,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.9.4" data-path="restful_api/delete_documents_api.html">
+        <li class="chapter " data-level="1.10.4" data-path="restful_api/delete_documents_api.html">
             
                 <a href="restful_api/delete_documents_api.html">
             
@@ -304,7 +317,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.9.5" data-path="restful_api/search_api.html">
+        <li class="chapter " data-level="1.10.5" data-path="restful_api/search_api.html">
             
                 <a href="restful_api/search_api.html">
             
@@ -322,7 +335,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.10" data-path="docker.html">
+        <li class="chapter " data-level="1.11" data-path="docker.html">
             
                 <a href="docker.html">
             
@@ -393,13 +406,13 @@ This repository has a docker-compose.yml file. With it, you can easily launch Mi
 </ul>
 <h2 id="start-phalanx-with-etcd-metastore">Start Phalanx with etcd metastore</h2>
 <p>Start Phalanx with etcd specified as the metastore:</p>
-<pre><code>% ./bin/phalanx --index-metastore-uri=etcd://phalanx/metastore
+<pre><code>% ./bin/phalanx --index-metastore-uri=etcd://phalanx-metastore
 </code></pre><h3 id="create-index-with-minio-and-etcd">Create index with MinIO and etcd</h3>
-<p>If you have started Phalanx to use MinIO and etcd, you can use this command to create an index.</p>
+<p>Use MinIO as index storage, and create a lock on etcd to avoid write conflicts.</p>
 <pre><code>% curl -XPUT -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/example --data-binary &apos;
 {
-    &quot;index_uri&quot;: &quot;minio://phalanx/indexes/example&quot;,
-    &quot;lock_uri&quot;: &quot;etcd://phalanx/locks/example&quot;,
+    &quot;index_uri&quot;: &quot;minio://phalanx-indexes/example&quot;,
+    &quot;lock_uri&quot;: &quot;etcd://phalanx-locks/example&quot;,
     &quot;index_mapping&quot;: {
         &quot;id&quot;: {
             &quot;type&quot;: &quot;numeric&quot;,
@@ -489,7 +502,7 @@ This repository has a docker-compose.yml file. With it, you can easily launch Mi
                 </a>
                 
                 
-                <a href="index_mapping.html" class="navigation navigation-next " aria-label="Next page: Index Mapping">
+                <a href="run_with_aws.html" class="navigation navigation-next " aria-label="Next page: Run with AWS">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -500,7 +513,7 @@ This repository has a docker-compose.yml file. With it, you can easily launch Mi
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Run with MinIO and etcd","level":"1.5","depth":1,"next":{"title":"Index Mapping","level":"1.6","depth":1,"path":"index_mapping.md","ref":"index_mapping.md","articles":[]},"previous":{"title":"Get started","level":"1.4","depth":1,"path":"get_started.md","ref":"get_started.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"run_with_minio_etcd.md","mtime":"2022-01-13T12:58:32.719Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-13T13:11:05.793Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Run with MinIO and etcd","level":"1.5","depth":1,"next":{"title":"Run with AWS","level":"1.6","depth":1,"path":"run_with_aws.md","ref":"run_with_aws.md","articles":[]},"previous":{"title":"Get started","level":"1.4","depth":1,"path":"get_started.md","ref":"get_started.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"run_with_minio_etcd.md","mtime":"2022-01-16T11:44:04.229Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-16T12:01:55.477Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
