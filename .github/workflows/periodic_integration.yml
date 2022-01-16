@@ -3,8 +3,8 @@ name: Periodic integration tests
 on:
   workflow_dispatch:
     branches: [ main ]
-  schedule:
-    - cron: 0 0 * * SUN
+#  schedule:
+#    - cron: 0 0 * * SUN
 
 jobs:
   test:
