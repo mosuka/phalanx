@@ -1,38 +1,24 @@
-# Run with AWS(LocalStack)
+# Run with AWS
 
-To experience Phalanx functionality, let's start Phalanx with [MinIO](https://min.io/) and [etcd](https://etcd.io/). 
-This repository has a docker-compose.yml file. With it, you can easily launch MinIO and etcd on Docker.
-
-```
-% docker-compose up etcd etcdkeeper localstack
-```
-
-Once the container has been started, you can check the MinIO and etcd data in your browser at the following URL.
-
-- MinIO  
-http://localhost:9001/dashboard
-
-- ETCD Keeper  
-http://localhost:8080/etcdkeeper/
-
+Phalanx supports [Amazon S3](https://aws.amazon.com/s3/) and [Amazon DynamoDB](https://aws.amazon.com/dynamodb/).
 
 ## Start Phalanx with etcd metastore
 
-Start Phalanx with etcd specified as the metastore:
+Start Phalanx with etcd metastore:
 
 ```
-% ./bin/phalanx --index-metastore-uri=etcd://phalanx/metastore
+% ./bin/phalanx --index-metastore-uri=etcd://phalanx-metastore
 ```
 
-### Create index with MinIO and etcd
+## Create index with S3 and DyunamoDB
 
-If you have started Phalanx to use MinIO and etcd, you can use this command to create an index.
+Use S3 as index storage, and create a lock on DynamoDB to avoid write conflicts.
 
 ```
 % curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example --data-binary '
 {
-	"index_uri": "s3://phalanx/indexes/example",
-	"lock_uri": "etcd://phalanx/locks/example",
+	"index_uri": "s3://phalanx-indexes/example",
+	"lock_uri": "dynamodb://phalanx-locks/example",
 	"index_mapping": {
 		"id": {
 			"type": "numeric",

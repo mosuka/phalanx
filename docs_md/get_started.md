@@ -5,7 +5,7 @@
 Phalanx can be started on a local machine using a local file system as a metastore. The following command starts with a configuration file:
 
 ```
-% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx/metastore
+% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx-metastore
 ```
 
 A metastore is a place where various information about an index is stored.  
@@ -17,7 +17,7 @@ If you have started Phalanx to use the local file system, you can use this comma
 ```
 % curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example --data-binary '
 {
-	"index_uri": "file:///tmp/phalanx/indexes/example",
+	"index_uri": "file:///tmp/phalanx-indexes/example",
 	"index_mapping": {
 		"id": {
 			"type": "numeric",

@@ -1,3 +1,5 @@
+//go:build integration
+
 package directory_integration_test_test
 
 import (

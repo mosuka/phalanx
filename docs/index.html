@@ -152,7 +152,20 @@
             
         </li>
     
-        <li class="chapter " data-level="1.6" data-path="index_mapping.html">
+        <li class="chapter " data-level="1.6" data-path="run_with_aws.html">
+            
+                <a href="run_with_aws.html">
+            
+                    
+                    Run with AWS
+            
+                </a>
+            
+
+            
+        </li>
+    
+        <li class="chapter " data-level="1.7" data-path="index_mapping.html">
             
                 <a href="index_mapping.html">
             
@@ -165,7 +178,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7" data-path="analyzer.html">
+        <li class="chapter " data-level="1.8" data-path="analyzer.html">
             
                 <a href="analyzer.html">
             
@@ -179,7 +192,7 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.7.1" data-path="analyzer/char_filters.html">
+        <li class="chapter " data-level="1.8.1" data-path="analyzer/char_filters.html">
             
                 <a href="analyzer/char_filters.html">
             
@@ -192,7 +205,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7.2" data-path="analyzer/tokenizers.html">
+        <li class="chapter " data-level="1.8.2" data-path="analyzer/tokenizers.html">
             
                 <a href="analyzer/tokenizers.html">
             
@@ -205,7 +218,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7.3" data-path="analyzer/token_filters.html">
+        <li class="chapter " data-level="1.8.3" data-path="analyzer/token_filters.html">
             
                 <a href="analyzer/token_filters.html">
             
@@ -223,7 +236,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.8" data-path="aggregations.html">
+        <li class="chapter " data-level="1.9" data-path="aggregations.html">
             
                 <a href="aggregations.html">
             
@@ -236,7 +249,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.9" data-path="restful_api.html">
+        <li class="chapter " data-level="1.10" data-path="restful_api.html">
             
                 <a href="restful_api.html">
             
@@ -250,7 +263,7 @@
             <ul class="articles">
                 
     
-        <li class="chapter " data-level="1.9.1" data-path="restful_api/create_index_api.html">
+        <li class="chapter " data-level="1.10.1" data-path="restful_api/create_index_api.html">
             
                 <a href="restful_api/create_index_api.html">
             
@@ -263,7 +276,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.9.2" data-path="restful_api/delete_index_api.html">
+        <li class="chapter " data-level="1.10.2" data-path="restful_api/delete_index_api.html">
             
                 <a href="restful_api/delete_index_api.html">
             
@@ -276,7 +289,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.9.3" data-path="restful_api/add_documents_api.html">
+        <li class="chapter " data-level="1.10.3" data-path="restful_api/add_documents_api.html">
             
                 <a href="restful_api/add_documents_api.html">
             
@@ -289,7 +302,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.9.4" data-path="restful_api/delete_documents_api.html">
+        <li class="chapter " data-level="1.10.4" data-path="restful_api/delete_documents_api.html">
             
                 <a href="restful_api/delete_documents_api.html">
             
@@ -302,7 +315,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.9.5" data-path="restful_api/search_api.html">
+        <li class="chapter " data-level="1.10.5" data-path="restful_api/search_api.html">
             
                 <a href="restful_api/search_api.html">
             
@@ -320,7 +333,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.10" data-path="docker.html">
+        <li class="chapter " data-level="1.11" data-path="docker.html">
             
                 <a href="docker.html">
             
@@ -379,7 +392,7 @@
                                 <section class="normal markdown-section">
                                 
                                 <h1 id="phalanx">Phalanx</h1>
-<p>Phalanx is a cloud-native distributed search engine written in <a href="https://golang.org" target="_blank">Go</a> built on top of <a href="https://github.com/blugelabs/bluge" target="_blank">Bluge</a> that provides endpoints through <a href="https://grpc.io/" target="_blank">gRPC</a> and traditional RESTful API.<br>Phalanx implements a cluster formation by <a href="https://github.com/hashicorp/memberlist" target="_blank">hashicorp/memberlist</a> and managing index metadata on <a href="https://etcd.io/" target="_blank">etcd</a>, so it is easy to bring up a fault-tolerant cluster.<br>Metrics for system operation can also be output in Prometheus exposition format, so that monitoring can be done immediately using <a href="https://prometheus.io/" target="_blank">Prometheus</a>.<br>Phalanx is using object storage for the storage layer, it is only responsible for the computation layer, such as indexing and retrieval processes. Therefore, scaling is easy, and you can simply add new nodes to the cluster.<br>Currently, it is an alpha version and only supports <a href="https://min.io/" target="_blank">MinIO</a> as the storage layer, but in the future it will support <a href="https://aws.amazon.com/s3/" target="_blank">Amazon S3</a>, <a href="https://cloud.google.com/storage" target="_blank">Google Cloud Storage</a>, and <a href="https://azure.microsoft.com/en-us/services/storage/blobs/" target="_blank">Azure Blob Storage</a>.  </p>
+<p>Phalanx is a cloud-native distributed search engine written in <a href="https://golang.org" target="_blank">Go</a> built on top of <a href="https://github.com/blugelabs/bluge" target="_blank">Bluge</a> that provides endpoints through <a href="https://grpc.io/" target="_blank">gRPC</a> and traditional RESTful API.<br>Phalanx implements a cluster formation by <a href="https://github.com/hashicorp/memberlist" target="_blank">hashicorp/memberlist</a> and managing index metadata on <a href="https://etcd.io/" target="_blank">etcd</a>, so it is easy to bring up a fault-tolerant cluster.<br>Metrics for system operation can also be output in Prometheus exposition format, so that monitoring can be done immediately using <a href="https://prometheus.io/" target="_blank">Prometheus</a>.<br>Phalanx is using object storage for the storage layer, it is only responsible for the computation layer, such as indexing and retrieval processes. Therefore, scaling is easy, and you can simply add new nodes to the cluster.<br>Currently, it is an alpha version and only supports <a href="https://aws.amazon.com/s3/" target="_blank">Amazon S3</a> and <a href="https://min.io/" target="_blank">MinIO</a> as the storage layer, but in the future it will support <a href="https://cloud.google.com/storage" target="_blank">Google Cloud Storage</a>, and <a href="https://azure.microsoft.com/en-us/services/storage/blobs/" target="_blank">Azure Blob Storage</a>.  </p>
 <p>Document: <a href="https://mosuka.github.io/phalanx/" target="_blank">https://mosuka.github.io/phalanx/</a></p>
 <p>Source: <a href="https://github.com/mosuka/phalanx" target="_blank">https://github.com/mosuka/phalanx</a></p>
 
@@ -421,7 +434,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Introduction","level":"1.1","depth":1,"next":{"title":"Architecture","level":"1.2","depth":1,"path":"architecture.md","ref":"architecture.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"README.md","mtime":"2022-01-10T15:41:56.116Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-13T13:11:05.793Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Introduction","level":"1.1","depth":1,"next":{"title":"Architecture","level":"1.2","depth":1,"path":"architecture.md","ref":"architecture.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"README.md","mtime":"2022-01-16T11:31:34.067Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-16T12:01:55.477Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>

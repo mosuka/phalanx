@@ -21,18 +21,18 @@ http://localhost:8080/etcdkeeper/
 Start Phalanx with etcd specified as the metastore:
 
 ```
-% ./bin/phalanx --index-metastore-uri=etcd://phalanx/metastore
+% ./bin/phalanx --index-metastore-uri=etcd://phalanx-metastore
 ```
 
 ### Create index with MinIO and etcd
 
-If you have started Phalanx to use MinIO and etcd, you can use this command to create an index.
+Use MinIO as index storage, and create a lock on etcd to avoid write conflicts.
 
 ```
 % curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example --data-binary '
 {
-	"index_uri": "minio://phalanx/indexes/example",
-	"lock_uri": "etcd://phalanx/locks/example",
+	"index_uri": "minio://phalanx-indexes/example",
+	"lock_uri": "etcd://phalanx-locks/example",
 	"index_mapping": {
 		"id": {
 			"type": "numeric",
