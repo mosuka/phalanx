@@ -51,7 +51,6 @@ jobs:
         run: go get -v -t -d ./...
 
       - name: Create .env file
-      - shell: bash
         run: |
           touch .env
           echo "MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}" >> .env
