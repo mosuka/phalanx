@@ -24,10 +24,10 @@ jobs:
         ports:
           - 2379:2379
       minio:
-        image: minio/minio:latest
+        image: mosuka/minio:latest
         env:
-          MINIO_ROOT_USER: minio
-          MINIO_ROOT_PASSWORD: miniosecret
+          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
+          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
         ports:
           - 9000:9000
       localstack:
@@ -35,6 +35,8 @@ jobs:
         env:
           SERVICES: s3,dynamodb
           DEFAULT_REGION: ap-northeast-1
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         ports:
           - 4566:4566
 
@@ -55,19 +57,19 @@ jobs:
           touch .env
           echo "MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}" >> .env
           echo "MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}" >> .env
-          echo "MINIO_VOLUMES=${{ secrets.MINIO_VOLUMES }}" >> .env
-          echo "MINIO_OPTS=${{ secrets.MINIO_OPTS }}" >> .env
-          echo "MINIO_REGION_NAME=${{ secrets.MINIO_REGION_NAME }}" >> .env
+          echo "MINIO_VOLUMES=/data" >> .env
+          echo "MINIO_OPTS=--console-address :9001" >> .env
+          echo "MINIO_REGION_NAME=us-east-1" >> .env
           echo "MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }}" >> .env
           echo "MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }}" >> .env
-          echo "MINIO_ENDPOINT=${{ secrets.MINIO_ENDPOINT }}" >> .env
-          echo "MINIO_SECURE=${{ secrets.MINIO_SECURE }}" >> .env
+          echo "MINIO_ENDPOINT=127.0.0.1:9000" >> .env
+          echo "MINIO_SECURE=false" >> .env
           echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
           echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
-          echo "AWS_DEFAULT_REGION=${{ secrets.AWS_DEFAULT_REGION }}" >> .env
-          echo "AWS_ENDPOINT_URL=${{ secrets.AWS_ENDPOINT_URL }}" >> .env
-          echo "AWS_USE_PATH_STYLE=${{ secrets.AWS_USE_PATH_STYLE }}" >> .env
-          echo "ETCD_ENDPOINTS=${{ secrets.ETCD_ENDPOINTS }}" >> .env
+          echo "AWS_DEFAULT_REGION=ap-northeast-1" >> .env
+          echo "AWS_ENDPOINT_URL=http://localhost:4566" >> .env
+          echo "AWS_USE_PATH_STYLE=true" >> .env
+          echo "ETCD_ENDPOINTS=localhost:2379" >> .env
 
       - name: Test
         run: go test -v -tags=integration ./...
