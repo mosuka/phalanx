@@ -1,10 +1,14 @@
-name: Periodic tests
+name: Regression
 
 on:
   workflow_dispatch:
     branches: [ main ]
   schedule:
     - cron: 0 0 * * SUN
+  push:
+    branches: [ main ]
+  pull_request:
+    types: [opened, synchronize]
 
 jobs:
   test:
