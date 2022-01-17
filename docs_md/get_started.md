@@ -8,11 +8,14 @@ Phalanx can be started on a local machine using a local file system as a metasto
 % ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx-metastore
 ```
 
-A metastore is a place where various information about an index is stored.  
+A metastore is a place where various information about an index is stored.
+See the [metadata store section](/metadata_store.md) for details.
 
 ### Create index on local file system
 
 If you have started Phalanx to use the local file system, you can use this command to create an index.
+If you have started Phalanx to use the local file system, you can use this command to create an index. If you want to use an object store for index storage, you need to specify `lock_uri` as well.
+See the [index store section](/index_store.md) and the [lock store section](/lock_store.md)for details.
 
 ```
 % curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example --data-binary '

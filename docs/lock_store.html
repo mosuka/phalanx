@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>Run with MinIO and etcd · GitBook</title>
+        <title>Lock Store · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.3">
@@ -57,10 +57,10 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="run_with_aws.html" />
+    <link rel="next" href="index_metadata.html" />
     
     
-    <link rel="prev" href="index_metadata.html" />
+    <link rel="prev" href="index_store.html" />
     
 
     </head>
@@ -167,7 +167,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.7" data-path="lock_store.html">
+        <li class="chapter active" data-level="1.7" data-path="lock_store.html">
             
                 <a href="lock_store.html">
             
@@ -193,7 +193,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.9" data-path="run_with_minio_etcd.html">
+        <li class="chapter " data-level="1.9" data-path="run_with_minio_etcd.html">
             
                 <a href="run_with_minio_etcd.html">
             
@@ -430,7 +430,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="." >Run with MinIO and etcd</a>
+        <a href="." >Lock Store</a>
     </h1>
 </div>
 
@@ -445,83 +445,65 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="run-with-minio-and-etcd">Run with MinIO and etcd</h1>
-<p>To experience Phalanx functionality, let&apos;s start Phalanx with <a href="https://min.io/" target="_blank">MinIO</a> and <a href="https://etcd.io/" target="_blank">etcd</a>. 
-This repository has a docker-compose.yml file. With it, you can easily launch MinIO and etcd on Docker.</p>
-<pre><code>% docker-compose up etcd etcdkeeper minio
-</code></pre><p>Once the container has been started, you can check the MinIO and etcd data in your browser at the following URL.</p>
+                                <h1 id="lock-store">Lock Store</h1>
+<p>The lock-store stores the lock objects.</p>
+<p>The lock-store supports the following data stores:</p>
 <ul>
-<li><p>MinIO<br><a href="http://localhost:9001/dashboard" target="_blank">http://localhost:9001/dashboard</a></p>
-</li>
-<li><p>ETCD Keeper<br><a href="http://localhost:8080/etcdkeeper/" target="_blank">http://localhost:8080/etcdkeeper/</a></p>
-</li>
+<li><a href="https://etcd.io/" target="_blank">etcd</a></li>
+<li><a href="https://aws.amazon.com/DynamoDB/" target="_blank">Amazon DynamoDB</a></li>
 </ul>
-<h2 id="start-phalanx-with-etcd-metastore">Start Phalanx with etcd metastore</h2>
-<p>Start Phalanx with etcd specified as the metastore:</p>
-<pre><code>% ./bin/phalanx --index-metastore-uri=etcd://phalanx-metastore
-</code></pre><h3 id="create-index-with-minio-and-etcd">Create index with MinIO and etcd</h3>
-<p>Use MinIO as index storage, and create a lock on etcd to avoid write conflicts.</p>
-<pre><code>% curl -XPUT -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/example --data-binary &apos;
-{
-    &quot;index_uri&quot;: &quot;minio://phalanx-indexes/example&quot;,
-    &quot;lock_uri&quot;: &quot;etcd://phalanx-locks/example&quot;,
-    &quot;index_mapping&quot;: {
-        &quot;id&quot;: {
-            &quot;type&quot;: &quot;numeric&quot;,
-            &quot;options&quot;: {
-                &quot;index&quot;: true,
-                &quot;store&quot;: true,
-                &quot;sortable&quot;: true,
-                &quot;aggregatable&quot;: true
-            }
-        },
-        &quot;text&quot;: {
-            &quot;type&quot;: &quot;text&quot;,
-            &quot;options&quot;: {
-                &quot;index&quot;: true,
-                &quot;store&quot;: true,
-                &quot;term_positions&quot;: true,
-                &quot;highlight&quot;: true,
-                &quot;sortable&quot;: true,
-                &quot;aggregatable&quot;: true
-            },
-            &quot;analyzer&quot;: {
-                &quot;char_filters&quot;: [
-                    {
-                        &quot;name&quot;: &quot;ascii_folding&quot;
-                    },
-                    {
-                        &quot;name&quot;: &quot;unicode_normalize&quot;,
-                        &quot;options&quot;: {
-                            &quot;form&quot;: &quot;NFKC&quot;
-                        }
-                    }
-                ],
-                &quot;tokenizer&quot;: {
-                    &quot;name&quot;: &quot;unicode&quot;
-                },
-                &quot;token_filters&quot;: [
-                    {
-                        &quot;name&quot;: &quot;lower_case&quot;
-                    }
-                ]
-            }
-        }
-    },
-    &quot;num_shards&quot;: 1,
-    &quot;default_search_field&quot;: &quot;_all&quot;,
-    &quot;default_analyzer&quot;: {
-        &quot;tokenizer&quot;: {
-            &quot;name&quot;: &quot;unicode&quot;
-        },
-        &quot;token_filters&quot;: [
-            {
-                &quot;name&quot;: &quot;lower_case&quot;
-            }
-        ]
-    }
-}
-&apos;
+<h2 id="etcd">etcd</h2>
+<p>You can create locks on etcd to avoid index write conflicts. This is recommended if you have a multi-node cluster configuration.</p>
+<h3 id="uri-specification">URI specification</h3>
+<pre><code>etcd://&lt;PATH_TO_LOCK_DIR&gt;
+</code></pre><ul>
+<li><code>&lt;PATH_TO_LOCK_DIR&gt;</code>: (Required, string) Path to the directory where the lock will be stored. The lock for each index is created under this directory when the index writer opened the index.</li>
+</ul>
+<h4 id="uri-parameters">URI parameters</h4>
+<ul>
+<li><code>endpoints</code>: (Optional, string) Comma separated list of etcd endpoints. e.g, 192.168.1.12:2379,192.168.1.13:2379,192.168.1.14:2379</li>
+</ul>
+<h3 id="environment-variables">Environment variables</h3>
+<p>The following parameters can be specified in the environment variable, but the value specified in the URI parameter will take precedence.</p>
+<ul>
+<li><code>ETCD_ENDPOINTS</code>: (Optional, string) Comma separated list of etcd endpoints. e.g, 192.168.1.12:2379,192.168.1.13:2379,192.168.1.14:2379</li>
+</ul>
+<h3 id="example">Example</h3>
+<pre><code>etcd://phalanx-locks
+</code></pre><pre><code>etcd://phalanx-locks?endpoints=192.168.1.12:2379,192.168.1.13:2379,192.168.1.14:2379
+</code></pre><h2 id="amazon-dynamodb">Amazon DynamoDB</h2>
+<p>You can create locks on Amazon DynamoDB to avoid index write conflicts. This is recommended if you have a multi-node cluster configuration.</p>
+<h3 id="uri-specification">URI specification</h3>
+<pre><code>dynamodb://&lt;TABLE_NAME&gt;/&lt;PREFIX&gt;/&lt;INDEX_NAME&gt;
+</code></pre><ul>
+<li><code>&lt;TABLE_NAME&gt;</code>: (Required, string) Name of the table where the index will be stored.</li>
+<li><code>&lt;PREFIX&gt;</code>: (Optional, string) Prefix of the indexes. You can specify this prefix if necessary.</li>
+<li><code>&lt;INDEX_NAME&gt;</code>: (Required, string) The name of the index. Create a lock using a key with this prefix.</li>
+</ul>
+<h4 id="uri-parameters">URI parameters</h4>
+<ul>
+<li><code>endpoint_url</code>: (Optional, string) AWS endpoint URL. e.g. <code>https://dynamodb.us-west-2.amazonaws.com</code> / <code>https://192.168.1.21:9000</code></li>
+<li><code>profile</code>: (Optional, string) AWS profile name.</li>
+<li><code>access_key_id</code>: (Optional, string) AWS access key ID.</li>
+<li><code>secret_access_key</code>: (Optional, string) AWS secret access key.</li>
+<li><code>session_token</code>: (Optional, string) AWS session token.</li>
+<li><code>region</code>: (Optional, string) AWS region. e.g. <code>us-west-2</code></li>
+<li><code>use_path_style</code>:  (Optional, boolean) Use AWS path style.</li>
+</ul>
+<h3 id="environment-variables">Environment variables</h3>
+<p>The following parameters can be specified in the environment variable, but the value specified in the URI parameters will take precedence.</p>
+<ul>
+<li><code>AWS_ENDPOINT_URL</code>: (Optional, string) AWS endpoint URL. e.g. <code>https://dynamodb.us-west-2.amazonaws.com</code> / <code>https://192.168.1.21:9000</code></li>
+<li><code>AWS_PROFILE</code>: (Optional, string) AWS profile name.</li>
+<li><code>AWS_ACCESS_KEY_ID</code>: (Optional, string) AWS access key ID.</li>
+<li><code>AWS_SECRET_ACCESS_KEY</code>: (Optional, string) AWS secret access key.</li>
+<li><code>AWS_SESSION_TOKEN</code>: (Optional, string) AWS session token.</li>
+<li><code>AWS_DEFAULT_REGION</code>: (Optional, string) AWS region. e.g. <code>us-west-2</code></li>
+<li><code>AWS_USE_PATH_STYLE</code>: (Optional, boolean) Use AWS path style.</li>
+</ul>
+<h3 id="example">Example</h3>
+<pre><code>dynamodb://phalanx-locks/wikipedia_en
+</code></pre><pre><code>dynamodb://phalanx-locks/wikipedia_en?endpoint=192.168.1.20:9000&amp;region=ap-northeast-1
 </code></pre>
                                 
                                 </section>
@@ -549,12 +531,12 @@ This repository has a docker-compose.yml file. With it, you can easily launch Mi
 
             
                 
-                <a href="index_metadata.html" class="navigation navigation-prev " aria-label="Previous page: Index Metadata">
+                <a href="index_store.html" class="navigation navigation-prev " aria-label="Previous page: Index Store">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
                 
-                <a href="run_with_aws.html" class="navigation navigation-next " aria-label="Next page: Run with AWS">
+                <a href="index_metadata.html" class="navigation navigation-next " aria-label="Next page: Index Metadata">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -565,7 +547,7 @@ This repository has a docker-compose.yml file. With it, you can easily launch Mi
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Run with MinIO and etcd","level":"1.9","depth":1,"next":{"title":"Run with AWS","level":"1.10","depth":1,"path":"run_with_aws.md","ref":"run_with_aws.md","articles":[]},"previous":{"title":"Index Metadata","level":"1.8","depth":1,"path":"index_metadata.md","ref":"index_metadata.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"run_with_minio_etcd.md","mtime":"2022-01-16T12:46:45.585Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-17T08:03:59.688Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Lock Store","level":"1.7","depth":1,"next":{"title":"Index Metadata","level":"1.8","depth":1,"path":"index_metadata.md","ref":"index_metadata.md","articles":[]},"previous":{"title":"Index Store","level":"1.6","depth":1,"path":"index_store.md","ref":"index_store.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"lock_store.md","mtime":"2022-01-17T07:47:55.796Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-17T08:03:59.688Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
