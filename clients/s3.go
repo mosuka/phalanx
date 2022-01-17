@@ -82,7 +82,7 @@ func NewS3ClientWithUri(uri string) (*s3.Client, error) {
 	}
 
 	endpoint := os.Getenv("AWS_ENDPOINT_URL")
-	if str := u.Query().Get("endpoint"); str != "" {
+	if str := u.Query().Get("endpoint_url"); str != "" {
 		endpoint = str
 	}
 	if endpoint != "" {
