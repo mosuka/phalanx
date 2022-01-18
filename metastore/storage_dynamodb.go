@@ -47,14 +47,23 @@ func NewDynamodbStorage(uri string, logger *zap.Logger) (*DynamodbStorage, error
 		return nil, err
 	}
 
-	return &DynamodbStorage{
+	ds := &DynamodbStorage{
 		dynamoSvc:      dynamodb.NewFromConfig(awsCfg),
 		tableName:      u.Host,
 		root:           u.Path,
 		logger:         metastorelogger,
 		ctx:            ctx,
 		requestTimeout: 3 * time.Second,
-	}, nil
+	}
+
+	if u.Query().Get("create_table") == "true" {
+		err := ds.createTable()
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return ds, nil
 }
 
 // Replace the path separator with '/'.
@@ -221,5 +230,42 @@ func (m *DynamodbStorage) Exists(path string) (bool, error) {
 }
 
 func (m *DynamodbStorage) Close() error {
+	return nil
+}
+
+func (m *DynamodbStorage) createTable() error {
+	_, err := m.dynamoSvc.CreateTable(m.ctx, &dynamodb.CreateTableInput{
+		TableName: &m.tableName,
+		AttributeDefinitions: []types.AttributeDefinition{
+			{
+				AttributeName: aws.String("pk"),
+				AttributeType: types.ScalarAttributeTypeS,
+			},
+			{
+				AttributeName: aws.String("sk"),
+				AttributeType: types.ScalarAttributeTypeS,
+			},
+		},
+		KeySchema: []types.KeySchemaElement{
+			{
+				AttributeName: aws.String("pk"),
+				KeyType:       types.KeyTypeHash,
+			},
+			{
+				AttributeName: aws.String("sk"),
+				KeyType:       types.KeyTypeRange,
+			},
+		},
+		BillingMode: types.BillingModePayPerRequest,
+	})
+	if err != nil {
+		var rne *types.ResourceInUseException
+		if errors.As(err, &rne) {
+			return nil
+		}
+
+		return err
+	}
+
 	return nil
 }
