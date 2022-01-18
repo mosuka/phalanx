@@ -1,4 +1,4 @@
-//go:build integration
+////go:build integration
 
 package metastore_integration_test
 
@@ -50,7 +50,15 @@ func TestDynamodbStorageGet(t *testing.T) {
 	}
 	defer dynamodbStorage.Close()
 
-	dynamodbStorage.Put("/wikipedia_en.json", []byte("{}"))
+	_, err = dynamodbStorage.Get("/wikipedia_en.json")
+	if err != metastore.ErrRecordNotFound {
+		t.Fatalf("unexpected value. %v\n", err)
+	}
+
+	err = dynamodbStorage.Put("/wikipedia_en.json", []byte("{}"))
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
 
 	content, err := dynamodbStorage.Get("/wikipedia_en.json")
 	if err != nil {
@@ -60,6 +68,43 @@ func TestDynamodbStorageGet(t *testing.T) {
 	if string(content) != "{}" {
 		t.Fatalf("unexpected value. %v\n", string(content))
 	}
+}
+
+func TestDynamodbStoragePut(t *testing.T) {
+	err := godotenv.Load(filepath.FromSlash("../.env"))
+	if err != nil {
+		t.Errorf("Failed to load .env file")
+	}
+
+	tmpDir := randstr.String(8)
+	uri := fmt.Sprintf("dynamodb://phalanx-test/metastore/newtest/%s?%s", tmpDir, buildQueryFromEnv())
+	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
+
+	dynamodbStorage, err := metastore.NewDynamodbStorage(uri, logger)
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+	defer dynamodbStorage.Close()
+
+	err = dynamodbStorage.Put("/wikipedia_en.json", []byte("{}"))
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+
+	err = dynamodbStorage.Put("/wikipedia_en.json", []byte("{}"))
+	if err != metastore.ErrDuplicateRecord {
+		t.Fatalf("unexpected value. %v\n", err)
+	}
+
+	content, err := dynamodbStorage.Get("/wikipedia_en.json")
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+
+	if string(content) != "{}" {
+		t.Fatalf("unexpected value. %v\n", string(content))
+	}
+
 }
 
 func TestDynamodbStorageDelete(t *testing.T) {

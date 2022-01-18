@@ -23,6 +23,14 @@ const (
 	partitionValue   = "metadata"
 )
 
+var (
+	// ErrRecordNotFound returned when a get returns no results
+	ErrRecordNotFound = errors.New("record not found")
+
+	// ErrDuplicateRecord returned when a conflict occurs putting a record due to duplicate
+	ErrDuplicateRecord = errors.New("record already exists")
+)
+
 type kv struct {
 	Partition string `dynamodbav:"pk"`
 	Path      string `dynamodbav:"sk"`
@@ -102,6 +110,10 @@ func (m *DynamodbStorage) Get(path string) ([]byte, error) {
 		return nil, err
 	}
 
+	if res.Item == nil {
+		return nil, ErrRecordNotFound
+	}
+
 	m.logger.Info("get record", zap.String("fullPath", fullPath))
 
 	rec := new(kv)
@@ -141,6 +153,11 @@ func (m *DynamodbStorage) Put(path string, value []byte) error {
 		ExpressionAttributeValues: condExpr.Values(),
 	})
 	if err != nil {
+		var rne *types.ConditionalCheckFailedException
+		if errors.As(err, &rne) {
+			return ErrDuplicateRecord
+		}
+
 		m.logger.Error(err.Error(), zap.String("key", fullPath))
 		return err
 	}
