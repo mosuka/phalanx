@@ -9,6 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/credentials"
 )
 
+// we must have a region for setting up an endpoint when testing so we use the standard default of north virginia
+const defaultSigningRegion = "us-east-1"
+
 func buildAwsCfg(uri string) (*url.URL, aws.Config, error) {
 	var awsCfg aws.Config
 
@@ -61,14 +64,21 @@ func getCredentials(u *url.URL) config.LoadOptionsFunc {
 }
 
 func getEndpoint(u *url.URL) config.LoadOptionsFunc {
-	if u.Query().Has("endpoint_url") && u.Query().Has("region") {
+	if u.Query().Has("endpoint_url") {
+
+		signingRegion := defaultSigningRegion
+
+		if u.Query().Has("region") {
+			signingRegion = u.Query().Get("region")
+		}
+
 		return config.WithEndpointResolverWithOptions(
 			aws.EndpointResolverWithOptionsFunc(
 				func(service, region string, options ...interface{}) (aws.Endpoint, error) {
 					return aws.Endpoint{
 						PartitionID:   "aws",
 						URL:           u.Query().Get("endpoint_url"),
-						SigningRegion: u.Query().Get("region"),
+						SigningRegion: signingRegion,
 					}, nil
 				},
 			),
