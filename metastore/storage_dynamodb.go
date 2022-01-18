@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"time"
 
@@ -12,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
+	"github.com/aws/smithy-go/logging"
 	"go.uber.org/zap"
 )
 
@@ -47,6 +49,14 @@ func NewDynamodbStorage(uri string, logger *zap.Logger) (*DynamodbStorage, error
 		return nil, err
 	}
 
+	if u.Query().Get("aws_sdk_request_logging") == "true" {
+		awsCfg.Logger = logging.LoggerFunc(func(classification logging.Classification, format string, v ...interface{}) {
+			metastorelogger.Info(fmt.Sprintf(format, v...))
+		})
+
+		awsCfg.ClientLogMode = aws.LogRetries | aws.LogRequest
+	}
+
 	ds := &DynamodbStorage{
 		dynamoSvc:      dynamodb.NewFromConfig(awsCfg),
 		tableName:      u.Host,
@@ -56,6 +66,7 @@ func NewDynamodbStorage(uri string, logger *zap.Logger) (*DynamodbStorage, error
 		requestTimeout: 3 * time.Second,
 	}
 
+	// primarily used for testing locally
 	if u.Query().Get("create_table") == "true" {
 		err := ds.createTable()
 		if err != nil {
@@ -77,18 +88,21 @@ func (m *DynamodbStorage) Get(path string) ([]byte, error) {
 	res, err := m.dynamoSvc.GetItem(m.ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(m.tableName),
 		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{
+			partitionKeyName: &types.AttributeValueMemberS{
 				Value: partitionValue,
 			},
-			"sk": &types.AttributeValueMemberS{
+			sortKeyName: &types.AttributeValueMemberS{
 				Value: fullPath,
 			},
 		},
+		ConsistentRead: aws.Bool(true), // enable consistent reads as we need this for atomic reads
 	})
 	if err != nil {
 		m.logger.Error(err.Error(), zap.String("key", fullPath))
 		return nil, err
 	}
+
+	m.logger.Info("get record", zap.String("fullPath", fullPath))
 
 	rec := new(kv)
 	err = attributevalue.UnmarshalMap(res.Item, rec)
@@ -131,19 +145,21 @@ func (m *DynamodbStorage) Put(path string, value []byte) error {
 		return err
 	}
 
+	m.logger.Info("put record", zap.String("fullPath", fullPath))
+
 	return nil
 }
 
 func (m *DynamodbStorage) List(prefix string) ([]string, error) {
-	fullPath := m.makePath(prefix)
+	prefixPath := m.makePath(prefix)
 
 	keyCond := expression.
 		Key(partitionKeyName).Equal(expression.Value(partitionValue)).
-		And(expression.Key(sortKeyName).BeginsWith(fullPath))
+		And(expression.Key(sortKeyName).BeginsWith(prefixPath))
 
 	keyExpr, err := expression.NewBuilder().WithKeyCondition(keyCond).Build()
 	if err != nil {
-		m.logger.Error(err.Error(), zap.String("key", fullPath))
+		m.logger.Error(err.Error(), zap.String("key", prefixPath))
 		return nil, err
 	}
 
@@ -152,32 +168,27 @@ func (m *DynamodbStorage) List(prefix string) ([]string, error) {
 		KeyConditionExpression:    keyExpr.KeyCondition(),
 		ExpressionAttributeNames:  keyExpr.Names(),
 		ExpressionAttributeValues: keyExpr.Values(),
+		ConsistentRead:            aws.Bool(true), // enable consistent reads as we need this for atomic reads
 	})
 	if err != nil {
-		m.logger.Error(err.Error(), zap.String("key", fullPath))
+		m.logger.Error(err.Error(), zap.String("key", prefixPath))
 		return nil, err
 	}
 
-	results := make([]string, len(res.Items))
+	paths := make([]string, 0)
 
-	for i, item := range res.Items {
+	for _, item := range res.Items {
 		rec := new(kv)
 		err = attributevalue.UnmarshalMap(item, rec)
 		if err != nil {
-			m.logger.Error(err.Error(), zap.String("key", fullPath))
+			m.logger.Error(err.Error(), zap.String("key", prefixPath))
 			return nil, err
 		}
 
-		v, err := base64.RawStdEncoding.DecodeString(rec.Value)
-		if err != nil {
-			m.logger.Error(err.Error(), zap.String("key", fullPath))
-			return nil, err
-		}
-
-		results[i] = string(v)
+		paths = append(paths, rec.Path[len(prefixPath):])
 	}
 
-	return results, nil
+	return paths, nil
 }
 
 func (m *DynamodbStorage) Delete(path string) error {
@@ -186,11 +197,11 @@ func (m *DynamodbStorage) Delete(path string) error {
 	_, err := m.dynamoSvc.DeleteItem(m.ctx, &dynamodb.DeleteItemInput{
 		TableName: aws.String(m.tableName),
 		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{
+			partitionKeyName: &types.AttributeValueMemberS{
 				Value: partitionValue,
 			},
-			"sk": &types.AttributeValueMemberS{
-				Value: path,
+			sortKeyName: &types.AttributeValueMemberS{
+				Value: fullPath,
 			},
 		},
 	})
@@ -205,28 +216,28 @@ func (m *DynamodbStorage) Delete(path string) error {
 func (m *DynamodbStorage) Exists(path string) (bool, error) {
 	fullPath := m.makePath(path)
 
-	_, err := m.dynamoSvc.GetItem(m.ctx, &dynamodb.GetItemInput{
+	res, err := m.dynamoSvc.GetItem(m.ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(m.tableName),
 		Key: map[string]types.AttributeValue{
-			"pk": &types.AttributeValueMemberS{
+			partitionKeyName: &types.AttributeValueMemberS{
 				Value: partitionValue,
 			},
-			"sk": &types.AttributeValueMemberS{
-				Value: path,
+			sortKeyName: &types.AttributeValueMemberS{
+				Value: fullPath,
 			},
 		},
+		ConsistentRead: aws.Bool(true), // enable consistent reads as we need this for atomic reads
 	})
 	if err != nil {
-		var rne *types.ResourceNotFoundException
-		if errors.As(err, &rne) {
-			return false, nil
-		}
-
 		m.logger.Error(err.Error(), zap.String("key", fullPath))
 		return false, err
 	}
 
-	return true, nil
+	exists := res.Item != nil
+
+	m.logger.Info("check record exists", zap.String("fullPath", fullPath), zap.Bool("exists", exists))
+
+	return exists, nil
 }
 
 func (m *DynamodbStorage) Close() error {
@@ -238,21 +249,21 @@ func (m *DynamodbStorage) createTable() error {
 		TableName: &m.tableName,
 		AttributeDefinitions: []types.AttributeDefinition{
 			{
-				AttributeName: aws.String("pk"),
+				AttributeName: aws.String(partitionKeyName),
 				AttributeType: types.ScalarAttributeTypeS,
 			},
 			{
-				AttributeName: aws.String("sk"),
+				AttributeName: aws.String(sortKeyName),
 				AttributeType: types.ScalarAttributeTypeS,
 			},
 		},
 		KeySchema: []types.KeySchemaElement{
 			{
-				AttributeName: aws.String("pk"),
+				AttributeName: aws.String(partitionKeyName),
 				KeyType:       types.KeyTypeHash,
 			},
 			{
-				AttributeName: aws.String("sk"),
+				AttributeName: aws.String(sortKeyName),
 				KeyType:       types.KeyTypeRange,
 			},
 		},

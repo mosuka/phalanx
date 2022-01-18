@@ -2,7 +2,6 @@ package metastore
 
 import (
 	"context"
-	"fmt"
 	"net/url"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -47,7 +46,6 @@ func buildOpts(u *url.URL) []func(*config.LoadOptions) error {
 }
 
 func getCredentials(u *url.URL) config.LoadOptionsFunc {
-	fmt.Println("creds", u.Query().Has("access_key_id"))
 	switch {
 	case u.Query().Has("profile"):
 		return config.WithSharedConfigProfile("test-profile")
@@ -63,8 +61,6 @@ func getCredentials(u *url.URL) config.LoadOptionsFunc {
 }
 
 func getEndpoint(u *url.URL) config.LoadOptionsFunc {
-	fmt.Println("creds", u.Query().Has("endpoint_url"))
-
 	if u.Query().Has("endpoint_url") && u.Query().Has("region") {
 		return config.WithEndpointResolverWithOptions(
 			aws.EndpointResolverWithOptionsFunc(
