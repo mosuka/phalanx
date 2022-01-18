@@ -1,12 +1,9 @@
 .DS_Store
 
-.classpath
-.project
-
 .idea/
+.vscode/
 
 bin/phalanx
-dist/
 
 .env
 
@@ -16,6 +13,5 @@ dist/
 cover.out
 cover.html
 
-# gitbook
 _book/
 node_modules/
