@@ -13,6 +13,7 @@ const (
 	SchemeTypeUnknown SchemeType = iota
 	SchemeTypeFile
 	SchemeTypeEtcd
+	SchemeTypeDynamodb
 )
 
 // Enum value maps for SchemeType.
@@ -80,6 +81,8 @@ func NewStorageWithUri(uri string, logger *zap.Logger) (Storage, error) {
 		return NewFileSystemStorageWithUri(uri, metastoreLogger)
 	case SchemeType_name[SchemeTypeEtcd]:
 		return NewEtcdStorageWithUri(uri, metastoreLogger)
+	case SchemeType_name[SchemeTypeDynamodb]:
+		return NewDynamodbStorage(uri, metastoreLogger)
 	default:
 		err := errors.ErrUnsupportedStorageType
 		metastoreLogger.Error(err.Error(), zap.String("scheme", u.Scheme))
