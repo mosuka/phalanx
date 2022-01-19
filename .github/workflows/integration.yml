@@ -7,7 +7,7 @@ on:
     - cron: 0 0 * * SUN
   push:
     branches: [ main ]
-  pull_request:
+  pull_request_target:
     types: [opened, synchronize]
 
 jobs:
