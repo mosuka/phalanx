@@ -47,7 +47,7 @@ show-env:
 	@echo "   CGO_CFLAGS        = $(CGO_CFLAGS)"
 	@echo "   CGO_LDFLAGS       = $(CGO_LDFLAGS)"
 	@echo "   BUILD_TAGS        = $(BUILD_TAGS)"
-	@echo "   TAG           = $(TAG)"
+	@echo "   TAG               = $(TAG)"
 	@echo "   BIN_EXT           = $(BIN_EXT)"
 	@echo "   LDFLAGS           = $(LDFLAGS)"
 	@echo "   PACKAGES          = $(PACKAGES)"
