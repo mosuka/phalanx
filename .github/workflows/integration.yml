@@ -7,8 +7,6 @@ on:
     - cron: 0 0 * * SUN
   push:
     branches: [ main ]
-  pull_request_target:
-    types: [opened, synchronize]
   pull_request:
     types: [opened, synchronize]
 
@@ -32,8 +30,8 @@ jobs:
       minio:
         image: mosuka/minio:latest
         env:
-          MINIO_ROOT_USER: ${{ secrets.MINIO_ROOT_USER }}
-          MINIO_ROOT_PASSWORD: ${{ secrets.MINIO_ROOT_PASSWORD }}
+          MINIO_ROOT_USER: minio
+          MINIO_ROOT_PASSWORD: miniosecret
         ports:
           - 9000:9000
       localstack:
@@ -41,8 +39,8 @@ jobs:
         env:
           SERVICES: s3,dynamodb
           DEFAULT_REGION: ap-northeast-1
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: dummy
+          AWS_SECRET_ACCESS_KEY: dummy
         ports:
           - 4566:4566
 
@@ -61,8 +59,8 @@ jobs:
       - name: Create .env file
         run: |
           touch .env
-          echo "MINIO_ROOT_USER=${{ secrets.MINIO_ROOT_USER }}" >> .env
-          echo "MINIO_ROOT_PASSWORD=${{ secrets.MINIO_ROOT_PASSWORD }}" >> .env
+          echo "MINIO_ROOT_USER=minio" >> .env
+          echo "MINIO_ROOT_PASSWORD=miniosecret" >> .env
           echo "MINIO_VOLUMES=/data" >> .env
           echo "MINIO_OPTS=--console-address :9001" >> .env
           echo "MINIO_REGION_NAME=us-east-1" >> .env
@@ -70,8 +68,8 @@ jobs:
           echo "MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }}" >> .env
           echo "MINIO_ENDPOINT=127.0.0.1:9000" >> .env
           echo "MINIO_SECURE=false" >> .env
-          echo "AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}" >> .env
-          echo "AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> .env
+          echo "AWS_ACCESS_KEY_ID=dummy" >> .env
+          echo "AWS_SECRET_ACCESS_KEY=dummy" >> .env
           echo "AWS_DEFAULT_REGION=ap-northeast-1" >> .env
           echo "AWS_ENDPOINT_URL=http://localhost:4566" >> .env
           echo "AWS_USE_PATH_STYLE=true" >> .env
