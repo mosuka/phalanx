@@ -457,9 +457,14 @@ This repository has a docker-compose.yml file. With it, you can easily launch Mi
 </li>
 </ul>
 <h2 id="start-phalanx-with-etcd-metastore">Start Phalanx with etcd metastore</h2>
-<p>Start Phalanx with etcd specified as the metastore:</p>
-<pre><code>% ./bin/phalanx --index-metastore-uri=etcd://phalanx-metastore
-</code></pre><h3 id="create-index-with-minio-and-etcd">Create index with MinIO and etcd</h3>
+<p>Start the first node:</p>
+<pre><code>% ./bin/phalanx --index-metastore-uri=etcd://phalanx-metadata
+</code></pre><p>Start the second node:</p>
+<pre><code>% ./bin/phalanx --index-metastore-uri=etcd://phalanx-metadata --bind-port=2001 --grpc-port=5001 --http-port=8001 --seed-addresses=localhost:2000
+</code></pre><p>Start the third node:</p>
+<pre><code>% ./bin/phalanx --index-metastore-uri=etcd://phalanx-metadata --bind-port=2002 --grpc-port=5002 --http-port=8002 --seed-addresses=localhost:2000
+</code></pre><p>Use the following command to create an index of 10 shards. Start the required nodes the same way.</p>
+<h3 id="create-index-with-minio-and-etcd">Create index with MinIO and etcd</h3>
 <p>Use MinIO as index storage, and create a lock on etcd to avoid write conflicts.</p>
 <pre><code>% curl -XPUT -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/example --data-binary &apos;
 {
@@ -508,7 +513,7 @@ This repository has a docker-compose.yml file. With it, you can easily launch Mi
             }
         }
     },
-    &quot;num_shards&quot;: 1,
+    &quot;num_shards&quot;: 10,
     &quot;default_search_field&quot;: &quot;_all&quot;,
     &quot;default_analyzer&quot;: {
         &quot;tokenizer&quot;: {
@@ -565,7 +570,7 @@ This repository has a docker-compose.yml file. With it, you can easily launch Mi
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Run with MinIO and etcd","level":"1.9","depth":1,"next":{"title":"Run with AWS","level":"1.10","depth":1,"path":"run_with_aws.md","ref":"run_with_aws.md","articles":[]},"previous":{"title":"Index Metadata","level":"1.8","depth":1,"path":"index_metadata.md","ref":"index_metadata.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"run_with_minio_etcd.md","mtime":"2022-01-20T06:02:09.623Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-20T06:50:37.135Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Run with MinIO and etcd","level":"1.9","depth":1,"next":{"title":"Run with AWS","level":"1.10","depth":1,"path":"run_with_aws.md","ref":"run_with_aws.md","articles":[]},"previous":{"title":"Index Metadata","level":"1.8","depth":1,"path":"index_metadata.md","ref":"index_metadata.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"run_with_minio_etcd.md","mtime":"2022-01-20T08:50:23.712Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-20T08:53:26.682Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>

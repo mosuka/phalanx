@@ -447,10 +447,17 @@
                                 
                                 <h1 id="run-with-aws">Run with AWS</h1>
 <p>Phalanx supports <a href="https://aws.amazon.com/s3/" target="_blank">Amazon S3</a> and <a href="https://aws.amazon.com/dynamodb/" target="_blank">Amazon DynamoDB</a>.</p>
-<h2 id="start-phalanx-with-dynamodb-metastore">Start Phalanx with DynamoDB metastore</h2>
-<p>Start Phalanx with etcd metastore:</p>
+<p>If you want to try it on your local machine, you can start <a href="https://localstack.cloud/" target="_blank">LocalStack</a> with the following command to prepare a pseudo AWS environment.</p>
+<pre><code>% docker-compose up localstack
+</code></pre><h2 id="start-phalanx-cluster-with-dynamodb-metastore">Start Phalanx cluster with DynamoDB metastore</h2>
+<p>Start the first node:</p>
 <pre><code>% ./bin/phalanx --index-metastore-uri=dynamodb://phalanx-metadata
-</code></pre><h2 id="create-index-with-s3-and-dyunamodb">Create index with S3 and DyunamoDB</h2>
+</code></pre><p>Start the second node:</p>
+<pre><code>% ./bin/phalanx --index-metastore-uri=dynamodb://phalanx-metadata --bind-port=2001 --grpc-port=5001 --http-port=8001 --seed-addresses=localhost:2000
+</code></pre><p>Start the third node:</p>
+<pre><code>% ./bin/phalanx --index-metastore-uri=dynamodb://phalanx-metadata --bind-port=2002 --grpc-port=5002 --http-port=8002 --seed-addresses=localhost:2000
+</code></pre><p>Use the following command to create an index of 10 shards. Start the required nodes the same way.</p>
+<h2 id="create-index-with-s3-and-dyunamodb">Create index with S3 and DyunamoDB</h2>
 <p>Use S3 as index storage, and create a lock on DynamoDB to avoid write conflicts.</p>
 <pre><code>% curl -XPUT -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/example --data-binary &apos;
 {
@@ -499,7 +506,7 @@
             }
         }
     },
-    &quot;num_shards&quot;: 1,
+    &quot;num_shards&quot;: 10,
     &quot;default_search_field&quot;: &quot;_all&quot;,
     &quot;default_analyzer&quot;: {
         &quot;tokenizer&quot;: {
@@ -556,7 +563,7 @@
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Run with AWS","level":"1.10","depth":1,"next":{"title":"Index Mapping","level":"1.11","depth":1,"path":"index_mapping.md","ref":"index_mapping.md","articles":[]},"previous":{"title":"Run with MinIO and etcd","level":"1.9","depth":1,"path":"run_with_minio_etcd.md","ref":"run_with_minio_etcd.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"run_with_aws.md","mtime":"2022-01-20T06:02:04.287Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-20T06:50:37.135Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Run with AWS","level":"1.10","depth":1,"next":{"title":"Index Mapping","level":"1.11","depth":1,"path":"index_mapping.md","ref":"index_mapping.md","articles":[]},"previous":{"title":"Run with MinIO and etcd","level":"1.9","depth":1,"path":"run_with_minio_etcd.md","ref":"run_with_minio_etcd.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"run_with_aws.md","mtime":"2022-01-20T08:53:06.069Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-20T08:53:26.682Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
