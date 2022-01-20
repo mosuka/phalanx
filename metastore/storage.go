@@ -19,14 +19,16 @@ const (
 // Enum value maps for SchemeType.
 var (
 	SchemeType_name = map[SchemeType]string{
-		SchemeTypeUnknown: "unknown",
-		SchemeTypeFile:    "file",
-		SchemeTypeEtcd:    "etcd",
+		SchemeTypeUnknown:  "unknown",
+		SchemeTypeFile:     "file",
+		SchemeTypeEtcd:     "etcd",
+		SchemeTypeDynamodb: "dynamodb",
 	}
 	SchemeType_value = map[string]SchemeType{
-		"unknown": SchemeTypeUnknown,
-		"file":    SchemeTypeFile,
-		"etcd":    SchemeTypeEtcd,
+		"unknown":  SchemeTypeUnknown,
+		"file":     SchemeTypeFile,
+		"etcd":     SchemeTypeEtcd,
+		"dynamodb": SchemeTypeDynamodb,
 	}
 )
 

@@ -2,12 +2,12 @@
 
 Phalanx supports [Amazon S3](https://aws.amazon.com/s3/) and [Amazon DynamoDB](https://aws.amazon.com/dynamodb/).
 
-## Start Phalanx with etcd metastore
+## Start Phalanx with DynamoDB metastore
 
 Start Phalanx with etcd metastore:
 
 ```
-% ./bin/phalanx --index-metastore-uri=etcd://phalanx-metastore
+% ./bin/phalanx --index-metastore-uri=dynamodb://phalanx-metadata
 ```
 
 ## Create index with S3 and DyunamoDB

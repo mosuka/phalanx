@@ -130,7 +130,7 @@ The JSON of the document is in the following format:
         }
     }
 }
-'
+' | jq .
 ```
 
 ```json
