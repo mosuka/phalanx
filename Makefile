@@ -5,7 +5,7 @@ CGO_ENABLED ?= 0
 CGO_CFLAGS ?=
 CGO_LDFLAGS ?=
 BUILD_TAGS ?=
-VERSION ?=
+TAG ?=
 BIN_EXT ?=
 DOCKER_REPOSITORY ?= mosuka
 
@@ -22,10 +22,10 @@ ifeq ($(GOARCH),)
   GOARCH = $(shell go version | awk -F ' ' '{print $$NF}' | awk -F '/' '{print $$2}')
 endif
 
-ifeq ($(VERSION),)
-  VERSION = latest
+ifeq ($(TAG),)
+  TAG = latest
 endif
-LDFLAGS = -ldflags "-s -w -X \"github.com/mosuka/phalanx/version.Version=$(VERSION)\""
+LDFLAGS = -ldflags "-s -w -X \"github.com/mosuka/phalanx/version.Version=$(TAG)\""
 
 ifeq ($(GOOS),windows)
   BIN_EXT = .exe
@@ -47,7 +47,7 @@ show-env:
 	@echo "   CGO_CFLAGS        = $(CGO_CFLAGS)"
 	@echo "   CGO_LDFLAGS       = $(CGO_LDFLAGS)"
 	@echo "   BUILD_TAGS        = $(BUILD_TAGS)"
-	@echo "   VERSION           = $(VERSION)"
+	@echo "   TAG           = $(TAG)"
 	@echo "   BIN_EXT           = $(BIN_EXT)"
 	@echo "   LDFLAGS           = $(LDFLAGS)"
 	@echo "   PACKAGES          = $(PACKAGES)"
@@ -97,24 +97,24 @@ docs:
 .PHONY: tag
 tag: show-env
 	@echo ">> tagging github"
-ifeq ($(VERSION),$(filter $(VERSION),latest master ""))
-	@echo "please specify VERSION"
+ifeq ($(TAG),$(filter $(TAG),latest master ""))
+	@echo "please specify TAG"
 else
-	git tag -a $(VERSION) -m "Release $(VERSION)"
-	git push origin $(VERSION)
+	git tag -a $(TAG) -m "Release $(TAG)"
+	git push origin $(TAG)
 endif
 
 .PHONY: docker-build
 docker-build: show-env
 	@echo ">> building docker container image"
-	docker build -t $(DOCKER_REPOSITORY)/phalanx:latest --build-arg VERSION=$(VERSION) .
-	docker tag $(DOCKER_REPOSITORY)/phalanx:latest $(DOCKER_REPOSITORY)/phalanx:$(VERSION)
+	docker build -t $(DOCKER_REPOSITORY)/phalanx:latest --build-arg TAG=$(TAG) .
+	docker tag $(DOCKER_REPOSITORY)/phalanx:latest $(DOCKER_REPOSITORY)/phalanx:$(TAG)
 
 .PHONY: docker-push
 docker-push: show-env
 	@echo ">> pushing docker container image"
 	docker push $(DOCKER_REPOSITORY)/phalanx:latest
-	docker push $(DOCKER_REPOSITORY)/phalanx:$(VERSION)
+	docker push $(DOCKER_REPOSITORY)/phalanx:$(TAG)
 
 .PHONY: docker-clean
 docker-clean:
