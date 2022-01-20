@@ -64,8 +64,8 @@ jobs:
           echo "MINIO_VOLUMES=/data" >> .env
           echo "MINIO_OPTS=--console-address :9001" >> .env
           echo "MINIO_REGION_NAME=us-east-1" >> .env
-          echo "MINIO_ACCESS_KEY=${{ secrets.MINIO_ACCESS_KEY }}" >> .env
-          echo "MINIO_SECRET_KEY=${{ secrets.MINIO_SECRET_KEY }}" >> .env
+          echo "MINIO_ACCESS_KEY=minio" >> .env
+          echo "MINIO_SECRET_KEY=miniosecret" >> .env
           echo "MINIO_ENDPOINT=127.0.0.1:9000" >> .env
           echo "MINIO_SECURE=false" >> .env
           echo "AWS_ACCESS_KEY_ID=dummy" >> .env
