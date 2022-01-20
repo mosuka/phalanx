@@ -18,11 +18,26 @@ http://localhost:8080/etcdkeeper/
 
 ## Start Phalanx with etcd metastore
 
-Start Phalanx with etcd specified as the metastore:
+Start the first node:
 
 ```
-% ./bin/phalanx --index-metastore-uri=etcd://phalanx-metastore
+% ./bin/phalanx --index-metastore-uri=etcd://phalanx-metadata
 ```
+
+Start the second node:
+
+```
+% ./bin/phalanx --index-metastore-uri=etcd://phalanx-metadata --bind-port=2001 --grpc-port=5001 --http-port=8001 --seed-addresses=localhost:2000
+```
+
+Start the third node:
+
+```
+% ./bin/phalanx --index-metastore-uri=etcd://phalanx-metadata --bind-port=2002 --grpc-port=5002 --http-port=8002 --seed-addresses=localhost:2000
+```
+
+Use the following command to create an index of 10 shards. Start the required nodes the same way.
+
 
 ### Create index with MinIO and etcd
 
@@ -76,7 +91,7 @@ Use MinIO as index storage, and create a lock on etcd to avoid write conflicts.
 			}
 		}
 	},
-	"num_shards": 1,
+	"num_shards": 10,
 	"default_search_field": "_all",
 	"default_analyzer": {
 		"tokenizer": {
