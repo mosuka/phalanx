@@ -1,6 +1,6 @@
 FROM golang:1.17.5-bullseye
 
-ARG VERSION
+ARG TAG
 
 ENV GOPATH /go
 
@@ -13,7 +13,7 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 RUN cd ${GOPATH}/src/github.com/mosuka/phalanx \
-    && make VERSION=${VERSION} build
+    && make TAG=${TAG} build
 
 
 FROM debian:bullseye-slim
