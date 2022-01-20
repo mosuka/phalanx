@@ -7,6 +7,7 @@ import (
 	"github.com/mosuka/phalanx/proto"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/keepalive"
 )
 
@@ -41,7 +42,7 @@ func NewGRPCIndexClientWithTLS(address string, certFile string, commonName strin
 		}
 		dialOpts = append(dialOpts, grpc.WithTransportCredentials(creds))
 	} else {
-		dialOpts = append(dialOpts, grpc.WithInsecure())
+		dialOpts = append(dialOpts, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	}
 
 	conn, err := grpc.Dial(address, dialOpts...)

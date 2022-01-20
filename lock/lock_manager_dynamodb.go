@@ -57,7 +57,7 @@ func NewDynamoDBLockManagerWithUri(uri string, logger *zap.Logger) (*DynamoDBLoc
 	if _, err := lockClient.CreateTableWithContext(ctx, table); err != nil {
 		var riue *types.ResourceInUseException
 		if errors.As(err, &riue) {
-			lockManagerLogger.Info(err.Error(), zap.String("uri", uri))
+			lockManagerLogger.Warn(err.Error(), zap.String("uri", uri))
 		} else {
 			lockManagerLogger.Error(err.Error(), zap.String("uri", uri))
 			return nil, err

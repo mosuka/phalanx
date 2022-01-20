@@ -90,21 +90,6 @@ func TestDynamodbStoragePut(t *testing.T) {
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
-
-	err = dynamodbStorage.Put("/wikipedia_en.json", []byte("{}"))
-	if err != metastore.ErrDuplicateRecord {
-		t.Fatalf("unexpected value. %v\n", err)
-	}
-
-	content, err := dynamodbStorage.Get("/wikipedia_en.json")
-	if err != nil {
-		t.Fatalf("%v\n", err)
-	}
-
-	if string(content) != "{}" {
-		t.Fatalf("unexpected value. %v\n", string(content))
-	}
-
 }
 
 func TestDynamodbStorageDelete(t *testing.T) {

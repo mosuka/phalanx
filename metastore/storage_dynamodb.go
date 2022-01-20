@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/base64"
 	"errors"
-	"fmt"
+	"net/url"
 	"path/filepath"
 	"time"
 
@@ -13,7 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/aws/smithy-go/logging"
+	"github.com/mosuka/phalanx/clients"
+	phalanxerrors "github.com/mosuka/phalanx/errors"
 	"go.uber.org/zap"
 )
 
@@ -39,7 +40,7 @@ type kv struct {
 }
 
 type DynamodbStorage struct {
-	dynamoSvc      *dynamodb.Client
+	client         *dynamodb.Client
 	tableName      string
 	root           string
 	logger         *zap.Logger
@@ -50,36 +51,41 @@ type DynamodbStorage struct {
 func NewDynamodbStorage(uri string, logger *zap.Logger) (*DynamodbStorage, error) {
 	metastorelogger := logger.Named("dynamodb")
 
-	ctx := context.Background()
-
-	u, awsCfg, err := buildAwsCfg(uri)
+	client, err := clients.NewDynamoDBClientWithUri(uri)
 	if err != nil {
+		logger.Error(err.Error(), zap.String("uri", uri))
 		return nil, err
 	}
 
-	if u.Query().Get("aws_sdk_request_logging") == "true" {
-		awsCfg.Logger = logging.LoggerFunc(func(classification logging.Classification, format string, v ...interface{}) {
-			metastorelogger.Info(fmt.Sprintf(format, v...))
-		})
+	// Parse URI.
+	u, err := url.Parse(uri)
+	if err != nil {
+		logger.Error(err.Error(), zap.String("uri", uri))
+		return nil, err
+	}
+	if u.Scheme != SchemeType_name[SchemeTypeDynamodb] {
+		err := phalanxerrors.ErrInvalidUri
+		logger.Error(err.Error(), zap.String("uri", uri))
+		return nil, err
+	}
 
-		awsCfg.ClientLogMode = aws.LogRetries | aws.LogRequest
+	root := u.Path
+	if root == "" {
+		root = "/"
 	}
 
 	ds := &DynamodbStorage{
-		dynamoSvc:      dynamodb.NewFromConfig(awsCfg),
+		client:         client,
 		tableName:      u.Host,
-		root:           u.Path,
+		root:           root,
 		logger:         metastorelogger,
-		ctx:            ctx,
+		ctx:            context.Background(),
 		requestTimeout: 3 * time.Second,
 	}
 
 	// primarily used for testing locally
-	if u.Query().Get("create_table") == "true" {
-		err := ds.createTable()
-		if err != nil {
-			return nil, err
-		}
+	if err := ds.createTable(); err != nil {
+		return nil, err
 	}
 
 	return ds, nil
@@ -93,7 +99,7 @@ func (m *DynamodbStorage) makePath(path string) string {
 func (m *DynamodbStorage) Get(path string) ([]byte, error) {
 	fullPath := m.makePath(path)
 
-	res, err := m.dynamoSvc.GetItem(m.ctx, &dynamodb.GetItemInput{
+	res, err := m.client.GetItem(m.ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(m.tableName),
 		Key: map[string]types.AttributeValue{
 			partitionKeyName: &types.AttributeValueMemberS{
@@ -136,28 +142,12 @@ func (m *DynamodbStorage) Put(path string, value []byte) error {
 		return err
 	}
 
-	// this adds a condition which checks if the sort key already exists, if it does
-	// this operation will return a condition error.
-	existCond := expression.AttributeNotExists(expression.Name(sortKeyName))
-	condExpr, err := expression.NewBuilder().WithCondition(existCond).Build()
-	if err != nil {
-		m.logger.Error(err.Error(), zap.String("key", fullPath))
-		return err
-	}
-
-	_, err = m.dynamoSvc.PutItem(m.ctx, &dynamodb.PutItemInput{
-		TableName:                 aws.String(m.tableName),
-		Item:                      attr,
-		ConditionExpression:       condExpr.Condition(),
-		ExpressionAttributeNames:  condExpr.Names(),
-		ExpressionAttributeValues: condExpr.Values(),
+	// A simple PutItem will suffice. There is no need to worry about conditions.
+	_, err = m.client.PutItem(m.ctx, &dynamodb.PutItemInput{
+		TableName: aws.String(m.tableName),
+		Item:      attr,
 	})
 	if err != nil {
-		var rne *types.ConditionalCheckFailedException
-		if errors.As(err, &rne) {
-			return ErrDuplicateRecord
-		}
-
 		m.logger.Error(err.Error(), zap.String("key", fullPath))
 		return err
 	}
@@ -180,7 +170,7 @@ func (m *DynamodbStorage) List(prefix string) ([]string, error) {
 		return nil, err
 	}
 
-	res, err := m.dynamoSvc.Query(m.ctx, &dynamodb.QueryInput{
+	res, err := m.client.Query(m.ctx, &dynamodb.QueryInput{
 		TableName:                 &m.tableName,
 		KeyConditionExpression:    keyExpr.KeyCondition(),
 		ExpressionAttributeNames:  keyExpr.Names(),
@@ -211,7 +201,7 @@ func (m *DynamodbStorage) List(prefix string) ([]string, error) {
 func (m *DynamodbStorage) Delete(path string) error {
 	fullPath := m.makePath(path)
 
-	_, err := m.dynamoSvc.DeleteItem(m.ctx, &dynamodb.DeleteItemInput{
+	_, err := m.client.DeleteItem(m.ctx, &dynamodb.DeleteItemInput{
 		TableName: aws.String(m.tableName),
 		Key: map[string]types.AttributeValue{
 			partitionKeyName: &types.AttributeValueMemberS{
@@ -233,7 +223,7 @@ func (m *DynamodbStorage) Delete(path string) error {
 func (m *DynamodbStorage) Exists(path string) (bool, error) {
 	fullPath := m.makePath(path)
 
-	res, err := m.dynamoSvc.GetItem(m.ctx, &dynamodb.GetItemInput{
+	res, err := m.client.GetItem(m.ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(m.tableName),
 		Key: map[string]types.AttributeValue{
 			partitionKeyName: &types.AttributeValueMemberS{
@@ -262,7 +252,7 @@ func (m *DynamodbStorage) Close() error {
 }
 
 func (m *DynamodbStorage) createTable() error {
-	_, err := m.dynamoSvc.CreateTable(m.ctx, &dynamodb.CreateTableInput{
+	_, err := m.client.CreateTable(m.ctx, &dynamodb.CreateTableInput{
 		TableName: &m.tableName,
 		AttributeDefinitions: []types.AttributeDefinition{
 			{
@@ -289,6 +279,7 @@ func (m *DynamodbStorage) createTable() error {
 	if err != nil {
 		var rne *types.ResourceInUseException
 		if errors.As(err, &rne) {
+			m.logger.Warn(err.Error(), zap.String("table_name", m.tableName))
 			return nil
 		}
 
