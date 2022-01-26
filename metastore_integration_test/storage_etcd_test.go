@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/mosuka/phalanx/logging"
@@ -177,5 +178,55 @@ func TestEtcdStorageList(t *testing.T) {
 
 	if !reflect.DeepEqual(paths, []string{"/hello.txt", "/world.txt"}) {
 		t.Fatalf("unexpected %v\v", paths)
+	}
+}
+
+func TestEtcdStorageEvents(t *testing.T) {
+	err := godotenv.Load(filepath.FromSlash("../.env"))
+	if err != nil {
+		t.Errorf("Failed to load .env file")
+	}
+
+	tmpDir := randstr.String(8)
+	uri := fmt.Sprintf("etcd://phalanx-test/metastore/eventstest/%s", tmpDir)
+	logger := logging.NewLogger("INFO", "", 500, 3, 30, false)
+
+	etcdStorage, err := metastore.NewEtcdStorageWithUri(uri, logger)
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+	defer etcdStorage.Close()
+
+	eventList := make([]metastore.StorageEvent, 0)
+	done := make(chan bool)
+
+	events := etcdStorage.Events()
+
+	go func() {
+		for {
+			select {
+			case cancel := <-done:
+				// check
+				if cancel {
+					return
+				}
+			case event := <-events:
+				eventList = append(eventList, event)
+			}
+		}
+	}()
+
+	etcdStorage.Put("/hello.txt", []byte("hello"))
+	etcdStorage.Put("/world.txt", []byte("world"))
+
+	// wait for events to be processed
+	time.Sleep(1 * time.Second)
+
+	done <- true
+
+	actual := len(eventList)
+	expected := 2
+	if actual != expected {
+		t.Fatalf("expected %v, but %v\n", expected, actual)
 	}
 }

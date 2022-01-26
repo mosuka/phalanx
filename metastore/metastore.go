@@ -16,6 +16,11 @@ import (
 
 const (
 	shardNamePrefix = "shard-"
+
+	// Evvent size.
+	// Cluster events can occur in large numbers at once,
+	// so make sure they are large enough.
+	metastoreEventSize = 1024
 )
 
 type MetastoreEventType int
@@ -69,6 +74,7 @@ type Metastore struct {
 	indexMetadataMap map[string]*IndexMetadata
 	ringMap          map[string]*rendezvous.Ring
 	events           chan MetastoreEvent
+	stopWatching     chan bool
 	logger           *zap.Logger
 	mutex            sync.RWMutex
 }
@@ -148,17 +154,159 @@ func NewMetastore(storage Storage, logger *zap.Logger) (*Metastore, error) {
 		}
 	}
 
-	return &Metastore{
+	metastore := &Metastore{
 		storage:          storage,
 		indexMetadataMap: indexMetadataMap,
 		ringMap:          ringMap,
-		events:           make(chan MetastoreEvent, 10),
+		stopWatching:     make(chan bool),
+		events:           make(chan MetastoreEvent, metastoreEventSize),
 		logger:           logger,
 		mutex:            sync.RWMutex{},
-	}, nil
+	}
+
+	metastore.watch()
+
+	return metastore, nil
+}
+
+func (m *Metastore) handleStorageEvent(event StorageEvent) error {
+	m.mutex.Lock()
+	defer m.mutex.Unlock()
+
+	fileName := filepath.Base(event.Path)
+
+	switch event.Type {
+	case StorageEventTypePut:
+		if fileName == "index.json" {
+			indexName := filepath.Base(filepath.Dir(event.Path))
+
+			indexMetadata, err := NewIndexMetadataWithBytes(event.Value)
+			if err != nil {
+				m.logger.Warn("failed to make index metadata", zap.Error(err), zap.String("path", event.Path))
+				return err
+			}
+
+			if _, ok := m.indexMetadataMap[indexName]; ok {
+				// Copy shard metadata map
+				copier.Copy(indexMetadata.ShardMetadataMap, m.indexMetadataMap[indexName].ShardMetadataMap)
+			}
+			m.indexMetadataMap[indexName] = indexMetadata
+
+			if _, ok := m.ringMap[indexName]; !ok {
+				m.ringMap[indexName] = rendezvous.New()
+			}
+
+			// Send put index event
+			m.events <- MetastoreEvent{
+				Type:  MetastoreEventTypePutIndex,
+				Index: indexName,
+			}
+			m.logger.Info("sent metastore index put event", zap.String("index_name", indexName))
+		} else if strings.HasPrefix(fileName, shardNamePrefix) && strings.HasSuffix(fileName, ".json") {
+			indexName := filepath.Base(filepath.Dir(event.Path))
+			shardName := strings.TrimSuffix(filepath.Base(event.Path), ".json")
+
+			shardMetadata, err := NewShardMetadataWithBytes(event.Value)
+			if err != nil {
+				err := errors.ErrInvalidShardMetadata
+				m.logger.Warn(err.Error(), zap.Error(err), zap.String("index_name", indexName), zap.String("shard_name", shardName))
+				return err
+			}
+
+			if _, ok := m.indexMetadataMap[indexName]; ok {
+				m.indexMetadataMap[indexName].ShardMetadataMap[shardName] = shardMetadata
+			} else {
+				err := errors.ErrIndexMetadataDoesNotExist
+				m.logger.Warn(err.Error(), zap.String("index_name", indexName))
+				return err
+			}
+
+			if _, ok := m.ringMap[indexName]; ok {
+				m.ringMap[indexName].AddWithWeight(shardName, 1.0)
+			} else {
+				m.logger.Warn("hash ring does not found", zap.String("index_name", indexName))
+				return err
+			}
+
+			// Send put shard event
+			m.events <- MetastoreEvent{
+				Type:  MetastoreEventTypePutShard,
+				Index: indexName,
+				Shard: shardName,
+			}
+			m.logger.Info("sent metastore shard put event", zap.String("index_name", indexName), zap.String("shard_name", shardName))
+		}
+	case StorageEventTypeDelete:
+		if fileName == "index.json" {
+			indexName := filepath.Base(filepath.Dir(event.Path))
+
+			delete(m.ringMap, indexName)
+
+			delete(m.indexMetadataMap, indexName)
+
+			// Send delete index event
+			m.events <- MetastoreEvent{
+				Type:  MetastoreEventTypeDeleteIndex,
+				Index: indexName,
+			}
+			m.logger.Info("sent metastore index delete event", zap.String("index_name", indexName))
+		} else if strings.HasPrefix(fileName, shardNamePrefix) && strings.HasSuffix(fileName, ".json") {
+			indexName := filepath.Base(filepath.Dir(event.Path))
+			shardName := strings.TrimSuffix(filepath.Base(event.Path), ".json")
+
+			if _, ok := m.indexMetadataMap[indexName]; ok {
+				delete(m.indexMetadataMap[indexName].ShardMetadataMap, shardName)
+			} else {
+				err := errors.ErrIndexMetadataDoesNotExist
+				m.logger.Warn(err.Error(), zap.String("index_name", indexName))
+				return err
+			}
+
+			if _, ok := m.ringMap[indexName]; ok {
+				m.ringMap[indexName].Remove(shardName)
+			} else {
+				err := errors.ErrIndexMetadataDoesNotExist
+				m.logger.Warn(err.Error(), zap.String("index_name", indexName))
+				return err
+			}
+
+			// Send put shard event
+			m.events <- MetastoreEvent{
+				Type:  MetastoreEventTypeDeleteShard,
+				Index: indexName,
+				Shard: shardName,
+			}
+			m.logger.Info("sent metastore shard delete event", zap.String("index_name", indexName), zap.String("shard_name", shardName))
+		}
+	}
+
+	return nil
+}
+
+func (m *Metastore) watch() error {
+	// Watch storage events.
+	go func() {
+		for {
+			select {
+			case cancel := <-m.stopWatching:
+				// check
+				if cancel {
+					return
+				}
+			case event := <-m.storage.Events():
+				if err := m.handleStorageEvent(event); err != nil {
+					m.logger.Warn("failed to handle storage event", zap.Error(err))
+				}
+			}
+		}
+	}()
+
+	return nil
 }
 
 func (m *Metastore) Close() error {
+	m.stopWatching <- true
+
 	if err := m.storage.Close(); err != nil {
 		m.logger.Error(err.Error())
 		return err
@@ -176,6 +324,7 @@ func (m *Metastore) IndexMetadataExists(indexName string) bool {
 	defer m.mutex.RUnlock()
 
 	_, ok := m.indexMetadataMap[indexName]
+
 	return ok
 }
 
@@ -248,9 +397,6 @@ func (m *Metastore) SetIndexMetadata(indexName string, indexMetadata *IndexMetad
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
-	// new index metadata
-	m.logger.Info("new index metadata", zap.String("index_name", indexName))
-
 	// Serialize index metadata
 	value, err := indexMetadata.Marshal()
 	if err != nil {
@@ -264,16 +410,6 @@ func (m *Metastore) SetIndexMetadata(indexName string, indexMetadata *IndexMetad
 	if err := m.storage.Put(indexMetadataPath, value); err != nil {
 		m.logger.Error(err.Error(), zap.String("path", indexMetadataPath))
 		return err
-	}
-
-	// Set hash ring
-	m.ringMap[indexName] = rendezvous.New()
-
-	// Send put index event
-	m.logger.Info("Send metastore event", zap.String("index_name", indexName))
-	m.events <- MetastoreEvent{
-		Type:  MetastoreEventTypePutIndex,
-		Index: indexName,
 	}
 
 	for shardName, shardMetadata := range indexMetadata.ShardMetadataMap {
@@ -290,24 +426,7 @@ func (m *Metastore) SetIndexMetadata(indexName string, indexMetadata *IndexMetad
 			m.logger.Warn(err.Error(), zap.String("path", shardMetadataPath))
 			continue
 		}
-
-		// Add new hash ring item for shard
-		if hashRing, ok := m.ringMap[indexName]; ok {
-			hashRing.AddWithWeight(shardName, 1.0)
-		} else {
-			m.logger.Warn("hash ring does not found", zap.String("index_name", indexName))
-		}
-
-		// Send put shard event
-		m.events <- MetastoreEvent{
-			Type:  MetastoreEventTypePutShard,
-			Index: indexName,
-			Shard: shardName,
-		}
 	}
-
-	// Update local index metadata map
-	m.indexMetadataMap[indexName] = indexMetadata
 
 	return nil
 }
@@ -349,16 +468,6 @@ func (m *Metastore) TouchShardMetadata(indexName string, shardName string) error
 		return err
 	}
 
-	// Update local shard metadata map
-	indexMetadata.ShardMetadataMap[shardName] = newShardMetadata
-
-	// Send metastore event
-	m.events <- MetastoreEvent{
-		Type:  MetastoreEventTypePutShard,
-		Index: indexName,
-		Shard: shardName,
-	}
-
 	return nil
 }
 
@@ -374,33 +483,13 @@ func (m *Metastore) DeleteIndexMetadata(indexName string) error {
 	}
 
 	for shardName := range indexMetadata.ShardMetadataMap {
-		// Delete hash ring item for shard
-		if hashRing, ok := m.ringMap[indexName]; ok {
-			hashRing.Remove(shardName)
-		} else {
-			m.logger.Warn("hash ring does not found", zap.String("index_name", indexName))
-		}
-
 		// Delete shard metadata
 		shardMetadataPath := makeShardMetadataPath(indexName, shardName)
 		if err := m.storage.Delete(shardMetadataPath); err != nil {
 			m.logger.Warn(err.Error(), zap.String("path", shardMetadataPath))
 			continue
 		}
-
-		// Send event
-		m.events <- MetastoreEvent{
-			Type:  MetastoreEventTypeDeleteShard,
-			Index: indexName,
-			Shard: shardName,
-		}
 	}
-
-	// Delete hash ring for index
-	delete(m.ringMap, indexName)
-
-	// Update local index metadata
-	delete(m.indexMetadataMap, indexName)
 
 	// Delete index metadata
 	indexMetadataPath := makeIndexMetadataPath(indexName)
@@ -412,12 +501,6 @@ func (m *Metastore) DeleteIndexMetadata(indexName string) error {
 	indexMetadataDir := filepath.Dir(indexMetadataPath)
 	if err := m.storage.Delete(indexMetadataDir); err != nil {
 		m.logger.Warn(err.Error(), zap.String("index_metadata_dir", indexMetadataDir))
-	}
-
-	// Send event
-	m.events <- MetastoreEvent{
-		Type:  MetastoreEventTypeDeleteIndex,
-		Index: indexName,
 	}
 
 	return nil

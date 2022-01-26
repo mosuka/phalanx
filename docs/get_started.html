@@ -448,7 +448,13 @@
                                 <h1 id="getting-started">Getting started</h1>
 <h2 id="start-phalanx-on-a-local-machine-using-a-local-file-system">Start Phalanx on a local machine using a local file system</h2>
 <p>Phalanx can be started on a local machine using a local file system as a metastore. The following command starts with a configuration file:</p>
-<pre><code>% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx-metastore
+<pre><code>% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx-metadata
+</code></pre><p>Multiple Phalanx nodes can be started on the local machine to run a pseudo-cluster.
+You can easily add nodes to the cluster with the previously started node as the seed node, using the following command.</p>
+<p>Start the second node:</p>
+<pre><code>% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx-metadata --bind-port=2001 --grpc-port=5001 --http-port=8001 --seed-addresses=localhost:2000
+</code></pre><p>Start the third node:</p>
+<pre><code>% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx-metadata --bind-port=2002 --grpc-port=5002 --http-port=8002 --seed-addresses=localhost:2000
 </code></pre><p>A metastore is a place where various information about an index is stored.
 See the <a href="metadata_store.html">metadata store section</a> for details.</p>
 <h3 id="create-index-on-local-file-system">Create index on local file system</h3>
@@ -501,7 +507,7 @@ See the <a href="index_store.html">index store section</a> and the <a href="lock
             }
         }
     },
-    &quot;num_shards&quot;: 1,
+    &quot;num_shards&quot;: 6,
     &quot;default_search_field&quot;: &quot;_all&quot;,
     &quot;default_analyzer&quot;: {
         &quot;tokenizer&quot;: {
@@ -555,69 +561,75 @@ phalanx_grpc_server_started_total{grpc_method=&quot;Search&quot;,grpc_service=&q
 <pre><code>% curl -XGET http://localhost:8000/cluster | jq .
 </code></pre><pre><code class="lang-json">{
   <span class="hljs-string">&quot;indexer_assignment&quot;</span>: {
-    <span class="hljs-string">&quot;wikipedia_en&quot;</span>: {
-      <span class="hljs-string">&quot;shard-73iAEf8K&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
-      <span class="hljs-string">&quot;shard-CRzZVi2b&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
-      <span class="hljs-string">&quot;shard-Wh7VO5Lp&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
-      <span class="hljs-string">&quot;shard-YazeIhze&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
-      <span class="hljs-string">&quot;shard-cXyt4esz&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
-      <span class="hljs-string">&quot;shard-hUM3HWQW&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
-      <span class="hljs-string">&quot;shard-jH3sTtc7&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
-      <span class="hljs-string">&quot;shard-viI2Dm3V&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
-      <span class="hljs-string">&quot;shard-y1tMwCEP&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>,
-      <span class="hljs-string">&quot;shard-y7VRCIlU&quot;</span>: <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+    <span class="hljs-string">&quot;example&quot;</span>: {
+      <span class="hljs-string">&quot;shard-60zYKCLJ&quot;</span>: <span class="hljs-string">&quot;node-1P4Hkvhy&quot;</span>,
+      <span class="hljs-string">&quot;shard-EIPjSbHG&quot;</span>: <span class="hljs-string">&quot;node-1P4Hkvhy&quot;</span>,
+      <span class="hljs-string">&quot;shard-HYuLwqp8&quot;</span>: <span class="hljs-string">&quot;node-1P4Hkvhy&quot;</span>,
+      <span class="hljs-string">&quot;shard-rIWGHdkS&quot;</span>: <span class="hljs-string">&quot;node-1P4Hkvhy&quot;</span>,
+      <span class="hljs-string">&quot;shard-sNHs6Kyh&quot;</span>: <span class="hljs-string">&quot;node-1P4Hkvhy&quot;</span>,
+      <span class="hljs-string">&quot;shard-wrAZqmV6&quot;</span>: <span class="hljs-string">&quot;node-1P4Hkvhy&quot;</span>
     }
   },
   <span class="hljs-string">&quot;indexes&quot;</span>: {
-    <span class="hljs-string">&quot;wikipedia_en&quot;</span>: {
+    <span class="hljs-string">&quot;example&quot;</span>: {
       <span class="hljs-string">&quot;index_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
-      <span class="hljs-string">&quot;index_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en&quot;</span>,
+      <span class="hljs-string">&quot;index_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx-indexes/example&quot;</span>,
       <span class="hljs-string">&quot;shards&quot;</span>: {
-        <span class="hljs-string">&quot;shard-73iAEf8K&quot;</span>: {
+        <span class="hljs-string">&quot;shard-60zYKCLJ&quot;</span>: {
           <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
-          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-73iAEf8K&quot;</span>
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx-indexes/example/shard-60zYKCLJ&quot;</span>
         },
-        <span class="hljs-string">&quot;shard-CRzZVi2b&quot;</span>: {
+        <span class="hljs-string">&quot;shard-EIPjSbHG&quot;</span>: {
           <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
-          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-CRzZVi2b&quot;</span>
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx-indexes/example/shard-EIPjSbHG&quot;</span>
         },
-        <span class="hljs-string">&quot;shard-Wh7VO5Lp&quot;</span>: {
+        <span class="hljs-string">&quot;shard-HYuLwqp8&quot;</span>: {
           <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
-          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-Wh7VO5Lp&quot;</span>
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx-indexes/example/shard-HYuLwqp8&quot;</span>
         },
-        <span class="hljs-string">&quot;shard-YazeIhze&quot;</span>: {
+        <span class="hljs-string">&quot;shard-rIWGHdkS&quot;</span>: {
           <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
-          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-YazeIhze&quot;</span>
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx-indexes/example/shard-rIWGHdkS&quot;</span>
         },
-        <span class="hljs-string">&quot;shard-cXyt4esz&quot;</span>: {
+        <span class="hljs-string">&quot;shard-sNHs6Kyh&quot;</span>: {
           <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
-          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-cXyt4esz&quot;</span>
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx-indexes/example/shard-sNHs6Kyh&quot;</span>
         },
-        <span class="hljs-string">&quot;shard-hUM3HWQW&quot;</span>: {
+        <span class="hljs-string">&quot;shard-wrAZqmV6&quot;</span>: {
           <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
-          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-hUM3HWQW&quot;</span>
-        },
-        <span class="hljs-string">&quot;shard-jH3sTtc7&quot;</span>: {
-          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
-          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-jH3sTtc7&quot;</span>
-        },
-        <span class="hljs-string">&quot;shard-viI2Dm3V&quot;</span>: {
-          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
-          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-viI2Dm3V&quot;</span>
-        },
-        <span class="hljs-string">&quot;shard-y1tMwCEP&quot;</span>: {
-          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
-          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-y1tMwCEP&quot;</span>
-        },
-        <span class="hljs-string">&quot;shard-y7VRCIlU&quot;</span>: {
-          <span class="hljs-string">&quot;shard_lock_uri&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
-          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx/indexes/wikipedia_en/shard-y7VRCIlU&quot;</span>
+          <span class="hljs-string">&quot;shard_uri&quot;</span>: <span class="hljs-string">&quot;file:///tmp/phalanx-indexes/example/shard-wrAZqmV6&quot;</span>
         }
       }
     }
   },
   <span class="hljs-string">&quot;nodes&quot;</span>: {
-    <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>: {
+    <span class="hljs-string">&quot;node-1P4Hkvhy&quot;</span>: {
+      <span class="hljs-string">&quot;addr&quot;</span>: <span class="hljs-string">&quot;0.0.0.0&quot;</span>,
+      <span class="hljs-string">&quot;meta&quot;</span>: {
+        <span class="hljs-string">&quot;grpc_port&quot;</span>: <span class="hljs-number">5002</span>,
+        <span class="hljs-string">&quot;http_port&quot;</span>: <span class="hljs-number">8002</span>,
+        <span class="hljs-string">&quot;roles&quot;</span>: [
+          <span class="hljs-string">&quot;indexer&quot;</span>,
+          <span class="hljs-string">&quot;searcher&quot;</span>
+        ]
+      },
+      <span class="hljs-string">&quot;port&quot;</span>: <span class="hljs-number">2002</span>,
+      <span class="hljs-string">&quot;state&quot;</span>: <span class="hljs-string">&quot;alive&quot;</span>
+    },
+    <span class="hljs-string">&quot;node-snjdTQVL&quot;</span>: {
+      <span class="hljs-string">&quot;addr&quot;</span>: <span class="hljs-string">&quot;0.0.0.0&quot;</span>,
+      <span class="hljs-string">&quot;meta&quot;</span>: {
+        <span class="hljs-string">&quot;grpc_port&quot;</span>: <span class="hljs-number">5001</span>,
+        <span class="hljs-string">&quot;http_port&quot;</span>: <span class="hljs-number">8001</span>,
+        <span class="hljs-string">&quot;roles&quot;</span>: [
+          <span class="hljs-string">&quot;indexer&quot;</span>,
+          <span class="hljs-string">&quot;searcher&quot;</span>
+        ]
+      },
+      <span class="hljs-string">&quot;port&quot;</span>: <span class="hljs-number">2001</span>,
+      <span class="hljs-string">&quot;state&quot;</span>: <span class="hljs-string">&quot;alive&quot;</span>
+    },
+    <span class="hljs-string">&quot;node-z8PozpGp&quot;</span>: {
       <span class="hljs-string">&quot;addr&quot;</span>: <span class="hljs-string">&quot;0.0.0.0&quot;</span>,
       <span class="hljs-string">&quot;meta&quot;</span>: {
         <span class="hljs-string">&quot;grpc_port&quot;</span>: <span class="hljs-number">5000</span>,
@@ -627,41 +639,41 @@ phalanx_grpc_server_started_total{grpc_method=&quot;Search&quot;,grpc_service=&q
           <span class="hljs-string">&quot;searcher&quot;</span>
         ]
       },
-      <span class="hljs-string">&quot;port&quot;</span>: <span class="hljs-number">3000</span>,
+      <span class="hljs-string">&quot;port&quot;</span>: <span class="hljs-number">2000</span>,
       <span class="hljs-string">&quot;state&quot;</span>: <span class="hljs-string">&quot;alive&quot;</span>
     }
   },
   <span class="hljs-string">&quot;searcher_assignment&quot;</span>: {
-    <span class="hljs-string">&quot;wikipedia_en&quot;</span>: {
-      <span class="hljs-string">&quot;shard-73iAEf8K&quot;</span>: [
-        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+    <span class="hljs-string">&quot;example&quot;</span>: {
+      <span class="hljs-string">&quot;shard-60zYKCLJ&quot;</span>: [
+        <span class="hljs-string">&quot;node-1P4Hkvhy&quot;</span>,
+        <span class="hljs-string">&quot;node-snjdTQVL&quot;</span>,
+        <span class="hljs-string">&quot;node-z8PozpGp&quot;</span>
       ],
-      <span class="hljs-string">&quot;shard-CRzZVi2b&quot;</span>: [
-        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      <span class="hljs-string">&quot;shard-EIPjSbHG&quot;</span>: [
+        <span class="hljs-string">&quot;node-1P4Hkvhy&quot;</span>,
+        <span class="hljs-string">&quot;node-z8PozpGp&quot;</span>,
+        <span class="hljs-string">&quot;node-snjdTQVL&quot;</span>
       ],
-      <span class="hljs-string">&quot;shard-Wh7VO5Lp&quot;</span>: [
-        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      <span class="hljs-string">&quot;shard-HYuLwqp8&quot;</span>: [
+        <span class="hljs-string">&quot;node-1P4Hkvhy&quot;</span>,
+        <span class="hljs-string">&quot;node-z8PozpGp&quot;</span>,
+        <span class="hljs-string">&quot;node-snjdTQVL&quot;</span>
       ],
-      <span class="hljs-string">&quot;shard-YazeIhze&quot;</span>: [
-        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      <span class="hljs-string">&quot;shard-rIWGHdkS&quot;</span>: [
+        <span class="hljs-string">&quot;node-1P4Hkvhy&quot;</span>,
+        <span class="hljs-string">&quot;node-z8PozpGp&quot;</span>,
+        <span class="hljs-string">&quot;node-snjdTQVL&quot;</span>
       ],
-      <span class="hljs-string">&quot;shard-cXyt4esz&quot;</span>: [
-        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      <span class="hljs-string">&quot;shard-sNHs6Kyh&quot;</span>: [
+        <span class="hljs-string">&quot;node-1P4Hkvhy&quot;</span>,
+        <span class="hljs-string">&quot;node-z8PozpGp&quot;</span>,
+        <span class="hljs-string">&quot;node-snjdTQVL&quot;</span>
       ],
-      <span class="hljs-string">&quot;shard-hUM3HWQW&quot;</span>: [
-        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
-      ],
-      <span class="hljs-string">&quot;shard-jH3sTtc7&quot;</span>: [
-        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
-      ],
-      <span class="hljs-string">&quot;shard-viI2Dm3V&quot;</span>: [
-        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
-      ],
-      <span class="hljs-string">&quot;shard-y1tMwCEP&quot;</span>: [
-        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
-      ],
-      <span class="hljs-string">&quot;shard-y7VRCIlU&quot;</span>: [
-        <span class="hljs-string">&quot;node-duIMwfjn&quot;</span>
+      <span class="hljs-string">&quot;shard-wrAZqmV6&quot;</span>: [
+        <span class="hljs-string">&quot;node-1P4Hkvhy&quot;</span>,
+        <span class="hljs-string">&quot;node-snjdTQVL&quot;</span>,
+        <span class="hljs-string">&quot;node-z8PozpGp&quot;</span>
       ]
     }
   }
@@ -672,12 +684,30 @@ phalanx_grpc_server_started_total{grpc_method=&quot;Search&quot;,grpc_service=&q
 {&quot;_id&quot;:&quot;1&quot;, &quot;id&quot;:1, &quot;text&quot;:&quot;This is an example document 1.&quot;}
 {&quot;_id&quot;:&quot;2&quot;, &quot;id&quot;:2, &quot;text&quot;:&quot;This is an example document 2.&quot;}
 {&quot;_id&quot;:&quot;3&quot;, &quot;id&quot;:3, &quot;text&quot;:&quot;This is an example document 3.&quot;}
+{&quot;_id&quot;:&quot;4&quot;, &quot;id&quot;:4, &quot;text&quot;:&quot;This is an example document 4.&quot;}
+{&quot;_id&quot;:&quot;5&quot;, &quot;id&quot;:5, &quot;text&quot;:&quot;This is an example document 5.&quot;}
+{&quot;_id&quot;:&quot;6&quot;, &quot;id&quot;:6, &quot;text&quot;:&quot;This is an example document 6.&quot;}
+{&quot;_id&quot;:&quot;7&quot;, &quot;id&quot;:7, &quot;text&quot;:&quot;This is an example document 7.&quot;}
+{&quot;_id&quot;:&quot;8&quot;, &quot;id&quot;:8, &quot;text&quot;:&quot;This is an example document 8.&quot;}
+{&quot;_id&quot;:&quot;9&quot;, &quot;id&quot;:9, &quot;text&quot;:&quot;This is an example document 9.&quot;}
+{&quot;_id&quot;:&quot;10&quot;, &quot;id&quot;:10, &quot;text&quot;:&quot;This is an example document 10.&quot;}
+{&quot;_id&quot;:&quot;11&quot;, &quot;id&quot;:11, &quot;text&quot;:&quot;This is an example document 11.&quot;}
+{&quot;_id&quot;:&quot;12&quot;, &quot;id&quot;:12, &quot;text&quot;:&quot;This is an example document 12.&quot;}
 &apos;
 </code></pre><h2 id="delete-documents">Delete documents</h2>
 <pre><code>% curl -XDELETE -H &apos;Content-type: text/plain&apos; http://localhost:8000/v1/indexes/example/documents --data-binary &apos;
 1
 2
 3
+4
+5
+6
+7
+8
+9
+10
+11
+12
 &apos;
 </code></pre><h2 id="search">Search</h2>
 <pre><code>% curl -XPOST -H &apos;Content-type: application/json&apos; http://localhost:8000/v1/indexes/example/_search --data-binary &apos;
@@ -714,12 +744,12 @@ phalanx_grpc_server_started_total{grpc_method=&quot;Search&quot;,grpc_service=&q
         }
     }
 }
-&apos;
+&apos; | jq .
 </code></pre><pre><code class="lang-json">{
   <span class="hljs-string">&quot;aggregations&quot;</span>: {
     <span class="hljs-string">&quot;timestamp_date_range&quot;</span>: {
       <span class="hljs-string">&quot;last_year&quot;</span>: <span class="hljs-number">0</span>,
-      <span class="hljs-string">&quot;this_year&quot;</span>: <span class="hljs-number">3</span>,
+      <span class="hljs-string">&quot;this_year&quot;</span>: <span class="hljs-number">12</span>,
       <span class="hljs-string">&quot;year_before_last&quot;</span>: <span class="hljs-number">0</span>
     }
   },
@@ -730,8 +760,8 @@ phalanx_grpc_server_started_total{grpc_method=&quot;Search&quot;,grpc_service=&q
         <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 1.&quot;</span>
       },
       <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;1&quot;</span>,
-      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.06069608755660118</span>,
-      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641992086513383200</span>
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.08287343490634301</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1643177200809294300</span>
     },
     {
       <span class="hljs-string">&quot;fields&quot;</span>: {
@@ -739,8 +769,71 @@ phalanx_grpc_server_started_total{grpc_method=&quot;Search&quot;,grpc_service=&q
         <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 2.&quot;</span>
       },
       <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;2&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.08287343490634301</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1643177200809316000</span>
+    },
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">4</span>,
+        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 4.&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;4&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.047891143480830164</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1643177200809422600</span>
+    },
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">7</span>,
+        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 7.&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;7&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.047891143480830164</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1643177200809437000</span>
+    },
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">10</span>,
+        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 10.&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;10&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.047891143480830164</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1643177200809448400</span>
+    },
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">11</span>,
+        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 11.&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;11&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.047891143480830164</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1643177200809457700</span>
+    },
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">5</span>,
+        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 5.&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;5&quot;</span>,
       <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.06069608755660118</span>,
-      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641992086513395500</span>
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1643177200809490000</span>
+    },
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">6</span>,
+        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 6.&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;6&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.06069608755660118</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1643177200809517000</span>
+    },
+    {
+      <span class="hljs-string">&quot;fields&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-number">12</span>,
+        <span class="hljs-string">&quot;text&quot;</span>: <span class="hljs-string">&quot;This is an example document 12.&quot;</span>
+      },
+      <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;12&quot;</span>,
+      <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.06069608755660118</span>,
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1643177200809526300</span>
     },
     {
       <span class="hljs-string">&quot;fields&quot;</span>: {
@@ -749,10 +842,10 @@ phalanx_grpc_server_started_total{grpc_method=&quot;Search&quot;,grpc_service=&q
       },
       <span class="hljs-string">&quot;id&quot;</span>: <span class="hljs-string">&quot;3&quot;</span>,
       <span class="hljs-string">&quot;score&quot;</span>: <span class="hljs-number">0.06069608755660118</span>,
-      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1641992086513399600</span>
+      <span class="hljs-string">&quot;timestamp&quot;</span>: <span class="hljs-number">1643177200809375200</span>
     }
   ],
-  <span class="hljs-string">&quot;hits&quot;</span>: <span class="hljs-number">3</span>,
+  <span class="hljs-string">&quot;hits&quot;</span>: <span class="hljs-number">12</span>,
   <span class="hljs-string">&quot;index_name&quot;</span>: <span class="hljs-string">&quot;example&quot;</span>
 }
 </code></pre>
@@ -802,7 +895,7 @@ phalanx_grpc_server_started_total{grpc_method=&quot;Search&quot;,grpc_service=&q
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Get started","level":"1.4","depth":1,"next":{"title":"Metadata Store","level":"1.5","depth":1,"path":"metadata_store.md","ref":"metadata_store.md","articles":[]},"previous":{"title":"Build","level":"1.3","depth":1,"path":"build.md","ref":"build.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"get_started.md","mtime":"2022-01-18T13:00:14.678Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-20T08:53:26.682Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Get started","level":"1.4","depth":1,"next":{"title":"Metadata Store","level":"1.5","depth":1,"path":"metadata_store.md","ref":"metadata_store.md","articles":[]},"previous":{"title":"Build","level":"1.3","depth":1,"path":"build.md","ref":"build.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"get_started.md","mtime":"2022-01-26T06:13:13.866Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-01-26T06:16:08.079Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>

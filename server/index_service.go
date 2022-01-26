@@ -91,27 +91,32 @@ func (s *IndexService) Start() error {
 					return
 				}
 			case event := <-s.metastore.Events():
-				s.logger.Info("received metastore event", zap.Any("metastore_event", event))
 				switch event.Type {
 				case phalanxmetastore.MetastoreEventTypePutIndex:
+					s.logger.Info("index metadata has been created", zap.Any("metastore_event", event))
 					// NOP
 				case phalanxmetastore.MetastoreEventTypeDeleteIndex:
+					s.logger.Info("index metadata has been deleted", zap.Any("metastore_event", event))
 					// NOP
 				case phalanxmetastore.MetastoreEventTypePutShard:
+					s.logger.Info("shard metadata has been created", zap.Any("metastore_event", event))
 					s.assignShardsToNode()
 				case phalanxmetastore.MetastoreEventTypeDeleteShard:
+					s.logger.Info("shard metadata has been deleted", zap.Any("metastore_event", event))
 					s.assignShardsToNode()
 				}
 			case event := <-s.cluster.ClusterEvents():
-				s.logger.Info("received cluster event", zap.Any("cluster_event", event))
 				switch event.NodeEvent.Type {
 				case phalanxcluster.NodeEventTypeJoin:
+					s.logger.Info("node has been joined", zap.Any("cluster_event", event))
 					if s.cluster.IsSeedNode() || event.NodeEvent.NodeName != s.cluster.LocalNodeName() {
 						s.assignShardsToNode()
 					}
 				case phalanxcluster.NodeEventTypeUpdate:
+					s.logger.Info("node has been updated", zap.Any("cluster_event", event))
 					s.assignShardsToNode()
 				case phalanxcluster.NodeEventTypeLeave:
+					s.logger.Info("node has been left", zap.Any("cluster_event", event))
 					s.assignShardsToNode()
 				}
 			}
@@ -169,7 +174,27 @@ func (s *IndexService) assignShardsToNode() error {
 	s.indexerAssignment = indexerAssignment
 	s.searcherAssignment = searcherAssignment
 
+	// fmt.Println("indexer:")
+	// for indexName, shards := range s.indexerAssignment {
+	// 	fmt.Println("  index:", indexName)
+	// 	for shardName, nodeName := range shards {
+	// 		fmt.Println("    shard:", shardName)
+	// 		fmt.Println("      node:", nodeName)
+	// 	}
+	// }
+	// fmt.Println("searcher:")
+	// for indexName, shards := range s.searcherAssignment {
+	// 	fmt.Println("  index:", indexName)
+	// 	for shardName, nodes := range shards {
+	// 		fmt.Println("    shard:", shardName)
+	// 		for _, nodeName := range nodes {
+	// 			fmt.Println("      node:", nodeName)
+	// 		}
+	// 	}
+	// }
+
 	// Open the index writers for assigned shards.
+	s.logger.Info("opening index writers")
 	for assignedIndexName, shardAssignment := range s.indexerAssignment {
 		for assignedShardName, assignedNodeName := range shardAssignment {
 			isAssigned := assignedNodeName == s.cluster.LocalNodeName()
@@ -191,6 +216,7 @@ func (s *IndexService) assignShardsToNode() error {
 						s.logger.Warn(err.Error(), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 						continue
 					}
+					s.logger.Info("opened the index writer for the assigned shard", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 				}
 			} else {
 				if s.indexWriters.Contains(assignedIndexName, assignedShardName) {
@@ -199,6 +225,7 @@ func (s *IndexService) assignShardsToNode() error {
 						s.logger.Warn(err.Error(), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 						continue
 					}
+					s.logger.Info("closed the index writer for a shard assigned to another node", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 				}
 			}
 		}
@@ -214,6 +241,7 @@ func (s *IndexService) assignShardsToNode() error {
 					s.logger.Warn(err.Error(), zap.String("index_name", openedIndexName), zap.String("shard_name", openedShardName))
 					continue
 				}
+				s.logger.Info("closed the index writer for the non-existent shard", zap.String("index_name", openedIndexName), zap.String("shard_name", openedShardName))
 			}
 
 			isAssigned := assignedNodeName == s.cluster.LocalNodeName()
@@ -223,6 +251,7 @@ func (s *IndexService) assignShardsToNode() error {
 					s.logger.Warn(err.Error(), zap.String("index_name", openedIndexName), zap.String("shard_name", openedShardName))
 					continue
 				}
+				s.logger.Info("closed the index writer for a shard assigned to another node", zap.String("index_name", openedShardName), zap.String("shard_name", openedShardName))
 			}
 		}
 	}
@@ -262,21 +291,26 @@ func (s *IndexService) assignShardsToNode() error {
 							s.logger.Warn(err.Error(), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 							continue
 						}
+						s.logger.Info("reopen the existing index reader due to the index has been updated", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 					}
 				} else {
+					// TODO: check the shard index existence before opening
 					// Open the index reader for the assigned shard.
 					if err := s.indexReaders.Open(assignedIndexName, assignedShardName, indexMetadata, shardMetadata); err != nil {
 						s.logger.Warn(err.Error(), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 						continue
 					}
+					s.logger.Info("opened the index reader for the assigned shard", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 				}
 			} else {
 				// Close the index reader for the shard assigned to the other node.
 				if s.indexReaders.Contains(assignedIndexName, assignedShardName) {
+					// TODO: check the shard index existence before closing
 					if err := s.indexReaders.Close(assignedIndexName, assignedShardName); err != nil {
 						s.logger.Warn(err.Error(), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 						continue
 					}
+					s.logger.Info("closed the index reader for a shard assigned to another node", zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 				}
 			}
 		}
@@ -291,6 +325,7 @@ func (s *IndexService) assignShardsToNode() error {
 				if err := s.indexReaders.Close(indexName, shardName); err != nil {
 					s.logger.Warn(err.Error(), zap.String("index_name", indexName), zap.String("shard_name", shardName))
 				}
+				s.logger.Info("closed the index reader for the non-existent shard", zap.String("index_name", indexName), zap.String("shard_name", shardName))
 				continue
 			}
 
@@ -306,6 +341,7 @@ func (s *IndexService) assignShardsToNode() error {
 				if err := s.indexReaders.Close(indexName, shardName); err != nil {
 					s.logger.Warn(err.Error(), zap.String("index_name", indexName), zap.String("shard_name", shardName))
 				}
+				s.logger.Info("closed the index reader for a shard assigned to another node", zap.String("index_name", indexName), zap.String("shard_name", shardName))
 				continue
 			}
 		}
