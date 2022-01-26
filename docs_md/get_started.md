@@ -5,8 +5,24 @@
 Phalanx can be started on a local machine using a local file system as a metastore. The following command starts with a configuration file:
 
 ```
-% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx-metastore
+% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx-metadata
 ```
+
+Multiple Phalanx nodes can be started on the local machine to run a pseudo-cluster.
+You can easily add nodes to the cluster with the previously started node as the seed node, using the following command.
+
+Start the second node:
+
+```
+% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx-metadata --bind-port=2001 --grpc-port=5001 --http-port=8001 --seed-addresses=localhost:2000
+```
+
+Start the third node:
+
+```
+% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx-metadata --bind-port=2002 --grpc-port=5002 --http-port=8002 --seed-addresses=localhost:2000
+```
+
 
 A metastore is a place where various information about an index is stored.
 See the [metadata store section](/metadata_store.md) for details.
@@ -64,7 +80,7 @@ See the [index store section](/index_store.md) and the [lock store section](/loc
 			}
 		}
 	},
-	"num_shards": 1,
+	"num_shards": 6,
 	"default_search_field": "_all",
 	"default_analyzer": {
 		"tokenizer": {
@@ -150,69 +166,75 @@ This endpoint returns the latest cluster status.
 ```json
 {
   "indexer_assignment": {
-    "wikipedia_en": {
-      "shard-73iAEf8K": "node-duIMwfjn",
-      "shard-CRzZVi2b": "node-duIMwfjn",
-      "shard-Wh7VO5Lp": "node-duIMwfjn",
-      "shard-YazeIhze": "node-duIMwfjn",
-      "shard-cXyt4esz": "node-duIMwfjn",
-      "shard-hUM3HWQW": "node-duIMwfjn",
-      "shard-jH3sTtc7": "node-duIMwfjn",
-      "shard-viI2Dm3V": "node-duIMwfjn",
-      "shard-y1tMwCEP": "node-duIMwfjn",
-      "shard-y7VRCIlU": "node-duIMwfjn"
+    "example": {
+      "shard-60zYKCLJ": "node-1P4Hkvhy",
+      "shard-EIPjSbHG": "node-1P4Hkvhy",
+      "shard-HYuLwqp8": "node-1P4Hkvhy",
+      "shard-rIWGHdkS": "node-1P4Hkvhy",
+      "shard-sNHs6Kyh": "node-1P4Hkvhy",
+      "shard-wrAZqmV6": "node-1P4Hkvhy"
     }
   },
   "indexes": {
-    "wikipedia_en": {
+    "example": {
       "index_lock_uri": "",
-      "index_uri": "file:///tmp/phalanx/indexes/wikipedia_en",
+      "index_uri": "file:///tmp/phalanx-indexes/example",
       "shards": {
-        "shard-73iAEf8K": {
+        "shard-60zYKCLJ": {
           "shard_lock_uri": "",
-          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-73iAEf8K"
+          "shard_uri": "file:///tmp/phalanx-indexes/example/shard-60zYKCLJ"
         },
-        "shard-CRzZVi2b": {
+        "shard-EIPjSbHG": {
           "shard_lock_uri": "",
-          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-CRzZVi2b"
+          "shard_uri": "file:///tmp/phalanx-indexes/example/shard-EIPjSbHG"
         },
-        "shard-Wh7VO5Lp": {
+        "shard-HYuLwqp8": {
           "shard_lock_uri": "",
-          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-Wh7VO5Lp"
+          "shard_uri": "file:///tmp/phalanx-indexes/example/shard-HYuLwqp8"
         },
-        "shard-YazeIhze": {
+        "shard-rIWGHdkS": {
           "shard_lock_uri": "",
-          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-YazeIhze"
+          "shard_uri": "file:///tmp/phalanx-indexes/example/shard-rIWGHdkS"
         },
-        "shard-cXyt4esz": {
+        "shard-sNHs6Kyh": {
           "shard_lock_uri": "",
-          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-cXyt4esz"
+          "shard_uri": "file:///tmp/phalanx-indexes/example/shard-sNHs6Kyh"
         },
-        "shard-hUM3HWQW": {
+        "shard-wrAZqmV6": {
           "shard_lock_uri": "",
-          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-hUM3HWQW"
-        },
-        "shard-jH3sTtc7": {
-          "shard_lock_uri": "",
-          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-jH3sTtc7"
-        },
-        "shard-viI2Dm3V": {
-          "shard_lock_uri": "",
-          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-viI2Dm3V"
-        },
-        "shard-y1tMwCEP": {
-          "shard_lock_uri": "",
-          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-y1tMwCEP"
-        },
-        "shard-y7VRCIlU": {
-          "shard_lock_uri": "",
-          "shard_uri": "file:///tmp/phalanx/indexes/wikipedia_en/shard-y7VRCIlU"
+          "shard_uri": "file:///tmp/phalanx-indexes/example/shard-wrAZqmV6"
         }
       }
     }
   },
   "nodes": {
-    "node-duIMwfjn": {
+    "node-1P4Hkvhy": {
+      "addr": "0.0.0.0",
+      "meta": {
+        "grpc_port": 5002,
+        "http_port": 8002,
+        "roles": [
+          "indexer",
+          "searcher"
+        ]
+      },
+      "port": 2002,
+      "state": "alive"
+    },
+    "node-snjdTQVL": {
+      "addr": "0.0.0.0",
+      "meta": {
+        "grpc_port": 5001,
+        "http_port": 8001,
+        "roles": [
+          "indexer",
+          "searcher"
+        ]
+      },
+      "port": 2001,
+      "state": "alive"
+    },
+    "node-z8PozpGp": {
       "addr": "0.0.0.0",
       "meta": {
         "grpc_port": 5000,
@@ -222,41 +244,41 @@ This endpoint returns the latest cluster status.
           "searcher"
         ]
       },
-      "port": 3000,
+      "port": 2000,
       "state": "alive"
     }
   },
   "searcher_assignment": {
-    "wikipedia_en": {
-      "shard-73iAEf8K": [
-        "node-duIMwfjn"
+    "example": {
+      "shard-60zYKCLJ": [
+        "node-1P4Hkvhy",
+        "node-snjdTQVL",
+        "node-z8PozpGp"
       ],
-      "shard-CRzZVi2b": [
-        "node-duIMwfjn"
+      "shard-EIPjSbHG": [
+        "node-1P4Hkvhy",
+        "node-z8PozpGp",
+        "node-snjdTQVL"
       ],
-      "shard-Wh7VO5Lp": [
-        "node-duIMwfjn"
+      "shard-HYuLwqp8": [
+        "node-1P4Hkvhy",
+        "node-z8PozpGp",
+        "node-snjdTQVL"
       ],
-      "shard-YazeIhze": [
-        "node-duIMwfjn"
+      "shard-rIWGHdkS": [
+        "node-1P4Hkvhy",
+        "node-z8PozpGp",
+        "node-snjdTQVL"
       ],
-      "shard-cXyt4esz": [
-        "node-duIMwfjn"
+      "shard-sNHs6Kyh": [
+        "node-1P4Hkvhy",
+        "node-z8PozpGp",
+        "node-snjdTQVL"
       ],
-      "shard-hUM3HWQW": [
-        "node-duIMwfjn"
-      ],
-      "shard-jH3sTtc7": [
-        "node-duIMwfjn"
-      ],
-      "shard-viI2Dm3V": [
-        "node-duIMwfjn"
-      ],
-      "shard-y1tMwCEP": [
-        "node-duIMwfjn"
-      ],
-      "shard-y7VRCIlU": [
-        "node-duIMwfjn"
+      "shard-wrAZqmV6": [
+        "node-1P4Hkvhy",
+        "node-snjdTQVL",
+        "node-z8PozpGp"
       ]
     }
   }
@@ -271,6 +293,15 @@ This endpoint returns the latest cluster status.
 {"_id":"1", "id":1, "text":"This is an example document 1."}
 {"_id":"2", "id":2, "text":"This is an example document 2."}
 {"_id":"3", "id":3, "text":"This is an example document 3."}
+{"_id":"4", "id":4, "text":"This is an example document 4."}
+{"_id":"5", "id":5, "text":"This is an example document 5."}
+{"_id":"6", "id":6, "text":"This is an example document 6."}
+{"_id":"7", "id":7, "text":"This is an example document 7."}
+{"_id":"8", "id":8, "text":"This is an example document 8."}
+{"_id":"9", "id":9, "text":"This is an example document 9."}
+{"_id":"10", "id":10, "text":"This is an example document 10."}
+{"_id":"11", "id":11, "text":"This is an example document 11."}
+{"_id":"12", "id":12, "text":"This is an example document 12."}
 '
 ```
 
@@ -282,6 +313,15 @@ This endpoint returns the latest cluster status.
 1
 2
 3
+4
+5
+6
+7
+8
+9
+10
+11
+12
 '
 ```
 
@@ -323,7 +363,7 @@ This endpoint returns the latest cluster status.
         }
     }
 }
-'
+' | jq .
 ```
 
 ```json
@@ -331,7 +371,7 @@ This endpoint returns the latest cluster status.
   "aggregations": {
     "timestamp_date_range": {
       "last_year": 0,
-      "this_year": 3,
+      "this_year": 12,
       "year_before_last": 0
     }
   },
@@ -342,8 +382,8 @@ This endpoint returns the latest cluster status.
         "text": "This is an example document 1."
       },
       "id": "1",
-      "score": 0.06069608755660118,
-      "timestamp": 1641992086513383200
+      "score": 0.08287343490634301,
+      "timestamp": 1643177200809294300
     },
     {
       "fields": {
@@ -351,8 +391,71 @@ This endpoint returns the latest cluster status.
         "text": "This is an example document 2."
       },
       "id": "2",
+      "score": 0.08287343490634301,
+      "timestamp": 1643177200809316000
+    },
+    {
+      "fields": {
+        "id": 4,
+        "text": "This is an example document 4."
+      },
+      "id": "4",
+      "score": 0.047891143480830164,
+      "timestamp": 1643177200809422600
+    },
+    {
+      "fields": {
+        "id": 7,
+        "text": "This is an example document 7."
+      },
+      "id": "7",
+      "score": 0.047891143480830164,
+      "timestamp": 1643177200809437000
+    },
+    {
+      "fields": {
+        "id": 10,
+        "text": "This is an example document 10."
+      },
+      "id": "10",
+      "score": 0.047891143480830164,
+      "timestamp": 1643177200809448400
+    },
+    {
+      "fields": {
+        "id": 11,
+        "text": "This is an example document 11."
+      },
+      "id": "11",
+      "score": 0.047891143480830164,
+      "timestamp": 1643177200809457700
+    },
+    {
+      "fields": {
+        "id": 5,
+        "text": "This is an example document 5."
+      },
+      "id": "5",
       "score": 0.06069608755660118,
-      "timestamp": 1641992086513395500
+      "timestamp": 1643177200809490000
+    },
+    {
+      "fields": {
+        "id": 6,
+        "text": "This is an example document 6."
+      },
+      "id": "6",
+      "score": 0.06069608755660118,
+      "timestamp": 1643177200809517000
+    },
+    {
+      "fields": {
+        "id": 12,
+        "text": "This is an example document 12."
+      },
+      "id": "12",
+      "score": 0.06069608755660118,
+      "timestamp": 1643177200809526300
     },
     {
       "fields": {
@@ -361,10 +464,10 @@ This endpoint returns the latest cluster status.
       },
       "id": "3",
       "score": 0.06069608755660118,
-      "timestamp": 1641992086513399600
+      "timestamp": 1643177200809375200
     }
   ],
-  "hits": 3,
+  "hits": 12,
   "index_name": "example"
 }
 ```

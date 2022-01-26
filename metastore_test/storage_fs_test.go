@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/mosuka/phalanx/logging"
 	"github.com/mosuka/phalanx/metastore"
@@ -200,5 +201,56 @@ func TestFileSystemStorageList(t *testing.T) {
 
 	if !reflect.DeepEqual(paths, []string{filepath.FromSlash("/hello.txt"), filepath.FromSlash("/world.txt")}) {
 		t.Fatalf("unexpected %v\v", paths)
+	}
+}
+
+func TestFileSystemStorageEvents(t *testing.T) {
+	tmpDir, err := ioutil.TempDir("", "phalanx-test")
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+	defer os.RemoveAll(tmpDir)
+
+	logger := logging.NewLogger("INFO", "", 500, 3, 30, false)
+
+	path := filepath.ToSlash(tmpDir)
+
+	fsMetastore, err := metastore.NewFileSystemStorageWithPath(path, logger)
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+	defer fsMetastore.Close()
+
+	eventList := make([]metastore.StorageEvent, 0)
+	done := make(chan bool)
+
+	events := fsMetastore.Events()
+
+	go func() {
+		for {
+			select {
+			case cancel := <-done:
+				// check
+				if cancel {
+					return
+				}
+			case event := <-events:
+				eventList = append(eventList, event)
+			}
+		}
+	}()
+
+	fsMetastore.Put("/hello.txt", []byte("hello"))
+	fsMetastore.Put("/hello2.txt", []byte("hello2"))
+
+	// wait for events to be processed
+	time.Sleep(1 * time.Second)
+
+	done <- true
+
+	actual := len(eventList)
+	expected := 2
+	if actual != expected {
+		t.Fatalf("expected %v, but %v\n", expected, actual)
 	}
 }

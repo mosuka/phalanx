@@ -50,12 +50,23 @@ services:
     restart: always
 
   localstack:
+    container_name: localstack
     image: localstack/localstack:latest
     environment:
       SERVICES: ${LOCALSTACK_SERVICES}
       DEFAULT_REGION: ${LOCALSTACK_DEFAULT_REGION}
     ports:
       - "4566:4566"
+
+  # dynamodb-admin:
+  #   image: aaronshaf/dynamodb-admin:latest
+  #   environment:
+  #     DYNAMO_ENDPOINT: localstack:4566
+  #     PORT: 8081
+  #   ports:
+  #     - 8081:8081
+  #   depends_on:
+  #     - localstack
 
   phalanx:
     container_name: phalanx

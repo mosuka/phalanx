@@ -16,6 +16,7 @@ import (
 	"github.com/mosuka/phalanx/clients"
 	phalanxerrors "github.com/mosuka/phalanx/errors"
 	"go.uber.org/zap"
+	// "github.com/aws/aws-sdk-go-v2/service/dynamodbstreams"
 )
 
 const (
@@ -40,15 +41,18 @@ type kv struct {
 }
 
 type DynamodbStorage struct {
-	client         *dynamodb.Client
+	client *dynamodb.Client
+	// stream         *dynamodbstreams.Client
 	tableName      string
 	root           string
 	logger         *zap.Logger
 	ctx            context.Context
 	requestTimeout time.Duration
+	stopWatching   chan bool
+	events         chan StorageEvent
 }
 
-func NewDynamodbStorage(uri string, logger *zap.Logger) (*DynamodbStorage, error) {
+func NewDynamodbStorageWithUri(uri string, logger *zap.Logger) (*DynamodbStorage, error) {
 	metastorelogger := logger.Named("dynamodb")
 
 	client, err := clients.NewDynamoDBClientWithUri(uri)
@@ -69,26 +73,56 @@ func NewDynamodbStorage(uri string, logger *zap.Logger) (*DynamodbStorage, error
 		return nil, err
 	}
 
+	// stream, err := clients.NewDynamoDBStreamsClientWithUri(uri)
+	// if err != nil {
+	// 	logger.Error(err.Error(), zap.String("uri", uri))
+	// 	return nil, err
+	// }
+
 	root := u.Path
 	if root == "" {
 		root = "/"
 	}
 
-	ds := &DynamodbStorage{
-		client:         client,
+	dynamodbStorage := &DynamodbStorage{
+		client: client,
+		// stream:         stream,
 		tableName:      u.Host,
 		root:           root,
 		logger:         metastorelogger,
 		ctx:            context.Background(),
 		requestTimeout: 3 * time.Second,
+		stopWatching:   make(chan bool),
+		events:         make(chan StorageEvent, storageEventSize),
 	}
 
-	// primarily used for testing locally
-	if err := ds.createTable(); err != nil {
+	if err := dynamodbStorage.createTable(); err != nil {
 		return nil, err
 	}
 
-	return ds, nil
+	dynamodbStorage.watch()
+
+	return dynamodbStorage, nil
+}
+
+func (m *DynamodbStorage) watch() error {
+	// Watch file system event.
+	go func() {
+		for {
+			select {
+			case cancel := <-m.stopWatching:
+				// check
+				if cancel {
+					return
+				}
+				// TODO: implement
+				// case DynamoDB events:
+				// Catches changes made to the database and sends storage events to the event channel.
+			}
+		}
+	}()
+
+	return nil
 }
 
 // Replace the path separator with '/'.
@@ -134,7 +168,11 @@ func (m *DynamodbStorage) Get(path string) ([]byte, error) {
 func (m *DynamodbStorage) Put(path string, value []byte) error {
 	fullPath := m.makePath(path)
 
-	rec := &kv{Partition: partitionValue, Path: fullPath, Value: base64.RawURLEncoding.EncodeToString(value)}
+	rec := &kv{
+		Partition: partitionValue,
+		Path:      fullPath,
+		Value:     base64.RawURLEncoding.EncodeToString(value),
+	}
 
 	attr, err := attributevalue.MarshalMap(rec)
 	if err != nil {
@@ -247,7 +285,13 @@ func (m *DynamodbStorage) Exists(path string) (bool, error) {
 	return exists, nil
 }
 
+func (m *DynamodbStorage) Events() <-chan StorageEvent {
+	return m.events
+}
+
 func (m *DynamodbStorage) Close() error {
+	m.stopWatching <- true
+
 	return nil
 }
 

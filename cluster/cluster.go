@@ -13,6 +13,11 @@ import (
 
 const (
 	nodeNamePrefix = "node-"
+
+	// Evvent size.
+	// Cluster events can occur in large numbers at once,
+	// so make sure they are large enough.
+	eventSize = 1024
 )
 
 func generateNodeName() string {
@@ -62,7 +67,7 @@ func NewCluster(host string, bindPort int, nodeMetadata NodeMetadata, isSeedNode
 		nodeEventDeliegate:   nodeEventDeliegate,
 		nodeMetadataDelegate: nodeMetadataDelegate,
 		logger:               clusterLogger,
-		clusterEvents:        make(chan ClusterEvent, 10),
+		clusterEvents:        make(chan ClusterEvent, eventSize),
 		stopWatching:         make(chan bool),
 		isSeedNode:           isSeedNode,
 		indexerHash:          rendezvous.New(),

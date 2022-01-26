@@ -10,6 +10,7 @@ import (
 	"reflect"
 	"sort"
 	"testing"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/mosuka/phalanx/logging"
@@ -27,7 +28,7 @@ func TestDynamodbStorageWithUri(t *testing.T) {
 	uri := fmt.Sprintf("dynamodb://phalanx-test/metastore/newtest/%s?%s", tmpDir, buildQueryFromEnv())
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	dynamodbStorage, err := metastore.NewDynamodbStorage(uri, logger)
+	dynamodbStorage, err := metastore.NewDynamodbStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -44,7 +45,7 @@ func TestDynamodbStorageGet(t *testing.T) {
 	uri := fmt.Sprintf("dynamodb://phalanx-test/metastore/newtest/%s?%s", tmpDir, buildQueryFromEnv())
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	dynamodbStorage, err := metastore.NewDynamodbStorage(uri, logger)
+	dynamodbStorage, err := metastore.NewDynamodbStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -80,7 +81,7 @@ func TestDynamodbStoragePut(t *testing.T) {
 	uri := fmt.Sprintf("dynamodb://phalanx-test/metastore/newtest/%s?%s", tmpDir, buildQueryFromEnv())
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	dynamodbStorage, err := metastore.NewDynamodbStorage(uri, logger)
+	dynamodbStorage, err := metastore.NewDynamodbStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -102,7 +103,7 @@ func TestDynamodbStorageDelete(t *testing.T) {
 	uri := fmt.Sprintf("dynamodb://phalanx-test/metastore/newtest/%s?%s", tmpDir, buildQueryFromEnv())
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	dynamodbStorage, err := metastore.NewDynamodbStorage(uri, logger)
+	dynamodbStorage, err := metastore.NewDynamodbStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -129,7 +130,7 @@ func TestDynamodbStorageExists(t *testing.T) {
 	uri := fmt.Sprintf("dynamodb://phalanx-test/metastore/newtest/%s?%s", tmpDir, buildQueryFromEnv())
 	logger := logging.NewLogger("INFO", "", 500, 3, 30, false)
 
-	dynamodbStorage, err := metastore.NewDynamodbStorage(uri, logger)
+	dynamodbStorage, err := metastore.NewDynamodbStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -169,7 +170,7 @@ func TestDynamodbStorageList(t *testing.T) {
 	uri := fmt.Sprintf("dynamodb://phalanx-test/metastore/newtest/%s?%s", tmpDir, buildQueryFromEnv())
 	logger := logging.NewLogger("WARN", "", 500, 3, 30, false)
 
-	dynamodbStorage, err := metastore.NewDynamodbStorage(uri, logger)
+	dynamodbStorage, err := metastore.NewDynamodbStorageWithUri(uri, logger)
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -187,6 +188,56 @@ func TestDynamodbStorageList(t *testing.T) {
 
 	if !reflect.DeepEqual(paths, []string{"/hello.txt", "/world.txt"}) {
 		t.Fatalf("unexpected %v\v", paths)
+	}
+}
+
+func TestDynamodbStorageStorageEvents(t *testing.T) {
+	err := godotenv.Load(filepath.FromSlash("../.env"))
+	if err != nil {
+		t.Errorf("Failed to load .env file")
+	}
+
+	tmpDir := randstr.String(8)
+	uri := fmt.Sprintf("dynamodb://phalanx-test/metastore/eventstest/%s", tmpDir)
+	logger := logging.NewLogger("INFO", "", 500, 3, 30, false)
+
+	dynamodbStorage, err := metastore.NewDynamodbStorageWithUri(uri, logger)
+	if err != nil {
+		t.Fatalf("%v\n", err)
+	}
+	defer dynamodbStorage.Close()
+
+	eventList := make([]metastore.StorageEvent, 0)
+	done2 := make(chan bool)
+
+	events := dynamodbStorage.Events()
+
+	go func() {
+		for {
+			select {
+			case cancel := <-done2:
+				// check
+				if cancel {
+					return
+				}
+			case event := <-events:
+				eventList = append(eventList, event)
+			}
+		}
+	}()
+
+	// Make changes to the database
+	// dynamodbStorage.Put("/hello.txt", []byte("hello"))
+	// dynamodbStorage.Put("/world.txt", []byte("world"))
+
+	// wait for events to be processed
+	time.Sleep(1 * time.Second)
+	done2 <- true
+
+	actual := len(eventList)
+	expected := 0 // TODO: fix this
+	if actual != expected {
+		t.Fatalf("expected %v, but %v\n", expected, actual)
 	}
 }
 

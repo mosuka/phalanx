@@ -7,6 +7,13 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	// Evvent size.
+	// Cluster events can occur in large numbers at once,
+	// so make sure they are large enough.
+	storageEventSize = 1024
+)
+
 type SchemeType int
 
 const (
@@ -66,6 +73,7 @@ type Storage interface {
 	Put(key string, value []byte) error
 	Delete(key string) error
 	Exists(key string) (bool, error)
+	Events() <-chan StorageEvent
 	Close() error
 }
 
@@ -84,7 +92,7 @@ func NewStorageWithUri(uri string, logger *zap.Logger) (Storage, error) {
 	case SchemeType_name[SchemeTypeEtcd]:
 		return NewEtcdStorageWithUri(uri, metastoreLogger)
 	case SchemeType_name[SchemeTypeDynamodb]:
-		return NewDynamodbStorage(uri, metastoreLogger)
+		return NewDynamodbStorageWithUri(uri, metastoreLogger)
 	default:
 		err := errors.ErrUnsupportedStorageType
 		metastoreLogger.Error(err.Error(), zap.String("scheme", u.Scheme))
