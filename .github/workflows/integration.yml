@@ -37,7 +37,7 @@ jobs:
       localstack:
         image: localstack/localstack:latest
         env:
-          SERVICES: s3,dynamodb
+          SERVICES: s3,dynamodb,dynamodbstreams
           DEFAULT_REGION: ap-northeast-1
           AWS_ACCESS_KEY_ID: dummy
           AWS_SECRET_ACCESS_KEY: dummy
