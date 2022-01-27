@@ -319,6 +319,10 @@ func (m *DynamodbStorage) createTable() error {
 			},
 		},
 		BillingMode: types.BillingModePayPerRequest,
+		StreamSpecification: &types.StreamSpecification{
+			StreamEnabled:  aws.Bool(true),
+			StreamViewType: types.StreamViewTypeNewAndOldImages,
+		},
 	})
 	if err != nil {
 		var rne *types.ResourceInUseException

@@ -68,30 +68,30 @@ services:
   #   depends_on:
   #     - localstack
 
-  phalanx:
-    container_name: phalanx
-    image: mosuka/phalanx:latest
-    environment:
-      MINIO_ENDPOINT: minio:9000
-      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-      MINIO_REGION_NAME: ${MINIO_REGION_NAME}
-      MINIO_SESSION_TOKEN: ${MINIO_SESSION_TOKEN}
-      MINIO_SECURE: ${MINIO_SECURE}
-      ETCD_ENDPOINTS: etcd:2379
-    command:
-      - '--host=phalanx'
-      - '--bind-port=2000'
-      - '--grpc-port=5000'
-      - '--http-port=8000'
-      - '--roles=indexer,searcher'
-      - '--index-metastore-uri=etcd://phalanx/metastore'
-      - '--log-level=info'
-    ports:
-      - "2000:2000"
-      - "5000:5000"
-      - "8000:8000"
-    depends_on:
-      - etcd
-      - minio
-    restart: always
+  # phalanx:
+  #   container_name: phalanx
+  #   image: mosuka/phalanx:latest
+  #   environment:
+  #     MINIO_ENDPOINT: minio:9000
+  #     MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+  #     MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+  #     MINIO_REGION_NAME: ${MINIO_REGION_NAME}
+  #     MINIO_SESSION_TOKEN: ${MINIO_SESSION_TOKEN}
+  #     MINIO_SECURE: ${MINIO_SECURE}
+  #     ETCD_ENDPOINTS: etcd:2379
+  #   command:
+  #     - '--host=phalanx'
+  #     - '--bind-port=2000'
+  #     - '--grpc-port=5000'
+  #     - '--http-port=8000'
+  #     - '--roles=indexer,searcher'
+  #     - '--index-metastore-uri=etcd://phalanx/metastore'
+  #     - '--log-level=info'
+  #   ports:
+  #     - "2000:2000"
+  #     - "5000:5000"
+  #     - "8000:8000"
+  #   depends_on:
+  #     - etcd
+  #     - minio
+  #   restart: always
