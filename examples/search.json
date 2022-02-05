@@ -1,6 +1,19 @@
 {
-    "query": "search",
-    "boost": 1.0,
+    "query": {
+        "type": "boolean",
+        "options": {
+            "must": [
+                {
+                    "type": "query_string",
+                    "options": {
+                        "query": "*"
+                    }
+                }
+            ],
+            "min_should": 1,
+            "boost": 1.0
+        }
+    },
     "start": 0,
     "num": 5,
     "sort_by": "-_score",

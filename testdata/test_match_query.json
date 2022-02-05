@@ -1,0 +1,26 @@
+{
+  "match": "hello",
+  "field": "description",
+  "prefix": 1,
+  "fuzziness": 1,
+  "boost": 1.0,
+  "operator": "AND",
+  "analyzer": {
+    "char_filters": [
+      {
+        "name": "unicode_normalize",
+        "options": {
+          "form": "NFKC"
+        }
+      }
+    ],
+    "tokenizer": {
+      "name": "whitespace"
+    },
+    "token_filters": [
+      {
+        "name": "lower_case"
+      }
+    ]
+  }
+}

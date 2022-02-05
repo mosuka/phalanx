@@ -218,12 +218,26 @@ func (m *Marshaler) Unmarshal(data []byte, v interface{}) error {
 			value.IndexName = indexName
 		}
 
-		if query, ok := m["query"].(string); ok {
-			value.Query = query
-		}
-
-		if boost, ok := m["boost"].(float64); ok {
-			value.Boost = boost
+		// if query, ok := m["query"].(string); ok {
+		// 	value.Query = query
+		// }
+		if query, ok := m["query"].(map[string]interface{}); ok {
+			queryType, ok := query["type"].(string)
+			if !ok {
+				return fmt.Errorf("query type is not a string: %v", query["type"])
+			}
+			queryOpts, ok := query["options"].(map[string]interface{})
+			if !ok {
+				return fmt.Errorf("query options is not a map: %v", query["options"])
+			}
+			queryOptsBytes, err := json.Marshal(queryOpts)
+			if err != nil {
+				return err
+			}
+			value.Query = &proto.Query{
+				Type:    queryType,
+				Options: queryOptsBytes,
+			}
 		}
 
 		if start, ok := m["start"].(float64); ok {
@@ -259,7 +273,7 @@ func (m *Marshaler) Unmarshal(data []byte, v interface{}) error {
 					}
 					aggOpts, ok := agg["options"].(map[string]interface{})
 					if !ok {
-						return fmt.Errorf("aggregation options is not a map: %v", agg["params"])
+						return fmt.Errorf("aggregation options is not a map: %v", agg["options"])
 					}
 					aggOptsBytes, err := json.Marshal(aggOpts)
 					if err != nil {

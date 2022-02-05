@@ -1,0 +1,5 @@
+{
+  "regexp": "hel.*",
+  "field": "description",
+  "boost": 1.0
+}

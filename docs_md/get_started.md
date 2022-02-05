@@ -331,8 +331,21 @@ This endpoint returns the latest cluster status.
 ```
 % curl -XPOST -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example/_search --data-binary '
 {
-    "query": "text:document",
-    "boost": 1.0,
+    "query": {
+        "type": "boolean",
+        "options": {
+            "must": [
+                {
+                    "type": "query_string",
+                    "options": {
+                        "query": "*"
+                    }
+                }
+            ],
+            "min_should": 1,
+            "boost": 1.0
+        }
+    },
     "start": 0,
     "num": 10,
     "sort_by": "-_score",

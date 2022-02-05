@@ -1,0 +1,5 @@
+{
+  "wildcard": "h*",
+  "field": "description",
+  "boost": 1.0
+}

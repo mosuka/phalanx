@@ -13,7 +13,6 @@ import (
 
 	"github.com/blugelabs/bluge"
 	"github.com/blugelabs/bluge/numeric/geo"
-	querystr "github.com/blugelabs/query_string"
 	"github.com/jinzhu/copier"
 	"github.com/mosuka/phalanx/analysis/analyzer"
 	phalanxclients "github.com/mosuka/phalanx/clients"
@@ -25,6 +24,7 @@ import (
 	phalanxmetastore "github.com/mosuka/phalanx/metastore"
 	"github.com/mosuka/phalanx/proto"
 	phalanxaggregations "github.com/mosuka/phalanx/search/aggregations"
+	phalanxqueries "github.com/mosuka/phalanx/search/queries"
 	"github.com/thanhpk/randstr"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -1095,9 +1095,9 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 						return nil
 					}
 
-					userQuery, err := querystr.ParseQueryString(request.Query, querystr.DefaultOptions())
-					if err != nil {
-						s.logger.Error(err.Error(), zap.String("query", request.Query))
+					var queryOpts map[string]interface{}
+					if err := json.Unmarshal(request.Query.Options, &queryOpts); err != nil {
+						s.logger.Error(err.Error(), zap.Any("query", request.Query))
 						responsesChan <- searchResponse{
 							nodeName:   nodeName,
 							indexName:  request.IndexName,
@@ -1107,13 +1107,17 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 						}
 						return err
 					}
-
-					query := bluge.NewBooleanQuery().AddMust(userQuery)
-					// TODO: add filter queries
-					// .AddMust(filters...)
-
-					if request.Boost > 0.0 {
-						query.SetBoost(request.Boost)
+					query, err := phalanxqueries.NewQuery(request.Query.Type, queryOpts)
+					if err != nil {
+						s.logger.Error(err.Error(), zap.Any("query", query))
+						responsesChan <- searchResponse{
+							nodeName:   nodeName,
+							indexName:  request.IndexName,
+							shardNames: request.ShardNames,
+							resp:       nil,
+							err:        err,
+						}
+						return err
 					}
 
 					blugeRequest := bluge.NewTopNSearch(int(request.Num), query).
