@@ -57,14 +57,22 @@ func NewDateRangeQueryWithMap(opts map[string]interface{}) (*bluge.DateRangeQuer
 }
 
 func NewDateRangeQueryWithOptions(opts DateRangeQueryOptions) (*bluge.DateRangeQuery, error) {
-	start, err := time.Parse(time.RFC3339, opts.Start)
-	if err != nil {
-		return nil, fmt.Errorf("start option is unexpected: %v", opts.Start)
+	var start time.Time
+	if opts.Start != "" {
+		var err error
+		start, err = time.Parse(time.RFC3339, opts.Start)
+		if err != nil {
+			return nil, fmt.Errorf("start option is unexpected: %v", opts.Start)
+		}
 	}
 
-	end, err := time.Parse(time.RFC3339, opts.End)
-	if err != nil {
-		return nil, fmt.Errorf("end option is unexpected: %v", opts.End)
+	var end time.Time
+	if opts.End != "" {
+		var err error
+		end, err = time.Parse(time.RFC3339, opts.End)
+		if err != nil {
+			return nil, fmt.Errorf("end option is unexpected: %v", opts.End)
+		}
 	}
 
 	dateRangeQuery := bluge.NewDateRangeInclusiveQuery(start, end, opts.InclusiveStart, opts.InclusiveEnd)

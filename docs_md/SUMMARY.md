@@ -13,6 +13,7 @@
   * [Char filters](/analyzer/char_filters.md)
   * [Tokenizers](/analyzer/tokenizers.md)
   * [Token filters](/analyzer/token_filters.md)
+* [Queries](/queries.md)
 * [Aggregations](/aggregations.md)
 * [RESTful API](/restful_api.md)
   * [Create Index API](/restful_api/create_index_api.md)

@@ -1,8 +1,12 @@
 {
-  "top_left_longitude": 40.73,
-  "top_left_latitude": -74.1,
-  "bottom_right_longitude": 40.73,
-  "bottom_right_latitude": -74.1,
+  "top_left_point": {
+    "lon": 40.73,
+    "lat": -74.1
+  },
+  "bottom_right_point": {
+    "lon": 40.73,
+    "lat": -74.1
+  },
   "field": "location",
   "boost": 1.0
 }

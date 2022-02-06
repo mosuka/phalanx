@@ -4,14 +4,14 @@ import (
 	"encoding/json"
 
 	"github.com/blugelabs/bluge"
+	"github.com/blugelabs/bluge/numeric/geo"
 )
 
 type GeoDistanceQueryOptions struct {
-	Longitude float64 `json:"longitude"`
-	Latitude  float64 `json:"latitude"`
-	Distance  string  `json:"distance"`
-	Field     string  `json:"field"`
-	Boost     float64 `json:"boost"`
+	Point    geo.Point `json:"point"`
+	Distance string    `json:"distance"`
+	Field    string    `json:"field"`
+	Boost    float64   `json:"boost"`
 }
 
 func NewGeoDistanceQueryOptions() GeoDistanceQueryOptions {
@@ -21,8 +21,10 @@ func NewGeoDistanceQueryOptions() GeoDistanceQueryOptions {
 // Create new GeoDistanceQuery with given options.
 // Options example:
 // {
-//   "longitude": 40.73,
-//   "latitude": -74.1,
+//   "point": {
+//     "lon": 40.73,
+//     "lat": -74.1
+//   },
 //   "distance": "1km",
 //   "field": "location",
 //   "boost": 1.0
@@ -43,7 +45,7 @@ func NewGeoDistanceQueryWithMap(opts map[string]interface{}) (*bluge.GeoDistance
 }
 
 func NewGeoDistanceQueryWithOptions(opts GeoDistanceQueryOptions) (*bluge.GeoDistanceQuery, error) {
-	geoDistanceQuery := bluge.NewGeoDistanceQuery(opts.Longitude, opts.Latitude, opts.Distance)
+	geoDistanceQuery := bluge.NewGeoDistanceQuery(opts.Point.Lon, opts.Point.Lat, opts.Distance)
 
 	// field is optional.
 	if opts.Field != "" {

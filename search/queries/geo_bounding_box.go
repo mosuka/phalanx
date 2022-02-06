@@ -4,15 +4,14 @@ import (
 	"encoding/json"
 
 	"github.com/blugelabs/bluge"
+	"github.com/blugelabs/bluge/numeric/geo"
 )
 
 type GeoBoundingBoxQueryOptions struct {
-	TopLeftLongitude     float64 `json:"top_left_longitude"`
-	TopLeftLatitude      float64 `json:"top_left_latitude"`
-	BottomRightLongitude float64 `json:"bottom_right_longitude"`
-	BottomRightLatitude  float64 `json:"bottom_right_latitude"`
-	Field                string  `json:"field"`
-	Boost                float64 `json:"boost"`
+	TopLeftPoint     geo.Point `json:"top_left_point"`
+	BottomRightPoint geo.Point `json:"bottom_right_point"`
+	Field            string    `json:"field"`
+	Boost            float64   `json:"boost"`
 }
 
 func NewGeoBoundingBoxQueryOptions() GeoBoundingBoxQueryOptions {
@@ -22,10 +21,14 @@ func NewGeoBoundingBoxQueryOptions() GeoBoundingBoxQueryOptions {
 // Create new GeoBoundingBoxQuery with given options.
 // Options example:
 // {
-//   "top_left_longitude": 40.73,
-//   "top_left_latitude": -74.1,
-//   "bottom_right_longitude": 40.73,
-//   "bottom_right_latitude": -74.1,
+//   "top_left_point": {
+//     "lon": 40.73,
+//     "lat": -74.1
+//   },
+//   "bottom_right_point": {
+//     "lon": 40.73,
+//     "lat": -74.1
+//   },
 //   "field": "location",
 //   "boost": 1.0
 // }
@@ -44,7 +47,7 @@ func NewGeoBoundingBoxQueryWithMap(opts map[string]interface{}) (*bluge.GeoBound
 }
 
 func NewGeoBoundingBoxQueryWithOptions(opts GeoBoundingBoxQueryOptions) (*bluge.GeoBoundingBoxQuery, error) {
-	geoBoundingBoxQuery := bluge.NewGeoBoundingBoxQuery(opts.TopLeftLongitude, opts.TopLeftLatitude, opts.BottomRightLongitude, opts.BottomRightLatitude)
+	geoBoundingBoxQuery := bluge.NewGeoBoundingBoxQuery(opts.TopLeftPoint.Lon, opts.TopLeftPoint.Lat, opts.BottomRightPoint.Lon, opts.BottomRightPoint.Lat)
 
 	// field is optional.
 	if opts.Field != "" {
