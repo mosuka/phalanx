@@ -1,0 +1,24 @@
+{
+  "phrase": "hello world",
+  "field": "description",
+  "slop": 1,
+  "boost": 1.0,
+  "analyzer": {
+    "char_filters": [
+      {
+        "name": "unicode_normalize",
+        "options": {
+          "form": "NFKC"
+        }
+      }
+    ],
+    "tokenizer": {
+      "name": "whitespace"
+    },
+    "token_filters": [
+      {
+        "name": "lower_case"
+      }
+    ]
+  }
+}

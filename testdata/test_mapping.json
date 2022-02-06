@@ -37,13 +37,11 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "single_token"
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"field_optrions_test": {
@@ -57,13 +55,11 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "single_token"
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"ascii_folding_char_filter_test": {
@@ -85,8 +81,7 @@
 			"tokenizer": {
 				"name": "single_token"
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"html_char_filter_test": {
@@ -108,8 +103,7 @@
 			"tokenizer": {
 				"name": "single_token"
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"regexp_char_filter_test": {
@@ -135,8 +129,7 @@
 			"tokenizer": {
 				"name": "single_token"
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"unicode_normalize_char_filter_test": {
@@ -161,8 +154,7 @@
 			"tokenizer": {
 				"name": "single_token"
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"zero_width_non_joiner_char_filter_test": {
@@ -184,8 +176,7 @@
 			"tokenizer": {
 				"name": "single_token"
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"character_tokenizer_test": {
@@ -199,16 +190,14 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "character",
 				"options": {
 					"rune": "letter"
 				}
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"exception_tokenizer_test": {
@@ -222,8 +211,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "exception",
 				"options": {
@@ -235,8 +223,7 @@
 					]
 				}
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"kagome_tokenizer_test": {
@@ -250,8 +237,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "kagome",
 				"options": {
@@ -292,8 +278,7 @@
 					]
 				}
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"letter_tokenizer_test": {
@@ -307,13 +292,11 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "letter"
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"regexp_tokenizer_test": {
@@ -327,16 +310,14 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "regexp",
 				"options": {
 					"pattern": "[0-9a-zA-Z_]*"
 				}
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"single_token_tokenizer_test": {
@@ -350,13 +331,11 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "single_token"
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"unicode_tokenizer_test": {
@@ -370,13 +349,11 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "unicode"
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"web_tokenizer_test": {
@@ -390,13 +367,11 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "web"
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"whitespace_tokenizer_test": {
@@ -410,13 +385,11 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
-			"token_filters": [
-			]
+			"token_filters": []
 		}
 	},
 	"apostrophe_token_filter_test": {
@@ -430,8 +403,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -453,8 +425,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -476,8 +447,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -510,8 +480,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -538,8 +507,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -566,8 +534,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -595,8 +562,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -622,8 +588,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -645,8 +610,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -672,8 +636,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -695,8 +658,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -718,8 +680,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -748,8 +709,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -808,8 +768,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -834,8 +793,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},
@@ -860,8 +818,7 @@
 			"aggregatable": true
 		},
 		"analyzer": {
-			"char_filters": [
-			],
+			"char_filters": [],
 			"tokenizer": {
 				"name": "whitespace"
 			},

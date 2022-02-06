@@ -44,6 +44,8 @@ var (
 	ErrUnexpectedFieldSetting   = errors.New("unexpected field setting")
 	ErrLockUriIsNotSupported    = errors.New("lock URI is not supported")
 
+	ErrUnknownQueryType = errors.New("unknown query type")
+
 	ErrNodeDoesNotFound = errors.New("node not found")
 	ErrInvalidData      = errors.New("invalid data")
 

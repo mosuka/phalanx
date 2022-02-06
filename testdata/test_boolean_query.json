@@ -1,0 +1,58 @@
+{
+  "must": [
+    {
+      "type": "term",
+      "options": {
+        "term": "hello",
+        "field": "description",
+        "boost": 1.0
+      }
+    },
+    {
+      "type": "term",
+      "options": {
+        "term": "world",
+        "field": "description",
+        "boost": 1.0
+      }
+    }
+  ],
+  "must_not": [
+    {
+      "type": "term",
+      "options": {
+        "term": "bye",
+        "field": "description",
+        "boost": 1.0
+      }
+    },
+    {
+      "type": "term",
+      "options": {
+        "term": "さようなら",
+        "field": "description",
+        "boost": 1.0
+      }
+    }
+  ],
+  "should": [
+    {
+      "type": "term",
+      "options": {
+        "term": "こんにちは",
+        "field": "description",
+        "boost": 1.0
+      }
+    },
+    {
+      "type": "term",
+      "options": {
+        "term": "世界",
+        "field": "description",
+        "boost": 1.0
+      }
+    }
+  ],
+  "min_should": 1,
+  "boost": 1.0
+}

@@ -1,0 +1,7 @@
+{
+  "term": "hello",
+  "prefix": 1,
+  "fuzziness": 1,
+  "field": "description",
+  "boost": 1.0
+}

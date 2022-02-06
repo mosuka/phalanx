@@ -1,0 +1,8 @@
+{
+  "min": "a",
+  "max": "z",
+  "inclusive_min": true,
+  "inclusive_max": false,
+  "field": "description",
+  "boost": 1.0
+}

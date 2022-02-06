@@ -1,0 +1,14 @@
+{
+  "terms": [
+    [
+      "foo",
+      "bar"
+    ],
+    [
+      "baz"
+    ]
+  ],
+  "field": "description",
+  "slop": 1,
+  "boost": 1.0
+}

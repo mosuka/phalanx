@@ -1,0 +1,8 @@
+{
+  "start": "2022-01-01T00:00:00Z",
+  "end": "2023-01-01T00:00:00Z",
+  "inclusive_start": true,
+  "inclusive_end": false,
+  "field": "description",
+  "boost": 1.0
+}

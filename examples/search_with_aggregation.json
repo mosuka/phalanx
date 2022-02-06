@@ -1,5 +1,19 @@
 {
-    "query": "example",
+    "query": {
+        "type": "boolean",
+        "options": {
+            "must": [
+                {
+                    "type": "query_string",
+                    "options": {
+                        "query": "*"
+                    }
+                }
+            ],
+            "min_should": 1,
+            "boost": 1.0
+        }
+    },
     "boost": 1.0,
     "start": 0,
     "num": 10,
