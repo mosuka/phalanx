@@ -4,8 +4,8 @@
     "lat": -74.1
   },
   "bottom_right_point": {
-    "lon": 40.73,
-    "lat": -74.1
+    "lon": 40.01,
+    "lat": -71.12
   },
   "field": "location",
   "boost": 1.0
