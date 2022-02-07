@@ -218,9 +218,6 @@ func (m *Marshaler) Unmarshal(data []byte, v interface{}) error {
 			value.IndexName = indexName
 		}
 
-		// if query, ok := m["query"].(string); ok {
-		// 	value.Query = query
-		// }
 		if query, ok := m["query"].(map[string]interface{}); ok {
 			queryType, ok := query["type"].(string)
 			if !ok {
