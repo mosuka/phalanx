@@ -25,6 +25,7 @@ import (
 	"github.com/mosuka/phalanx/proto"
 	phalanxaggregations "github.com/mosuka/phalanx/search/aggregations"
 	phalanxqueries "github.com/mosuka/phalanx/search/queries"
+	"github.com/mosuka/phalanx/util/wildcard"
 	"github.com/thanhpk/randstr"
 	"go.uber.org/zap"
 	"golang.org/x/sync/errgroup"
@@ -1207,8 +1208,8 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 								doc.Timestamp = timestamp.UTC().UnixNano()
 							default:
 								exists := false
-								for _, fieldName := range request.Fields {
-									if fieldName == field {
+								for _, reqField := range request.Fields {
+									if wildcard.Match(reqField, field) {
 										exists = true
 										break
 									}
