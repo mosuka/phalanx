@@ -7,6 +7,7 @@ import (
 	"io/ioutil"
 
 	"github.com/grpc-ecosystem/grpc-gateway/v2/runtime"
+	"github.com/mosuka/phalanx/mapping"
 	"github.com/mosuka/phalanx/proto"
 )
 
@@ -97,6 +98,10 @@ func (m *Marshaler) Marshal(v interface{}) ([]byte, error) {
 			indexInfo := make(map[string]interface{})
 			indexInfo["index_uri"] = indexMeta.IndexUri
 			indexInfo["index_lock_uri"] = indexMeta.IndexLockUri
+			indexMapping, err := mapping.NewMapping(indexMeta.IndexMapping)
+			if err == nil {
+				indexInfo["index_mapping"] = indexMapping
+			}
 			indexInfo["shards"] = make(map[string]interface{})
 			for shardName, shardMeta := range indexMeta.Shards {
 				shardInfo := make(map[string]interface{})

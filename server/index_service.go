@@ -484,9 +484,17 @@ func (s *IndexService) Cluster(req *proto.ClusterRequest) (*proto.ClusterRespons
 			s.logger.Warn(err.Error(), zap.String("index_name", indexName))
 			continue
 		}
+
+		indexMappingBytes, err := indexMetadata.IndexMapping.Marshal()
+		if err != nil {
+			s.logger.Warn(err.Error(), zap.String("index_name", indexName))
+			indexMappingBytes = []byte("{}") // Set empty JSON
+		}
+
 		indexMeta := &proto.IndexMetadata{
 			IndexUri:     indexMetadata.IndexUri,
 			IndexLockUri: indexMetadata.IndexLockUri,
+			IndexMapping: indexMappingBytes,
 			Shards:       make(map[string]*proto.ShardMetadata),
 		}
 

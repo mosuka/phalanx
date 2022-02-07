@@ -164,6 +164,10 @@ func NewMapping(source []byte) (IndexMapping, error) {
 	return indexMapping, nil
 }
 
+func (m IndexMapping) Marshal() ([]byte, error) {
+	return json.Marshal(m)
+}
+
 func (m IndexMapping) getFieldSetting(fieldName string) (*FieldSetting, error) {
 	fieldSetting, ok := m[fieldName]
 	if !ok {
