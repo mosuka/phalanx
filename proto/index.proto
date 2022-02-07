@@ -68,8 +68,8 @@ enum NodeState {
 }
 
 message NodeMeta {
-    uint32 grpc_port = 1;
-    uint32 http_port = 2;
+    uint32 grpc_port = 1 [json_name="grpc_port"];
+    uint32 http_port = 2 [json_name="http_port"];
     repeated NodeRole roles = 3;
 }
 
@@ -81,14 +81,15 @@ message Node {
 }
 
 message ShardMetadata {
-    string shard_uri = 1;
-    string shard_lock_uri = 2;
+    string shard_uri = 1 [json_name="shard_uri"];
+    string shard_lock_uri = 2 [json_name="shard_lock_uri"];
 }
 
 message IndexMetadata {
-    string index_uri = 1;
-    string index_lock_uri = 2;
-    map<string, ShardMetadata> shards = 3;
+    string index_uri = 1 [json_name="index_uri"];
+    string index_lock_uri = 2 [json_name="index_lock_uri"];
+    bytes index_mapping = 3 [json_name="index_mapping"];
+    map<string, ShardMetadata> shards = 4;
 }
 
 message ClusterRequest {
@@ -97,8 +98,8 @@ message ClusterRequest {
 message ClusterResponse {
     map<string, Node> nodes = 1;
     map<string, IndexMetadata> indexes = 2;
-    bytes indexer_assignment = 3;
-    bytes searcher_assignment = 4;
+    bytes indexer_assignment = 3 [json_name="indexer_assignment"];
+    bytes searcher_assignment = 4 [json_name="searcher_assignment"];
 }
 
 message CreateIndexRequest {
