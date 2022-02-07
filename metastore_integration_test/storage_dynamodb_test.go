@@ -231,7 +231,7 @@ func TestDynamodbStorageStorageEvents(t *testing.T) {
 	// dynamodbStorage.Put("/world.txt", []byte("world"))
 
 	// wait for events to be processed
-	time.Sleep(1 * time.Second)
+	time.Sleep(3 * time.Second)
 	done2 <- true
 
 	actual := len(eventList)
