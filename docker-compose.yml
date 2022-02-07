@@ -58,15 +58,17 @@ services:
     ports:
       - "4566:4566"
 
-  # dynamodb-admin:
-  #   image: aaronshaf/dynamodb-admin:latest
-  #   environment:
-  #     DYNAMO_ENDPOINT: localstack:4566
-  #     PORT: 8081
-  #   ports:
-  #     - 8081:8081
-  #   depends_on:
-  #     - localstack
+  grafana:
+    container_name: grafana
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./grafana.ini:/etc/grafana/grafana.ini
+      - ./dist:/var/lib/grafana/plugins/phalanx-grafana-datasource
+    environment:
+      - GF_SERVER_ROOT_URL=http://localhost:3000
+      - GF_SECURITY_ADMIN_PASSWORD=admin
 
   # phalanx:
   #   container_name: phalanx
