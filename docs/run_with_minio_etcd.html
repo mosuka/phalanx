@@ -556,6 +556,62 @@ This repository has a docker-compose.yml file. With it, you can easily launch Mi
   <span class="hljs-string">&quot;indexes&quot;</span>: {
     <span class="hljs-string">&quot;example&quot;</span>: {
       <span class="hljs-string">&quot;index_lock_uri&quot;</span>: <span class="hljs-string">&quot;etcd://phalanx-locks/example&quot;</span>,
+      <span class="hljs-string">&quot;index_mapping&quot;</span>: {
+        <span class="hljs-string">&quot;id&quot;</span>: {
+          <span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;numeric&quot;</span>,
+          <span class="hljs-string">&quot;options&quot;</span>: {
+            <span class="hljs-string">&quot;index&quot;</span>: <span class="hljs-literal">true</span>,
+            <span class="hljs-string">&quot;store&quot;</span>: <span class="hljs-literal">true</span>,
+            <span class="hljs-string">&quot;term_positions&quot;</span>: <span class="hljs-literal">false</span>,
+            <span class="hljs-string">&quot;highlight&quot;</span>: <span class="hljs-literal">false</span>,
+            <span class="hljs-string">&quot;sortable&quot;</span>: <span class="hljs-literal">true</span>,
+            <span class="hljs-string">&quot;aggregatable&quot;</span>: <span class="hljs-literal">true</span>
+          },
+          <span class="hljs-string">&quot;analyzer&quot;</span>: {
+            <span class="hljs-string">&quot;char_filters&quot;</span>: <span class="hljs-literal">null</span>,
+            <span class="hljs-string">&quot;tokenizer&quot;</span>: {
+              <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;&quot;</span>,
+              <span class="hljs-string">&quot;options&quot;</span>: <span class="hljs-literal">null</span>
+            },
+            <span class="hljs-string">&quot;token_filters&quot;</span>: <span class="hljs-literal">null</span>
+          }
+        },
+        <span class="hljs-string">&quot;text&quot;</span>: {
+          <span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;text&quot;</span>,
+          <span class="hljs-string">&quot;options&quot;</span>: {
+            <span class="hljs-string">&quot;index&quot;</span>: <span class="hljs-literal">true</span>,
+            <span class="hljs-string">&quot;store&quot;</span>: <span class="hljs-literal">true</span>,
+            <span class="hljs-string">&quot;term_positions&quot;</span>: <span class="hljs-literal">true</span>,
+            <span class="hljs-string">&quot;highlight&quot;</span>: <span class="hljs-literal">true</span>,
+            <span class="hljs-string">&quot;sortable&quot;</span>: <span class="hljs-literal">true</span>,
+            <span class="hljs-string">&quot;aggregatable&quot;</span>: <span class="hljs-literal">true</span>
+          },
+          <span class="hljs-string">&quot;analyzer&quot;</span>: {
+            <span class="hljs-string">&quot;char_filters&quot;</span>: [
+              {
+                <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;ascii_folding&quot;</span>,
+                <span class="hljs-string">&quot;options&quot;</span>: <span class="hljs-literal">null</span>
+              },
+              {
+                <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;unicode_normalize&quot;</span>,
+                <span class="hljs-string">&quot;options&quot;</span>: {
+                  <span class="hljs-string">&quot;form&quot;</span>: <span class="hljs-string">&quot;NFKC&quot;</span>
+                }
+              }
+            ],
+            <span class="hljs-string">&quot;tokenizer&quot;</span>: {
+              <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;unicode&quot;</span>,
+              <span class="hljs-string">&quot;options&quot;</span>: <span class="hljs-literal">null</span>
+            },
+            <span class="hljs-string">&quot;token_filters&quot;</span>: [
+              {
+                <span class="hljs-string">&quot;name&quot;</span>: <span class="hljs-string">&quot;lower_case&quot;</span>,
+                <span class="hljs-string">&quot;options&quot;</span>: <span class="hljs-literal">null</span>
+              }
+            ]
+          }
+        }
+      },
       <span class="hljs-string">&quot;index_uri&quot;</span>: <span class="hljs-string">&quot;minio://phalanx-indexes/example&quot;</span>,
       <span class="hljs-string">&quot;shards&quot;</span>: {
         <span class="hljs-string">&quot;shard-0kZFXhrZ&quot;</span>: {
@@ -890,7 +946,7 @@ This repository has a docker-compose.yml file. With it, you can easily launch Mi
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Run with MinIO and etcd","level":"1.9","depth":1,"next":{"title":"Run with AWS","level":"1.10","depth":1,"path":"run_with_aws.md","ref":"run_with_aws.md","articles":[]},"previous":{"title":"Index Metadata","level":"1.8","depth":1,"path":"index_metadata.md","ref":"index_metadata.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"run_with_minio_etcd.md","mtime":"2022-02-06T10:37:25.989Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-02-07T07:26:43.169Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Run with MinIO and etcd","level":"1.9","depth":1,"next":{"title":"Run with AWS","level":"1.10","depth":1,"path":"run_with_aws.md","ref":"run_with_aws.md","articles":[]},"previous":{"title":"Index Metadata","level":"1.8","depth":1,"path":"index_metadata.md","ref":"index_metadata.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"run_with_minio_etcd.md","mtime":"2022-02-09T05:21:26.082Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-02-09T06:50:28.533Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
