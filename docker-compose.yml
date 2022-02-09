@@ -41,6 +41,7 @@ services:
     environment:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+      MINIO_PROMETHEUS_AUTH_TYPE: ${MINIO_PROMETHEUS_AUTH_TYPE}
     command: server ${MINIO_VOLUMES} ${MINIO_OPTS}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
@@ -58,42 +59,53 @@ services:
     ports:
       - "4566:4566"
 
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus:latest
+    volumes:
+      - ./examples/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+
   grafana:
     container_name: grafana
     image: grafana/grafana:latest
     ports:
       - "3000:3000"
     volumes:
-      - ./grafana.ini:/etc/grafana/grafana.ini
-      - ./dist:/var/lib/grafana/plugins/phalanx-grafana-datasource
+      - ./examples/grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./examples/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./examples/grafana/datasources:/etc/grafana/provisioning/datasources
     environment:
-      - GF_SERVER_ROOT_URL=http://localhost:3000
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      GF_SERVER_ROOT_URL: ${GF_SERVER_ROOT_URL}
+      GF_SECURITY_ADMIN_PASSWORD: ${GF_SECURITY_ADMIN_PASSWORD}
+    depends_on:
+      - prometheus
 
-  # phalanx:
-  #   container_name: phalanx
-  #   image: mosuka/phalanx:latest
-  #   environment:
-  #     MINIO_ENDPOINT: minio:9000
-  #     MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
-  #     MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
-  #     MINIO_REGION_NAME: ${MINIO_REGION_NAME}
-  #     MINIO_SESSION_TOKEN: ${MINIO_SESSION_TOKEN}
-  #     MINIO_SECURE: ${MINIO_SECURE}
-  #     ETCD_ENDPOINTS: etcd:2379
-  #   command:
-  #     - '--host=phalanx'
-  #     - '--bind-port=2000'
-  #     - '--grpc-port=5000'
-  #     - '--http-port=8000'
-  #     - '--roles=indexer,searcher'
-  #     - '--index-metastore-uri=etcd://phalanx/metastore'
-  #     - '--log-level=info'
-  #   ports:
-  #     - "2000:2000"
-  #     - "5000:5000"
-  #     - "8000:8000"
-  #   depends_on:
-  #     - etcd
-  #     - minio
-  #   restart: always
+  phalanx:
+    container_name: phalanx
+    image: mosuka/phalanx:latest
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_REGION_NAME: ${MINIO_REGION_NAME}
+      MINIO_SESSION_TOKEN: ${MINIO_SESSION_TOKEN}
+      MINIO_SECURE: ${MINIO_SECURE}
+      ETCD_ENDPOINTS: etcd:2379
+    command:
+      - '--host=phalanx'
+      - '--bind-port=2000'
+      - '--grpc-port=5000'
+      - '--http-port=8000'
+      - '--roles=indexer,searcher'
+      - '--index-metastore-uri=etcd://phalanx-metadata'
+      - '--log-level=info'
+    ports:
+      - "2000:2000"
+      - "5000:5000"
+      - "8000:8000"
+    depends_on:
+      - etcd
+      - minio
+    restart: always

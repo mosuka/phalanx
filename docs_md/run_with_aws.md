@@ -122,6 +122,62 @@ Use S3 as index storage, and create a lock on DynamoDB to avoid write conflicts.
   "indexes": {
     "example": {
       "index_lock_uri": "etcd://phalanx-locks/example",
+      "index_mapping": {
+        "id": {
+          "type": "numeric",
+          "options": {
+            "index": true,
+            "store": true,
+            "term_positions": false,
+            "highlight": false,
+            "sortable": true,
+            "aggregatable": true
+          },
+          "analyzer": {
+            "char_filters": null,
+            "tokenizer": {
+              "name": "",
+              "options": null
+            },
+            "token_filters": null
+          }
+        },
+        "text": {
+          "type": "text",
+          "options": {
+            "index": true,
+            "store": true,
+            "term_positions": true,
+            "highlight": true,
+            "sortable": true,
+            "aggregatable": true
+          },
+          "analyzer": {
+            "char_filters": [
+              {
+                "name": "ascii_folding",
+                "options": null
+              },
+              {
+                "name": "unicode_normalize",
+                "options": {
+                  "form": "NFKC"
+                }
+              }
+            ],
+            "tokenizer": {
+              "name": "unicode",
+              "options": null
+            },
+            "token_filters": [
+              {
+                "name": "lower_case",
+                "options": null
+              }
+            ]
+          }
+        }
+      },
       "index_uri": "minio://phalanx-indexes/example",
       "shards": {
         "shard-0kZFXhrZ": {

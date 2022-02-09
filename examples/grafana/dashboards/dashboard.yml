@@ -1,0 +1,60 @@
+apiVersion: 1
+
+providers:
+  - name: 'Etcd by Prometheus'
+    orgId: 1
+    folder: 'Defaults'
+    folderUid: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: false
+    options:
+      # https://grafana.com/grafana/dashboards/3070
+      path: /etc/grafana/provisioning/dashboards/etcd.json
+      foldersFromFilesStructure: false
+
+  - name: 'Grafana metrics'
+    orgId: 1
+    folder: 'Defaults'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/provisioning/dashboards/grafana.json
+      foldersFromFilesStructure: false
+
+  - name: 'MinIO Dashboard'
+    orgId: 1
+    folder: 'Defaults'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: false
+    options:
+      # https://grafana.com/grafana/dashboards/13502
+      path: /etc/grafana/provisioning/dashboards/minio.json
+      foldersFromFilesStructure: false
+
+  - name: 'Phalanx Dashboard'
+    orgId: 1
+    folder: 'Defaults'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/provisioning/dashboards/phalanx.json
+      foldersFromFilesStructure: false
+
+  - name: 'Prometheus 2.0 Stats'
+    orgId: 1
+    folder: 'Defaults'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/provisioning/dashboards/prometheus.json
+      foldersFromFilesStructure: false
