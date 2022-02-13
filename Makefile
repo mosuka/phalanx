@@ -84,6 +84,7 @@ clean:
 build: show-env
 	@echo ">> building binaries"
 	$(GO) build -tags="$(BUILD_TAGS)" $(LDFLAGS) -o bin/phalanx
+	cp ./scripts/phalanx_docs.sh ./bin/phalanx_docs.sh
 
 .PHONY: docs
 docs:
