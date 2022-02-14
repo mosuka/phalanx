@@ -9,4 +9,4 @@ Phalanx stores index metadata in etcd. The metadata stores the index and the pat
 
 Phalanx also uses etcd as a distributed lock manager to ensure that updates to a single shard are not made on multiple nodes at the same time.
 
-![phalanx_architecture](./architecture.png)
+![phalanx_architecture](./img/architecture.png)

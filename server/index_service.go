@@ -1203,7 +1203,7 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 					for err == nil && docMatch != nil {
 						// Load stored fields.
 						doc := &proto.Document{}
-						fields := make(map[string]interface{})
+						fields := make(map[string][]interface{})
 						err := docMatch.VisitStoredFields(func(field string, value []byte) bool {
 							switch field {
 							case mapping.IdFieldName:
@@ -1229,27 +1229,32 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 										s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.String("field_name", field))
 										return true
 									}
+
+									if ok := fields[field]; ok == nil {
+										fields[field] = make([]interface{}, 0)
+									}
+
 									switch fieldType {
 									case mapping.TextField:
-										fields[field] = string(value)
+										fields[field] = append(fields[field], string(value))
 									case mapping.NumericField:
 										f64Value, err := bluge.DecodeNumericFloat64(value)
 										if err != nil {
 											s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.Any("field", field))
 										}
-										fields[field] = f64Value
+										fields[field] = append(fields[field], f64Value)
 									case mapping.DatetimeField:
 										timestamp, err := bluge.DecodeDateTime(value)
 										if err != nil {
 											s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.Any("field", field))
 										}
-										fields[field] = timestamp.Format(time.RFC3339)
+										fields[field] = append(fields[field], timestamp.Format(time.RFC3339))
 									case mapping.GeoPointField:
 										lat, lon, err := bluge.DecodeGeoLonLat(value)
 										if err != nil {
 											s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.Any("field", field))
 										}
-										fields[field] = geo.Point{Lat: lat, Lon: lon}
+										fields[field] = append(fields[field], geo.Point{Lat: lat, Lon: lon})
 									}
 								}
 							}
