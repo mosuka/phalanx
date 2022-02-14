@@ -63,6 +63,7 @@ func NewHTTPIndexServerWithTLS(httpAddress string, grpcAddress string, certifica
 		router.Use(cors.New(corsConfig))
 	}
 
+	router.Any("/static/*filepath", staticHandlerFunc)
 	router.GET("/livez", livezHandlerFunc)
 	router.GET("/readyz", readyzHandlerFunc)
 	router.GET("/metrics", metricsHandlerFunc)

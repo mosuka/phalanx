@@ -1,0 +1,238 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
+}
+
+body {
+    overflow-x: hidden;
+}
+
+.search-container {
+    display: flex;
+    width: 100vw;
+    height: 150px;
+    top: 0;
+    left: 0;
+    align-items: center;
+    padding-left: 50px;
+    position: fixed;
+    z-index: 9999;
+    background: white;
+}
+
+.search-form {
+    display: flex;
+    margin-left: 30px;
+    border-radius: 5px;
+    background: #ffffff;
+    box-shadow: 5px 5px 10px #c9c9c9,
+        -5px -5px 10px #ffffff;
+}
+
+.search-input {
+    border: none;
+    padding: 5px 10px;
+    width: 41.5vw;
+    height: 48px;
+    min-width: 400px;
+    outline: none;
+}
+
+.icon {
+    display: flex;
+    background: white;
+    border: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 48px;
+    width: 40px;
+    color: #292929;
+}
+
+.searchResults {
+    padding: 20px 0 50px;
+    margin-left: 140px;
+    width: 550px;
+    text-align: left;
+}
+
+.results {
+    width: 40vw;
+    margin-top: 150px;
+    margin-left: 140px;
+}
+
+.result {
+    width: 100%;
+    padding: 15px 40px 15px 20px;
+    margin-bottom: 30px;
+    border-radius: 10px;
+    background: #ffffff;
+    overflow-wrap: break-word;
+    box-shadow: 5px 5px 10px #cccccc,
+        -5px -5px 11px #ffffff;
+    animation: reveal 0.5s;
+
+}
+
+.result:hover {
+    background: #f5f5f5;
+}
+
+a {
+    text-decoration: none;
+    color: #292929;
+}
+
+.result-title {
+    color: #292929;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 1.3em;
+}
+
+.searchmatch {
+    background: rgba(255, 255, 0, 0.5);
+}
+
+.result-link {
+    text-decoration: underline;
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+    background: white;
+
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+    background: #333333;
+    border-radius: 50px;
+
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
+
+}
+
+@media only screen and (max-width: 768px) {
+    .search-container {
+        padding: 20px 0px;
+        flex-direction: column;
+    }
+
+    .logo {
+        margin: 20px 0;
+    }
+
+    .search-form {
+        margin: 0;
+    }
+
+    .search-input {
+
+        width: 250px;
+        min-width: 0px;
+    }
+
+    .results {
+        margin-left: 20px;
+        margin-top: 200px;
+        width: 75%;
+    }
+}
+
+
+@keyframes reveal {
+    0% {
+        opacity: 0;
+        transform: translateY(100px);
+    }
+
+    100% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+
+
+/* ================================================================== */
+/*                       FORK ON GITHUB RIBBION                       */
+
+/* #forkongithub a {
+    background: #fff;
+    color: #333;
+    text-decoration: none;
+    text-align: center;
+    font-weight: bold;
+    padding: 5px 40px;
+    font-size: 1rem;
+    line-height: 2rem;
+    position: relative;
+    transition: 0.5s;
+}
+
+#forkongithub a:hover {
+    background: #333;
+    color: #fff;
+}
+
+#forkongithub a::before,
+#forkongithub a::after {
+    content: "";
+    width: 100%;
+    display: block;
+    position: absolute;
+    top: 1px;
+    left: 0;
+    height: 1px;
+    background: #fff;
+}
+
+#forkongithub a::after {
+    bottom: 1px;
+    top: auto;
+}
+
+#forkongithub {
+    display: none;
+}
+
+@media screen and (min-width:768px) {
+    #forkongithub {
+        position: fixed;
+        display: block;
+        top: 0;
+        right: 0;
+        width: 200px;
+        overflow: hidden;
+        height: 200px;
+        z-index: 9999;
+    }
+
+    #forkongithub a {
+        width: 200px;
+        position: absolute;
+        top: 60px;
+        right: -60px;
+        transform: rotate(45deg);
+        -webkit-transform: rotate(45deg);
+        -ms-transform: rotate(45deg);
+        -moz-transform: rotate(45deg);
+        -o-transform: rotate(45deg);
+        box-shadow: 1px 1px 5px #e8e8e8, -1px -1px 5px #ffffff;
+        ;
+    }
+} */

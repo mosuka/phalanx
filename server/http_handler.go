@@ -3,6 +3,7 @@ package server
 import (
 	"bufio"
 	"context"
+	"embed"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -17,6 +18,9 @@ import (
 	"github.com/mosuka/phalanx/mapping"
 	"github.com/mosuka/phalanx/proto"
 )
+
+//go:embed static/*
+var staticFS embed.FS
 
 func setClient(client *clients.GRPCIndexClient) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -56,6 +60,11 @@ func getMarshaler(c *gin.Context) (*Marshaler, error) {
 	}
 
 	return marshaler, nil
+}
+
+func staticHandlerFunc(c *gin.Context) {
+	staticServer := http.FileServer(http.FS(staticFS))
+	staticServer.ServeHTTP(c.Writer, c.Request)
 }
 
 func livezHandlerFunc(c *gin.Context) {
