@@ -799,7 +799,7 @@ Use MinIO as index storage, and create a lock on etcd to avoid write conflicts.
 
 ## Search
 
-```
+```json
 % curl -XPOST -H 'Content-type: application/json' http://localhost:8000/v1/indexes/enwiki/_search --data-binary '
 {
     "query": {
@@ -809,7 +809,7 @@ Use MinIO as index storage, and create a lock on etcd to avoid write conflicts.
                 {
                     "type": "query_string",
                     "options": {
-                        "query": "search engine"
+                        "query": "+text:search"
                     }
                 }
             ],
@@ -846,6 +846,30 @@ Use MinIO as index storage, and create a lock on etcd to avoid write conflicts.
                 }
             }
         }
+    },
+    "highlights": {
+        "title": {
+            "highlighter": {
+                "type": "html",
+                "options": {
+                    "fragment_size": 100,
+                    "pre_tag": "<mark>",
+                    "post_tag": "</mark>"
+                }
+            },
+            "num": 1
+        },
+        "text": {
+            "highlighter": {
+              "type": "html",
+              "options": {
+                  "fragment_size": 200,
+                  "pre_tag": "<mark>",
+                  "post_tag": "</mark>"
+              }
+            },
+            "num": 3
+        }
     }
 }
 ' | jq .
@@ -856,7 +880,7 @@ Use MinIO as index storage, and create a lock on etcd to avoid write conflicts.
   "aggregations": {
     "timestamp_date_range": {
       "last_year": 0,
-      "this_year": 16,
+      "this_year": 6,
       "year_before_last": 0
     }
   },
@@ -864,66 +888,26 @@ Use MinIO as index storage, and create a lock on etcd to avoid write conflicts.
     {
       "fields": {
         "text": [
-          "The Analytical Engine was a proposed mechanical general-purpose computer designed by English mathematician and computer pioneer Charles Babbage. It was first described in 1837 as the successor to Babbage's difference engine, which was a design for a simpler mechanical computer.\nThe Analytical Engine incorporated an arithmetic logic unit, control flow in the form of conditional branching and loops, and integrated memory, making it the first design for a general-purpose computer that could be described in modern terms as Turing-complete. In other words, the logical structure of the Analytical Engine was essentially the same as that which has dominated computer design in the electronic era. It was not until 1941 that Konrad Zuse built the first general-purpose computer, Z3, more than a century after Babbage had proposed the pioneering Analytical Engine in 1837.\nDuring this project, Babbage realised that a much more general design, the Analytical Engine, was possible. The work on the design of the Analytical Engine started in c. 1833.\nThe input, consisting of programs (\"formulae\") and data, was to be provided to the machine via punched cards, a method being used at the time to direct mechanical looms such as the Jacquard loom. For output, the machine would have a printer, a curve plotter, and a bell. The machine would also be able to punch numbers onto cards to be read in later. It employed ordinary base-10 fixed-point arithmetic.\nThere was to be a store (that is, a memory) capable of holding 1,000 numbers of 40 decimal digits each (ca. 16.6 kB). An arithmetic unit (the \"mill\") would be able to perform all four arithmetic operations, plus comparisons and optionally square roots. Initially (1838) it was conceived as a difference engine curved back upon itself, in a generally circular layout, with the long store exiting off to one side. Later drawings (1858) depict a regularised grid layout. Like the central processing unit (CPU) in a modern computer, the mill would rely upon its own internal procedures, to be stored in the form of pegs inserted into rotating drums called \"barrels\", to carry out some of the more complex instructions the user's program might specify.\nThe programming language to be employed by users was akin to modern day assembly languages. Loops and conditional branching were possible, and so the language as conceived would have been Turing-complete as later defined by Alan Turing. Three different types of punch cards were used: one for arithmetical operations, one for numerical constants, and one for load and store operations, transferring numbers from the store to the arithmetical unit or back. There were three separate readers for the three types of cards. Babbage developed some two dozen programs for the Analytical Engine between 1837 and 1840, and one program later. These programs treat polynomials, iterative formulas, Gaussian elimination, and Bernoulli numbers.\nIn 1842, the Italian mathematician Luigi Federico Menabrea published a description of the engine in French, based on lectures Babbage gave when he visited Turin in 1840. In 1843, the description was translated into English and extensively annotated by Ada Lovelace, who had become interested in the engine eight years earlier. In recognition of her additions to Menabrea's paper, which included a way to calculate Bernoulli numbers using the machine (widely considered to be the first complete computer program), she has been described as the first computer programmer."
+          " (; born , ; 16 April 1844 – 12 October 1924) was a French poet, journalist, and novelist with several best-sellers. Ironic and skeptical, he was considered in his day the ideal French man of letters. He was a member of the Académie française, and won the 1921 Nobel Prize in Literature \"in recognition of his brilliant literary achievements, characterized as they are by a nobility of style, a profound human sympathy, grace, and a true Gallic temperament\".\nFrance is also widely believed to be the model for narrator Marcel's literary idol Bergotte in Marcel Proust's In Search of Lost Time."
         ],
         "title": [
-          "Analytical Engine"
+          "Anatole France"
         ],
         "url": [
-          "https://en.wikipedia.org/wiki/Analytical_Engine"
+          "https://en.wikipedia.org/wiki/Anatole_France"
         ]
       },
-      "id": "1271",
-      "score": 4.294355129514904,
-      "timestamp": 1644822812843749600
-    },
-    {
-      "fields": {
+      "highlights": {
         "text": [
-          " Ada Lovelace#Ada Byron's notes on the analytical engine"
+          "…f style, a profound human sympathy, grace, and a true Gallic temperament&#34;.\nFrance is also widely believed to be the model for narrator Marcel&#39;s literary idol Bergotte in Marcel Proust&#39;s<mark> In Se</mark>arch of L…"
         ],
         "title": [
-          "Ada Byron's notes on the analytical engine"
-        ],
-        "url": [
-          "https://en.wikipedia.org/wiki/Ada_Byron's_notes_on_the_analytical_engine"
+          "Anatole France"
         ]
       },
-      "id": "1311",
-      "score": 4.215404371132957,
-      "timestamp": 1644822812919017000
-    },
-    {
-      "fields": {
-        "text": [
-          "Augusta Ada King, Countess of Lovelace (née Byron; 10 December 1815 – 27 November 1852) was an English mathematician and writer, chiefly known for her work on Charles Babbage's proposed mechanical general-purpose computer, the Analytical Engine. She was the first to recognise that the machine had applications beyond pure calculation, and to have published the first algorithm intended to be carried out by such a machine. As a result, she is often regarded as the first computer programmer.\nAda Byron was the only child of poet Lord Byron and mathematician Lady Byron. All of Byron's other children were born out of wedlock to other women. He died in Greece when Ada was eight years old. Her mother remained bitter and promoted Ada's interest in mathematics and logic in an effort to prevent her from developing her father's perceived insanity. Despite this, Ada remained interested in him, naming her two sons Byron and Gordon. Upon her death, she was buried next to him at her request. Although often ill in her childhood, Ada pursued her studies assiduously. She married William King in 1835. King was made Earl of Lovelace in 1838, Ada thereby becoming Countess of Lovelace.\nHer educational and social exploits brought her into contact with scientists such as Andrew Crosse, Charles Babbage, Sir David Brewster, Charles Wheatstone, Michael Faraday and the author Charles Dickens, contacts which she used to further her education. Ada described her approach as \"poetical science\" and herself as an \"Analyst (& Metaphysician)\".\nWhen she was a teenager (18), her mathematical talents led her to a long working relationship and friendship with fellow British mathematician Charles Babbage, who is known as \"the father of computers\". She was in particular interested in Babbage's work on the Analytical Engine. Lovelace first met him in June 1833, through their mutual friend, and her private tutor, Mary Somerville.\nBetween 1842 and 1843, Ada translated an article by Italian military engineer Luigi Menabrea about the Analytical Engine, supplementing it with an elaborate set of notes, simply called \"Notes\". Lovelace's notes are important in the early history of computers, containing what many consider to be the first computer program—that is, an algorithm designed to be carried out by a machine. Other historians reject this perspective and point out that Babbage's personal notes from the years 1836/1837 contain the first programs for the engine. She also developed a vision of the capability of computers to go beyond mere calculating or number-crunching, while many others, including Babbage himself, focused only on those capabilities. Her mindset of \"poetical science\" led her to ask questions about the Analytical Engine (as shown in her notes) examining how individuals and society relate to technology as a collaborative tool.\nShe died of uterine cancer in 1852 at the age of 36."
-        ],
-        "title": [
-          "Ada Lovelace"
-        ],
-        "url": [
-          "https://en.wikipedia.org/wiki/Ada_Lovelace"
-        ]
-      },
-      "id": "974",
-      "score": 3.4604735722185667,
-      "timestamp": 1644822812408895000
-    },
-    {
-      "fields": {
-        "text": [
-          "Adder may refer to:\n Any of several groups of venomous snakes\n Vipera berus, the common European adder, found in Europe and northern Asia\n Adder (electronics), an electronic circuit designed to do addition\n AA-12 Adder, the NATO name for the R-77, a Russian air-to-air missile\n HMS Adder, any of seven ships of the Royal Navy\n USS Adder (SS-3), an early US submarine\n Adder Technology, a manufacturing company\n Addition, a mathematical operation\n Armstrong Siddeley Adder, a late 1940s British turbojet engine\n Blackadder, a series of BBC sitcoms\n Golden Axe: The Revenge of Death Adder, a video game"
-        ],
-        "title": [
-          "Adder"
-        ],
-        "url": [
-          "https://en.wikipedia.org/wiki/Adder"
-        ]
-      },
-      "id": "1538",
-      "score": 2.9936382329174775,
-      "timestamp": 1644822813067768800
+      "id": "1057",
+      "score": 2.5689701938929193,
+      "timestamp": 1644936891227494000
     },
     {
       "fields": {
@@ -937,73 +921,17 @@ Use MinIO as index storage, and create a lock on etcd to avoid write conflicts.
           "https://en.wikipedia.org/wiki/Royal_Antigua_and_Barbuda_Defence_Force"
         ]
       },
+      "highlights": {
+        "text": [
+          "…of drug smuggling, the protection and support of fishing rights, prevention of marine pollution, <mark>search</mark> and rescue, ceremonial duties, assistance to government programs, provision of relief during nat…"
+        ],
+        "title": [
+          "Royal Antigua and Barbuda Defence Force"
+        ]
+      },
       "id": "1074",
-      "score": 2.8903576929024535,
-      "timestamp": 1644822812495888400
-    },
-    {
-      "fields": {
-        "text": [
-          "In computing, an applet is any small application that performs one specific task that runs within the scope of a dedicated widget engine or a larger program, often as a plug-in. The term is frequently used to refer to a Java applet, a program written in the Java programming language that is designed to be placed on a web page. Applets are typical examples of transient and auxiliary applications that don't monopolize the user's attention. Applets are not full-featured application programs, and are intended to be easily accessible."
-        ],
-        "title": [
-          "Applet"
-        ],
-        "url": [
-          "https://en.wikipedia.org/wiki/Applet"
-        ]
-      },
-      "id": "1202",
-      "score": 2.8648928474658204,
-      "timestamp": 1644822812706504200
-    },
-    {
-      "fields": {
-        "text": [
-          " (; born , ; 16 April 1844 – 12 October 1924) was a French poet, journalist, and novelist with several best-sellers. Ironic and skeptical, he was considered in his day the ideal French man of letters. He was a member of the Académie française, and won the 1921 Nobel Prize in Literature \"in recognition of his brilliant literary achievements, characterized as they are by a nobility of style, a profound human sympathy, grace, and a true Gallic temperament\".\nFrance is also widely believed to be the model for narrator Marcel's literary idol Bergotte in Marcel Proust's In Search of Lost Time."
-        ],
-        "title": [
-          "Anatole France"
-        ],
-        "url": [
-          "https://en.wikipedia.org/wiki/Anatole_France"
-        ]
-      },
-      "id": "1057",
-      "score": 2.540780345712897,
-      "timestamp": 1644822812700458800
-    },
-    {
-      "fields": {
-        "text": [
-          "Argo Navis (the Ship Argo), or simply Argo, was a large constellation in the southern sky. The genitive was \"Argus Navis\", abbreviated \"Arg\". Flamsteed and other early modern astronomers called it Navis (the Ship), genitive \"Navis\", abbreviated \"Nav\".\nThe constellation proved to be of unwieldy size, as it was 28% larger than the next largest constellation and had more than 160 easily visible stars. The 1755 catalogue of Nicolas Louis de Lacaille divided it into the three modern constellations that occupy much of the same area: Carina (the keel), Puppis (the poop deck) and Vela (the sails).\nArgo derived from the ship Argo in Greek mythology, sailed by Jason and the Argonauts to Colchis in search of the Golden Fleece. Due to precession of the equinoxes, the position of the stars from Earth's viewpoint has shifted southward, and though most of the constellation was visible in Classical times, the constellation is now not easily visible from most of the northern hemisphere. All the stars of Argo Navis are easily visible from the tropics southward, and pass near zenith from southern temperate latitudes. The brightest of these is Canopus (α Carinae), the second-brightest night-time star, now assigned to Carina."
-        ],
-        "title": [
-          "Argo Navis"
-        ],
-        "url": [
-          "https://en.wikipedia.org/wiki/Argo_Navis"
-        ]
-      },
-      "id": "1924",
-      "score": 2.331200750903565,
-      "timestamp": 1644822813221983500
-    },
-    {
-      "fields": {
-        "text": [
-          "An assembly line is a manufacturing process (often called a progressive assembly) in which parts (usually interchangeable parts) are added as the semi-finished assembly moves from workstation to workstation where the parts are added in sequence until the final assembly is produced. By mechanically moving the parts to the assembly work and moving the semi-finished assembly from work station to work station, a finished product can be assembled faster and with less labor than by having workers carry parts to a stationary piece for assembly.\nAssembly lines are common methods of assembling complex items such as automobiles and other transportation equipment, household appliances and electronic goods.\nWorkers in charge of the works of assembly line are called assemblers."
-        ],
-        "title": [
-          "Assembly line"
-        ],
-        "url": [
-          "https://en.wikipedia.org/wiki/Assembly_line"
-        ]
-      },
-      "id": "1146",
-      "score": 2.3034866993609384,
-      "timestamp": 1644822812771819800
+      "score": 2.4424078634334503,
+      "timestamp": 1644936891224384500
     },
     {
       "fields": {
@@ -1017,12 +945,92 @@ Use MinIO as index storage, and create a lock on etcd to avoid write conflicts.
           "https://en.wikipedia.org/wiki/André_Gide"
         ]
       },
+      "highlights": {
+        "text": [
+          "…rs on his continuous effort to achieve intellectual honesty. His self-exploratory texts reflect h<mark>is sea</mark>rch of how to be fully oneself, including owning one&#39;s sexual nature, without at the same time be…"
+        ],
+        "title": [
+          "André Gide"
+        ]
+      },
       "id": "1058",
-      "score": 2.0794730555180783,
-      "timestamp": 1644822812633650400
+      "score": 1.8723381430998982,
+      "timestamp": 1644936891229208800
+    },
+    {
+      "fields": {
+        "text": [
+          "Argo Navis (the Ship Argo), or simply Argo, was a large constellation in the southern sky. The genitive was \"Argus Navis\", abbreviated \"Arg\". Flamsteed and other early modern astronomers called it Navis (the Ship), genitive \"Navis\", abbreviated \"Nav\".\nThe constellation proved to be of unwieldy size, as it was 28% larger than the next largest constellation and had more than 160 easily visible stars. The 1755 catalogue of Nicolas Louis de Lacaille divided it into the three modern constellations that occupy much of the same area: Carina (the keel), Puppis (the poop deck) and Vela (the sails).\nArgo derived from the ship Argo in Greek mythology, sailed by Jason and the Argonauts to Colchis in search of the Golden Fleece. Due to precession of the equinoxes, the position of the stars from Earth's viewpoint has shifted southward, and though most of the constellation was visible in Classical times, the constellation is now not easily visible from most of the northern hemisphere. All the stars of Argo Navis are easily visible from the tropics southward, and pass near zenith from southern temperate latitudes. The brightest of these is Canopus (α Carinae), the second-brightest night-time star, now assigned to Carina."
+        ],
+        "title": [
+          "Argo Navis"
+        ],
+        "url": [
+          "https://en.wikipedia.org/wiki/Argo_Navis"
+        ]
+      },
+      "highlights": {
+        "text": [
+          "…o derived from the ship Argo in Greek mythology, sailed by Jason and the Argonauts to Colchis in <mark>search</mark> of the Golden Fleece. Due to precession of the equinoxes, the position of the stars from Earth&#39;s…"
+        ],
+        "title": [
+          "Argo Navis"
+        ]
+      },
+      "id": "1924",
+      "score": 1.8495595076783102,
+      "timestamp": 1644936891230542600
+    },
+    {
+      "fields": {
+        "text": [
+          "Asia () is Earth's largest and most populous continent, located primarily in the Eastern and Northern Hemispheres. It shares the continental landmass of Eurasia with the continent of Europe and the continental landmass of Afro-Eurasia with both Europe and Africa. Asia covers an area of , about 30% of Earth's total land area and 8.7% of the Earth's total surface area. The continent, which has long been home to the majority of the human population, was the site of many of the first civilizations. Its 4.5 billion people () constitute roughly 60% of the world's population.\nIn general terms, Asia is bounded on the east by the Pacific Ocean, on the south by the Indian Ocean, and on the north by the Arctic Ocean. The border of Asia with Europe is a historical and cultural construct, as there is no clear physical and geographical separation between them. It is somewhat arbitrary and has moved since its first conception in classical antiquity. The division of Eurasia into two continents reflects East–West cultural, linguistic, and ethnic differences, some of which vary on a spectrum rather than with a sharp dividing line. The most commonly accepted boundaries place Asia to the east of the Suez Canal separating it from Africa; and to the east of the Turkish Straits, the Ural Mountains and Ural River, and to the south of the Caucasus Mountains and the Caspian and Black Seas, separating it from Europe.\nChina and India alternated in being the largest economies in the world from 1 to 1800 CE. China was a major economic power and attracted many to the east, and for many the legendary wealth and prosperity of the ancient culture of India personified Asia, attracting European commerce, exploration and colonialism. The accidental discovery of a trans-Atlantic route from Europe to America by Columbus while in search for a route to India demonstrates this deep fascination. The Silk Road became the main east–west trading route in the Asian hinterlands while the Straits of Malacca stood as a major sea route. Asia has exhibited economic dynamism (particularly East Asia) as well as robust population growth during the 20th century, but overall population growth has since fallen. Asia was the birthplace of most of the world's mainstream religions including Hinduism, Zoroastrianism, Judaism, Jainism, Buddhism, Confucianism, Taoism, Christianity, Islam, Sikhism, as well as many other religions.\nGiven its size and diversity, the concept of Asia—a name dating back to classical antiquity—may actually have more to do with human geography than physical geography. Asia varies greatly across and within its regions with regard to ethnic groups, cultures, environments, economics, historical ties and government systems. It also has a mix of many different climates ranging from the equatorial south via the hot desert in the Middle East, temperate areas in the east and the continental centre to vast subarctic and polar areas in Siberia."
+        ],
+        "title": [
+          "Asia"
+        ],
+        "url": [
+          "https://en.wikipedia.org/wiki/Asia"
+        ]
+      },
+      "highlights": {
+        "text": [
+          "…sm. The accidental discovery of a trans-Atlantic route from Europe to America by Columbus while i<mark>n sear</mark>ch for a route to India demonstrates this deep fascination. The Silk Road became the main east–we…"
+        ],
+        "title": [
+          "Asia"
+        ]
+      },
+      "id": "689",
+      "score": 1.085247182156043,
+      "timestamp": 1644936891216916000
+    },
+    {
+      "fields": {
+        "text": [
+          "Artificial intelligence (AI) is intelligence demonstrated by machines, as opposed to natural intelligence displayed by animals including humans.\nLeading AI textbooks define the field as the study of \"intelligent agents\": any system that perceives its environment and takes actions that maximize its chance of achieving its goals.\nSome popular accounts use the term \"artificial intelligence\" to describe machines that mimic \"cognitive\" functions that humans associate with the human mind, such as \"learning\" and \"problem solving\", however, this definition is rejected by major AI researchers.\nAI applications include advanced web search engines (e.g., Google), recommendation systems (used by YouTube, Amazon and Netflix), understanding human speech (such as Siri and Alexa), self-driving cars (e.g., Tesla), automated decision-making and competing at the highest level in strategic game systems (such as chess and Go).\nAs machines become increasingly capable, tasks considered to require \"intelligence\" are often removed from the definition of AI, a phenomenon known as the AI effect. For instance, optical character recognition is frequently excluded from things considered to be AI, having become a routine technology.\nArtificial intelligence was founded as an academic discipline in 1956, and in the years since has experienced several waves of optimism,\nand have been common in fiction, as in Mary Shelley's Frankenstein or Karel Čapek's R.U.R. These characters and their fates raised many of the same issues now discussed in the ethics of artificial intelligence.\nThe study of mechanical or \"formal\" reasoning began with philosophers and mathematicians in antiquity. The study of mathematical logic led directly to Alan Turing's theory of computation, which suggested that a machine, by shuffling symbols as simple as \"0\" and \"1\", could simulate any conceivable act of mathematical deduction. This insight that digital computers can simulate any process of formal reasoning is known as the Church–Turing thesis.\nThe Church-Turing thesis, along with concurrent discoveries in neurobiology, information theory and cybernetics, led researchers to consider the possibility of building an electronic brain.\nThe first work that is now generally recognized as AI was McCullouch and Pitts' 1943 formal design for Turing-complete \"artificial neurons\".\nWhen access to digital computers became possible in the mid-1950s, AI research began to explore the possibility that human intelligence could be reduced to step-by-step symbol manipulation, known as Symbolic AI or GOFAI. Approaches based on cybernetics or artificial neural networks were abandoned or pushed into the background.\nThe field of AI research was born at a workshop at Dartmouth College in 1956.\nThe attendees became the founders and leaders of AI research.\nThey and their students produced programs that the press described as \"astonishing\":\ncomputers were learning checkers strategies, solving word problems in algebra, proving logical theorems and speaking English.\nBy the middle of the 1960s, research in the U.S. was heavily funded by the Department of Defense\nand laboratories had been established around the world.\nResearchers in the 1960s and the 1970s were convinced that symbolic approaches would eventually succeed in creating a machine with artificial general intelligence and considered this the goal of their field.\nHerbert Simon predicted, \"machines will be capable, within twenty years, of doing any work a man can do\".\nMarvin Minsky agreed, writing, \"within a generation ... the problem of creating 'artificial intelligence' will substantially be solved\".\nThey failed to recognize the difficulty of some of the remaining tasks. Progress slowed and in 1974, in response to the criticism of Sir James Lighthill\nand ongoing pressure from the US Congress to fund more productive projects, both the U.S. and British governments cut off exploratory research in AI. The next few years would later be called an \"AI winter\", a period when obtaining funding for AI projects was difficult.\nIn the early 1980s, AI research was revived by the commercial success of expert systems,\na form of AI program that simulated the knowledge and analytical skills of human experts. By 1985, the market for AI had reached over a billion dollars. At the same time, Japan's fifth generation computer project inspired the U.S and British governments to restore funding for academic research.\nHowever, beginning with the collapse of the Lisp Machine market in 1987, AI once again fell into disrepute, and a second, longer-lasting winter began.\nMany researchers began to doubt that the symbolic approach would be able to imitate all the processes of human cognition, especially perception, robotics, learning and pattern recognition. A number of researchers began to look into \"sub-symbolic\" approaches to specific AI problems. Robotics researchers, such as Rodney Brooks, rejected symbolic AI and focused on the basic engineering problems that would allow robots to move, survive, and learn their environment.\nInterest in neural networks and \"connectionism\" was revived by Geoffrey Hinton, David Rumelhart and others in the middle of the 1980s.\nSoft computing tools were developed in the 80s, such as neural networks, fuzzy systems, Grey system theory, evolutionary computation and many tools drawn from statistics or mathematical optimization.\nAI gradually restored its reputation in the late 1990s and early 21st century by finding specific solutions to specific problems. The narrow focus allowed researchers to produce verifiable results, exploit more mathematical methods, and collaborate with other fields (such as statistics, economics and mathematics).\nBy 2000, solutions developed by AI researchers were being widely used, although in the 1990s they were rarely described as \"artificial intelligence\".\nFaster computers, algorithmic improvements, and access to large amounts of data enabled advances in machine learning and perception; data-hungry deep learning methods started to dominate accuracy benchmarks around 2012.\nAccording to Bloomberg's Jack Clark, 2015 was a landmark year for artificial intelligence, with the number of software projects that use AI within Google increased from a \"sporadic usage\" in 2012 to more than 2,700 projects. He attributes this to an increase in affordable neural networks, due to a rise in cloud computing infrastructure and to an increase in research tools and datasets. In a 2017 survey, one in five companies reported they had \"incorporated AI in some offerings or processes\". The amount of research into AI (measured by total publications) increased by 50% in the years 2015–2019.\nNumerous academic researchers became concerned that AI was no longer pursuing the original goal of creating versatile, fully intelligent machines. Much of current research involves statistical AI, which is overwhelmingly used to solve specific problems, even highly successful techniques such as deep learning. This concern has led to the subfield artificial general intelligence (or \"AGI\"), which had several well-funded institutions by the 2010s."
+        ],
+        "title": [
+          "Artificial intelligence"
+        ],
+        "url": [
+          "https://en.wikipedia.org/wiki/Artificial_intelligence"
+        ]
+      },
+      "highlights": {
+        "text": [
+          "…wever, this definition is rejected by major AI researchers.\nAI applications include advanced web <mark>search</mark> engines (e.g., Google), recommendation systems (used by YouTube, Amazon and Netflix), understand…"
+        ],
+        "title": [
+          "Artificial intelligence"
+        ]
+      },
+      "id": "1164",
+      "score": 0.5769028632224984,
+      "timestamp": 1644936891228777200
     }
   ],
-  "hits": 16,
+  "hits": 6,
   "index_name": "enwiki"
 }
 ```

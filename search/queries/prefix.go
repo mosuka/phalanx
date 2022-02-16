@@ -23,7 +23,6 @@ func NewPrefixQueryOptions() PrefixQueryOptions {
 //   "field": "description",
 //   "boost": 1.0
 // }
-
 func NewPrefixQueryWithMap(opts map[string]interface{}) (*bluge.PrefixQuery, error) {
 	bytes, err := json.Marshal(opts)
 	if err != nil {

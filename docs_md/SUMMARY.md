@@ -15,6 +15,7 @@
   * [Token filters](/analyzer/token_filters.md)
 * [Queries](/queries.md)
 * [Aggregations](/aggregations.md)
+* [Highlights](/highlights.md)
 * [RESTful API](/restful_api.md)
   * [Create Index API](/restful_api/create_index_api.md)
   * [Delete Index API](/restful_api/delete_index_api.md)

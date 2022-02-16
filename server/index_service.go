@@ -24,6 +24,7 @@ import (
 	phalanxmetastore "github.com/mosuka/phalanx/metastore"
 	"github.com/mosuka/phalanx/proto"
 	phalanxaggregations "github.com/mosuka/phalanx/search/aggregations"
+	phalanxhighlight "github.com/mosuka/phalanx/search/highlight"
 	phalanxqueries "github.com/mosuka/phalanx/search/queries"
 	"github.com/mosuka/phalanx/util/wildcard"
 	"github.com/thanhpk/randstr"
@@ -1132,7 +1133,8 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 					blugeRequest := bluge.NewTopNSearch(int(request.Num), query).
 						SetFrom(int(request.Start)).
 						WithStandardAggregations().
-						ExplainScores()
+						ExplainScores().
+						IncludeLocations()
 
 					if request.SortBy != "" {
 						blugeRequest.SortBy([]string{request.SortBy})
@@ -1199,11 +1201,48 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 						return err
 					}
 
+					// Make highlights.
+
+					highlightRequests := make(map[string]*phalanxhighlight.HighlightRequest)
+					for fieldName, highlight := range request.Highlights {
+						fmt.Println(fieldName, highlight)
+						opts := make(map[string]interface{})
+						if err := json.Unmarshal(highlight.Highlighter.Options, &opts); err != nil {
+							s.logger.Error(err.Error(), zap.String("field_name", fieldName), zap.String("highlighter_type", highlight.Highlighter.Type))
+							responsesChan <- searchResponse{
+								nodeName:   nodeName,
+								indexName:  request.IndexName,
+								shardNames: request.ShardNames,
+								resp:       nil,
+								err:        err,
+							}
+							return err
+						}
+						highliter, err := phalanxhighlight.NewHighlighter(highlight.Highlighter.Type, opts)
+						if err != nil {
+							s.logger.Error(err.Error(), zap.String("field_name", fieldName), zap.String("highlighter_type", highlight.Highlighter.Type))
+							responsesChan <- searchResponse{
+								nodeName:   nodeName,
+								indexName:  request.IndexName,
+								shardNames: request.ShardNames,
+								resp:       nil,
+								err:        err,
+							}
+							return err
+						}
+
+						highlightRequests[fieldName] = &phalanxhighlight.HighlightRequest{
+							Highlighter: highliter,
+							Num:         int(highlight.Num),
+						}
+					}
+
 					// Make docs
 					for err == nil && docMatch != nil {
 						// Load stored fields.
 						doc := &proto.Document{}
 						fields := make(map[string][]interface{})
+						highlights := make(map[string][]string)
 						err := docMatch.VisitStoredFields(func(field string, value []byte) bool {
 							switch field {
 							case mapping.IdFieldName:
@@ -1237,6 +1276,19 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 									switch fieldType {
 									case mapping.TextField:
 										fields[field] = append(fields[field], string(value))
+										fo, err := indexMapping.GetFieldOptions(field)
+										if err != nil {
+											s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.String("field_name", field))
+											return true
+										}
+										if fo&bluge.HighlightMatches != 0 {
+											if highlightRequest, ok := highlightRequests[field]; ok {
+												if _, ok := highlights[field]; !ok {
+													highlights[field] = make([]string, 0)
+												}
+												highlights[field] = append(highlights[field], highlightRequest.Highlighter.BestFragments(docMatch.Locations[field], value, highlightRequest.Num)...)
+											}
+										}
 									case mapping.NumericField:
 										f64Value, err := bluge.DecodeNumericFloat64(value)
 										if err != nil {
@@ -1278,7 +1330,7 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 						// Serialize fields.
 						fieldsBytes, err := json.Marshal(fields)
 						if err != nil {
-							s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.Any("doc", fields))
+							s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.String("doc_id", doc.Id), zap.Any("fields", fields))
 							responsesChan <- searchResponse{
 								nodeName:   nodeName,
 								indexName:  request.IndexName,
@@ -1289,6 +1341,21 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 							return err
 						}
 						doc.Fields = fieldsBytes
+
+						// Serialize highlights.
+						highlightsBytes, err := json.Marshal(highlights)
+						if err != nil {
+							s.logger.Error(err.Error(), zap.String("index_name", req.IndexName), zap.String("doc_id", doc.Id), zap.Any("highlights", highlights))
+							responsesChan <- searchResponse{
+								nodeName:   nodeName,
+								indexName:  request.IndexName,
+								shardNames: request.ShardNames,
+								resp:       nil,
+								err:        err,
+							}
+							return err
+						}
+						doc.Highlights = highlightsBytes
 
 						resp.Documents = append(resp.Documents, doc)
 

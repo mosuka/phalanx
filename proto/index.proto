@@ -127,6 +127,7 @@ message Document {
     double score = 2;
     int64 timestamp = 3;
     bytes fields = 4;
+    bytes highlights = 5;
 }
 
 message AddDocumentsRequest {
@@ -161,6 +162,16 @@ message Query {
     bytes options = 2;
 }
 
+message Highlighter {
+    string type = 1;
+    bytes options = 2;
+}
+
+message HighlightRequest {
+    Highlighter highlighter = 1;
+    int32 num = 2;
+}
+
 message SearchRequest {
     string index_name = 1 [json_name="index_name"];
     repeated string shard_names = 2 [json_name="shard_names"];
@@ -170,6 +181,7 @@ message SearchRequest {
     string sort_by = 6 [json_name="sort_by"];
     repeated string fields = 7;
     map<string, AggregationRequest> aggregations = 8;
+    map<string, HighlightRequest> highlights = 9;
 }
 
 message SearchResponse {

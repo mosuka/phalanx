@@ -4,7 +4,7 @@
     <head>
         <meta charset="UTF-8">
         <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
-        <title>Index Mapping · GitBook</title>
+        <title>Highlights · GitBook</title>
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="description" content="">
         <meta name="generator" content="GitBook 3.2.3">
@@ -57,10 +57,10 @@
     <link rel="shortcut icon" href="gitbook/images/favicon.ico" type="image/x-icon">
 
     
-    <link rel="next" href="analyzer.html" />
+    <link rel="next" href="restful_api.html" />
     
     
-    <link rel="prev" href="run_with_aws.html" />
+    <link rel="prev" href="aggregations.html" />
     
 
     </head>
@@ -219,7 +219,7 @@
             
         </li>
     
-        <li class="chapter active" data-level="1.11" data-path="index_mapping.html">
+        <li class="chapter " data-level="1.11" data-path="index_mapping.html">
             
                 <a href="index_mapping.html">
             
@@ -316,7 +316,7 @@
             
         </li>
     
-        <li class="chapter " data-level="1.15" data-path="highlights.html">
+        <li class="chapter active" data-level="1.15" data-path="highlights.html">
             
                 <a href="highlights.html">
             
@@ -456,7 +456,7 @@
     <!-- Title -->
     <h1>
         <i class="fa fa-circle-o-notch fa-spin"></i>
-        <a href="." >Index Mapping</a>
+        <a href="." >Highlights</a>
     </h1>
 </div>
 
@@ -471,89 +471,57 @@
     
                                 <section class="normal markdown-section">
                                 
-                                <h1 id="index-mapping">Index Mapping</h1>
-<p>Index mapping is the definition of how documents and the fields they contain are stored and indexed.  </p>
-<p>The format of the field definition to be included in the index is as follows:</p>
+                                <h1 id="highlights">Highlights</h1>
+<p>Highlights enable you to get highlighted snippets from one or more fields in your search results so you can show users where the query matches are.</p>
+<p>The format of the highlight definition is as follows:</p>
 <pre><code>{
     &lt;FIELD_NAME&gt;: {
-        &quot;type&quot;: &lt;FIELD_TYPE&gt;,
-        &quot;options&quot;: &lt;FIELD_OPTIONS&gt;,
-        &quot;analyzer&quot;: &lt;ANALYZER&gt;
+        &quot;highlighter&quot;: {
+            &quot;type&quot;: &lt;HIGHLIGHTER_TYPE&gt;,
+            &quot;options&quot;: &lt;HIGHLIGHTER_OPTIONS&gt;
+        },
+        &quot;num&quot;: &lt;NUMBER_OF_FRAGMENTS&gt;
     }
-    ...
 }
 </code></pre><ul>
-<li><code>&lt;FIELD_NAME&gt;</code>: The name of the field you want to include in the index.  </li>
+<li><code>&lt;HIGHLIGHTER_TYPE&gt;</code>: Highlighter name.</li>
+<li><code>&lt;HIGHLIGHTER_OPTIONS&gt;</code>: Highlighter options.</li>
+<li><code>&lt;NUMBER_OF_FRAGMENTS&gt;</code>: Number of fragments.</li>
 </ul>
-<ul>
-<li><code>&lt;FIELD_TYPE&gt;</code>: The type of field you want to include in the index.<br>The following types can be defined:<ul>
-<li><code>text</code>: Unstructured natural language text or keywords.</li>
-<li><code>numeric</code>: Numeric types, such as long and double, used to express amounts.</li>
-<li><code>datetime</code>: DateTime string, such as date and time, formatted in RFC3339.</li>
-<li><code>geo_point</code>: Latitude and longitude points.</li>
-</ul>
-</li>
-</ul>
-<ul>
-<li><code>&lt;FIELD_OPTIONS&gt;</code>:  Specifies the options for how the field values are registered in the index.
-The options that can be set differ for each field type.<ul>
-<li><code>index</code>: (Optional, boolean) Whether or not to register the value in the index. Set to true if you want to search by the value of the field. (<code>text</code>, <code>numeric</code>, <code>datetime</code>, <code>geo_point</code>)</li>
-<li><code>store</code>: (Optional, boolean) Whether or not to store the original value. Set to true if you want to return the field values of document retrieved. (<code>text</code>, <code>numeric</code>, <code>datetime</code>, <code>geo_point</code>)</li>
-<li><code>term_positions</code>: (Optional, boolean) Set to true if you want to include information such as the position of the term in the index. (<code>text</code>)</li>
-<li><code>highlight</code>: (Optional, boolean) Set to true if you want to highlight the terms in the matching part of the query. (<code>text</code>)</li>
-<li><code>sortable</code>: (Optional, boolean) Set to true if you want to sort by field value. (<code>text</code>, <code>numeric</code>, <code>datetime</code>, <code>geo_point</code>)</li>
-<li><code>aggregatable</code>: (Optional, boolean) Set to true if you want to aggregate the values of the fields.&#x3000;(<code>text</code>, <code>numeric</code>, <code>datetime</code>, <code>geo_point</code>)</li>
-</ul>
-</li>
-</ul>
-<ul>
-<li><code>&lt;ANALYZER&gt;</code>: (Optional, JSON) You only need to define an analyzer if you define a <code>text</code> field.<br>The Analyzer defines how to analyze the value of a text field. See <a href="analyzer.html">Analyzer</a> section.</li>
-</ul>
-<h2 id="example">Example</h2>
-<pre><code>{
-    &quot;id&quot;: {
-        &quot;type&quot;: &quot;numeric&quot;,
-        &quot;options&quot;: {
-            &quot;index&quot;: true,
-            &quot;store&quot;: true,
-            &quot;sortable&quot;: true,
-            &quot;aggregatable&quot;: true
-        }
-    },
-    &quot;text&quot;: {
-        &quot;type&quot;: &quot;text&quot;,
-        &quot;options&quot;: {
-            &quot;index&quot;: true,
-            &quot;store&quot;: true,
-            &quot;term_positions&quot;: true,
-            &quot;highlight&quot;: true,
-            &quot;sortable&quot;: true,
-            &quot;aggregatable&quot;: true
+<h2 id="ansi-highlighter">ANSI Highlighter</h2>
+<p>Example:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-string">&quot;field_a&quot;</span>: {
+        <span class="hljs-string">&quot;highlighter&quot;</span>: {
+            <span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;ansi&quot;</span>,
+            <span class="hljs-string">&quot;options&quot;</span>: {
+                <span class="hljs-string">&quot;fragment_size&quot;</span>: <span class="hljs-number">100</span>,
+                <span class="hljs-string">&quot;color&quot;</span>: <span class="hljs-string">&quot;FgCyan&quot;</span>,
+                <span class="hljs-string">&quot;separator&quot;</span>: <span class="hljs-string">&quot;&#x2026;&quot;</span>
+            }
         },
-        &quot;analyzer&quot;: {
-            &quot;char_filters&quot;: [
-                {
-                    &quot;name&quot;: &quot;ascii_folding&quot;
-                },
-                {
-                    &quot;name&quot;: &quot;unicode_normalize&quot;,
-                    &quot;options&quot;: {
-                        &quot;form&quot;: &quot;NFKC&quot;
-                    }
-                }
-            ],
-            &quot;tokenizer&quot;: {
-                &quot;name&quot;: &quot;unicode&quot;
-            },
-            &quot;token_filters&quot;: [
-                {
-                    &quot;name&quot;: &quot;lower_case&quot;
-                }
-            ]
-        }
+        <span class="hljs-string">&quot;num&quot;</span>: <span class="hljs-number">3</span>
     }
 }
 </code></pre>
+<h2 id="html-highlighter">HTML Highlighter</h2>
+<p>Example:</p>
+<pre><code class="lang-json">{
+    <span class="hljs-string">&quot;field_a&quot;</span>: {
+        <span class="hljs-string">&quot;highlighter&quot;</span>: {
+            <span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;html&quot;</span>,
+            <span class="hljs-string">&quot;options&quot;</span>: {
+                <span class="hljs-string">&quot;fragment_size&quot;</span>: <span class="hljs-number">100</span>,
+                <span class="hljs-string">&quot;pre_tag&quot;</span>: <span class="hljs-string">&quot;&lt;mark&gt;&quot;</span>,
+                <span class="hljs-string">&quot;post_tag&quot;</span>: <span class="hljs-string">&quot;&lt;/mark&gt;&quot;</span>,
+                <span class="hljs-string">&quot;separator&quot;</span>: <span class="hljs-string">&quot;&#x2026;&quot;</span>
+            }
+        },
+        <span class="hljs-string">&quot;num&quot;</span>: <span class="hljs-number">3</span>
+    }
+}
+</code></pre>
+
                                 
                                 </section>
                             
@@ -580,12 +548,12 @@ The options that can be set differ for each field type.<ul>
 
             
                 
-                <a href="run_with_aws.html" class="navigation navigation-prev " aria-label="Previous page: Run with AWS">
+                <a href="aggregations.html" class="navigation navigation-prev " aria-label="Previous page: Aggregations">
                     <i class="fa fa-angle-left"></i>
                 </a>
                 
                 
-                <a href="analyzer.html" class="navigation navigation-next " aria-label="Next page: Analyzer">
+                <a href="restful_api.html" class="navigation navigation-next " aria-label="Next page: RESTful API">
                     <i class="fa fa-angle-right"></i>
                 </a>
                 
@@ -596,7 +564,7 @@ The options that can be set differ for each field type.<ul>
     <script>
         var gitbook = gitbook || [];
         gitbook.push(function() {
-            gitbook.page.hasChanged({"page":{"title":"Index Mapping","level":"1.11","depth":1,"next":{"title":"Analyzer","level":"1.12","depth":1,"path":"analyzer.md","ref":"analyzer.md","articles":[{"title":"Char filters","level":"1.12.1","depth":2,"path":"analyzer/char_filters.md","ref":"analyzer/char_filters.md","articles":[]},{"title":"Tokenizers","level":"1.12.2","depth":2,"path":"analyzer/tokenizers.md","ref":"analyzer/tokenizers.md","articles":[]},{"title":"Token filters","level":"1.12.3","depth":2,"path":"analyzer/token_filters.md","ref":"analyzer/token_filters.md","articles":[]}]},"previous":{"title":"Run with AWS","level":"1.10","depth":1,"path":"run_with_aws.md","ref":"run_with_aws.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"index_mapping.md","mtime":"2022-02-07T06:52:57.073Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-02-16T12:57:45.143Z"},"basePath":".","book":{"language":""}});
+            gitbook.page.hasChanged({"page":{"title":"Highlights","level":"1.15","depth":1,"next":{"title":"RESTful API","level":"1.16","depth":1,"path":"restful_api.md","ref":"restful_api.md","articles":[{"title":"Create Index API","level":"1.16.1","depth":2,"path":"restful_api/create_index_api.md","ref":"restful_api/create_index_api.md","articles":[]},{"title":"Delete Index API","level":"1.16.2","depth":2,"path":"restful_api/delete_index_api.md","ref":"restful_api/delete_index_api.md","articles":[]},{"title":"Add Documents API","level":"1.16.3","depth":2,"path":"restful_api/add_documents_api.md","ref":"restful_api/add_documents_api.md","articles":[]},{"title":"Delete Documents API","level":"1.16.4","depth":2,"path":"restful_api/delete_documents_api.md","ref":"restful_api/delete_documents_api.md","articles":[]},{"title":"Search API","level":"1.16.5","depth":2,"path":"restful_api/search_api.md","ref":"restful_api/search_api.md","articles":[]}]},"previous":{"title":"Aggregations","level":"1.14","depth":1,"path":"aggregations.md","ref":"aggregations.md","articles":[]},"dir":"ltr"},"config":{"gitbook":"*","theme":"default","variables":{},"plugins":["hide-published-with"],"pluginsConfig":{"hide-published-with":{},"highlight":{},"search":{},"lunr":{"maxIndexSize":1000000,"ignoreSpecialCharacters":false},"sharing":{"facebook":true,"twitter":true,"google":false,"weibo":false,"instapaper":false,"vk":false,"all":["facebook","google","twitter","weibo","instapaper"]},"fontsettings":{"theme":"white","family":"sans","size":2},"theme-default":{"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"},"showLevel":false}},"structure":{"langs":"LANGS.md","readme":"README.md","glossary":"GLOSSARY.md","summary":"SUMMARY.md"},"pdf":{"pageNumbers":true,"fontSize":12,"fontFamily":"Arial","paperSize":"a4","chapterMark":"pagebreak","pageBreaksBefore":"/","margin":{"right":62,"left":62,"top":56,"bottom":56}},"styles":{"website":"styles/website.css","pdf":"styles/pdf.css","epub":"styles/epub.css","mobi":"styles/mobi.css","ebook":"styles/ebook.css","print":"styles/print.css"}},"file":{"path":"highlights.md","mtime":"2022-02-16T12:57:34.222Z","type":"markdown"},"gitbook":{"version":"3.2.3","time":"2022-02-16T12:57:45.143Z"},"basePath":".","book":{"language":""}});
         });
     </script>
 </div>
