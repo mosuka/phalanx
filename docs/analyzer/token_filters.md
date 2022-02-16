@@ -1,6 +1,6 @@
 # Token filters
 
-Token filters accept a stream of tokens from a [tokenizer](/analyzer/tokenizers.md) and can modify tokens (e.g., lowercasing), delete tokens (e.g., remove stopwords).
+Token filters accept a stream of tokens from a [tokenizer](./analyzer/tokenizers.md) and can modify tokens (e.g., lowercasing), delete tokens (e.g., remove stopwords).
 
 The format of the char filter definition is as follows:
 ```

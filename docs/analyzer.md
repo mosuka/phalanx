@@ -12,11 +12,11 @@ The format of the analyzer definition is as follows:
 }
 ```
 
-- `<CHAR_FILTERS>`: (Optional) Char filter settings. If you write multiple char_filter in this part, you can process that order. See [Char filters](/analyzer/char_filters.md) section.
+- `<CHAR_FILTERS>`: (Optional) Char filter settings. If you write multiple char_filter in this part, you can process that order. See [Char filters](./analyzer/char_filters.md) section.
 
-- `<TOKENIZER>`: (Required) Tokenizer setting. Specifies a tokenizer to split the text into tokens. See [Tokenizers](/analyzer/tokenizers.md) section.
+- `<TOKENIZER>`: (Required) Tokenizer setting. Specifies a tokenizer to split the text into tokens. See [Tokenizers](./analyzer/tokenizers.md) section.
 
-- `<TOKEN_FILTERS>`: (Optional) Token filter settings. If you write multiple token_filter in this part, you can process that order.  See [Token filters](/analyzer/token_filters.md) section.
+- `<TOKEN_FILTERS>`: (Optional) Token filter settings. If you write multiple token_filter in this part, you can process that order.  See [Token filters](./analyzer/token_filters.md) section.
 
 
 ## Example

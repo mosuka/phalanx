@@ -8,30 +8,14 @@ Phalanx can be started on a local machine using a local file system as a metasto
 % ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx-metadata
 ```
 
-Multiple Phalanx nodes can be started on the local machine to run a pseudo-cluster.
-You can easily add nodes to the cluster with the previously started node as the seed node, using the following command.
-
-Start the second node:
-
-```
-% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx-metadata --bind-port=2001 --grpc-port=5001 --http-port=8001 --seed-addresses=localhost:2000
-```
-
-Start the third node:
-
-```
-% ./bin/phalanx --index-metastore-uri=file:///tmp/phalanx-metadata --bind-port=2002 --grpc-port=5002 --http-port=8002 --seed-addresses=localhost:2000
-```
-
-
 A metastore is a place where various information about an index is stored.
-See the [metadata store section](/metadata_store.md) for details.
+See the [metadata store section](./metadata_store.md) for details.
 
-### Create index on local file system
 
-If you have started Phalanx to use the local file system, you can use this command to create an index.
+## Create index on local file system
+
 If you have started Phalanx to use the local file system, you can use this command to create an index. If you want to use an object store for index storage, you need to specify `lock_uri` as well.
-See the [index store section](/index_store.md) and the [lock store section](/lock_store.md)for details.
+See the [index store section](./index_store.md) and the [lock store section](./lock_store.md)for details.
 
 ```
 % curl -XPUT -H 'Content-type: application/json' http://localhost:8000/v1/indexes/example --data-binary '
@@ -95,6 +79,7 @@ See the [index store section](/index_store.md) and the [lock store section](/loc
 }
 '
 ```
+
 
 ## Health check
 
@@ -267,32 +252,6 @@ This endpoint returns the latest cluster status.
     "node-1P4Hkvhy": {
       "addr": "0.0.0.0",
       "meta": {
-        "grpc_port": 5002,
-        "http_port": 8002,
-        "roles": [
-          "indexer",
-          "searcher"
-        ]
-      },
-      "port": 2002,
-      "state": "alive"
-    },
-    "node-snjdTQVL": {
-      "addr": "0.0.0.0",
-      "meta": {
-        "grpc_port": 5001,
-        "http_port": 8001,
-        "roles": [
-          "indexer",
-          "searcher"
-        ]
-      },
-      "port": 2001,
-      "state": "alive"
-    },
-    "node-z8PozpGp": {
-      "addr": "0.0.0.0",
-      "meta": {
         "grpc_port": 5000,
         "http_port": 8000,
         "roles": [
@@ -307,34 +266,22 @@ This endpoint returns the latest cluster status.
   "searcher_assignment": {
     "example": {
       "shard-60zYKCLJ": [
-        "node-1P4Hkvhy",
-        "node-snjdTQVL",
-        "node-z8PozpGp"
+        "node-1P4Hkvhy"
       ],
       "shard-EIPjSbHG": [
-        "node-1P4Hkvhy",
-        "node-z8PozpGp",
-        "node-snjdTQVL"
+        "node-1P4Hkvhy"
       ],
       "shard-HYuLwqp8": [
-        "node-1P4Hkvhy",
-        "node-z8PozpGp",
-        "node-snjdTQVL"
+        "node-1P4Hkvhy"
       ],
       "shard-rIWGHdkS": [
-        "node-1P4Hkvhy",
-        "node-z8PozpGp",
-        "node-snjdTQVL"
+        "node-1P4Hkvhy"
       ],
       "shard-sNHs6Kyh": [
-        "node-1P4Hkvhy",
-        "node-z8PozpGp",
-        "node-snjdTQVL"
+        "node-1P4Hkvhy"
       ],
       "shard-wrAZqmV6": [
-        "node-1P4Hkvhy",
-        "node-snjdTQVL",
-        "node-z8PozpGp"
+        "node-1P4Hkvhy"
       ]
     }
   }
@@ -342,7 +289,7 @@ This endpoint returns the latest cluster status.
 ```
 
 
-## Add / Update documents
+## Update documents
 
 ```
 % curl -XPUT -H 'Content-type: application/x-ndjson' http://localhost:8000/v1/indexes/example/documents --data-binary '
@@ -544,7 +491,7 @@ This endpoint returns the latest cluster status.
 
 ## Delete index
 
-The following command will delete the index `wikipedia_en` with the specified name. This command will delete the index file on the object storage and the index metadata on the metastore.
+The following command will delete the index `example` with the specified name. This command will delete the index file on the object storage and the index metadata on the metastore.
 
 ```
 % curl -XDELETE http://localhost:8000/v1/indexes/example
