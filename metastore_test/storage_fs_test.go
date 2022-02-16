@@ -244,7 +244,7 @@ func TestFileSystemStorageEvents(t *testing.T) {
 	fsMetastore.Put("/hello2.txt", []byte("hello2"))
 
 	// wait for events to be processed
-	time.Sleep(3 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	done <- true
 
