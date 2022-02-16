@@ -46,6 +46,8 @@ var (
 
 	ErrUnknownQueryType = errors.New("unknown query type")
 
+	ErrUnknownHighlighterType = errors.New("unknown query type")
+
 	ErrNodeDoesNotFound = errors.New("node not found")
 	ErrInvalidData      = errors.New("invalid data")
 

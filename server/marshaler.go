@@ -139,11 +139,17 @@ func (m *Marshaler) Marshal(v interface{}) ([]byte, error) {
 				return nil, err
 			}
 
+			var highlights map[string][]string
+			if err := json.Unmarshal(doc.Highlights, &highlights); err != nil {
+				return nil, err
+			}
+
 			docMap := map[string]interface{}{
-				"id":        doc.Id,
-				"score":     doc.Score,
-				"timestamp": doc.Timestamp,
-				"fields":    fields,
+				"id":         doc.Id,
+				"score":      doc.Score,
+				"timestamp":  doc.Timestamp,
+				"fields":     fields,
+				"highlights": highlights,
 			}
 
 			docs = append(docs, docMap)
@@ -284,6 +290,41 @@ func (m *Marshaler) Unmarshal(data []byte, v interface{}) error {
 					value.Aggregations[name] = &proto.AggregationRequest{
 						Type:    aggType,
 						Options: aggOptsBytes,
+					}
+				}
+			}
+		}
+
+		if highlights, ok := m["highlights"].(map[string]interface{}); ok {
+			value.Highlights = make(map[string]*proto.HighlightRequest)
+			for fieldName, highlightReq := range highlights {
+				if highlight, ok := highlightReq.(map[string]interface{}); ok {
+					highlighter, ok := highlight["highlighter"].(map[string]interface{})
+					if !ok {
+						return fmt.Errorf("highlighter is unexpected: %v", highlight["highlighter"])
+					}
+					highlighterType, ok := highlighter["type"].(string)
+					if !ok {
+						return fmt.Errorf("highlighter type is unexpected: %v", highlighter["type"])
+					}
+					highlighterOpts, ok := highlighter["options"].(map[string]interface{})
+					if !ok {
+						return fmt.Errorf("highlighter options is unexpected: %v", highlighter["options"])
+					}
+					highlighterOptsBytes, err := json.Marshal(highlighterOpts)
+					if err != nil {
+						return err
+					}
+					num, ok := highlight["num"].(float64)
+					if !ok {
+						return fmt.Errorf("num is unexpected: %v", highlight["num"])
+					}
+					value.Highlights[fieldName] = &proto.HighlightRequest{
+						Highlighter: &proto.Highlighter{
+							Type:    highlighterType,
+							Options: highlighterOptsBytes,
+						},
+						Num: int32(num),
 					}
 				}
 			}
