@@ -32,23 +32,15 @@ PUT /v1/indexes/<INDEX_NAME>
 ```
 
 - `<INDEX_URI>`: (Required, string) Path of the index.  
-Specifies the path to create the index. It currently supports the following:
-  - Local file system:  
-  e.g., `file:///var/lib/phalanx-indexes/wikipedia_en`  
-  - [MinIO](https://min.io/):  
-  e.g., `minio://phalanx-indexes/wikipedia_en`  
+See [Lock store](../index_store.md) section.
 
 
 - `<LOCK_URI>`: (Optional, string) Path of the lock objects.  
-Specifies the path to create the locks. It currently supports the following:
-  - Local file system:  
-  e.g., `file:///var/lib/phalanx-locks/wikipedia_en`  
-  - [etcd](https://etcd.io/):  
-  e.g., `etcd://phalanx-locks/wikipedia_en`  
+See [Lock store](../lock_store.md) section.
 
 
 - `<INDEX_MAPPING>`: (Required, JSON) Mapping for fields in the index.  
-See [Index Mapping](/index_mapping.md) section.
+See [Index Mapping](../index_mapping.md) section.
 
 
 - `<NUM_SHARDS>`: (Optional, integer) Number of shards in the index.  
@@ -60,7 +52,7 @@ Defaults to `_all`.
 
 
 - `<DEFAULT_ANALYZER>`: (Optional, JSON) Default analyuzer to use in the index.  
-See [Analyzer](/analyzer.md) section. Defaults to use [StandardAnalyzer](https://github.com/blugelabs/bluge/blob/master/analysis/analyzer/standard.go) that will be the same as the next setting.  
+See [Analyzer](../analyzer.md) section. Defaults to use [StandardAnalyzer](https://github.com/blugelabs/bluge/blob/master/analysis/analyzer/standard.go) that will be the same as the next setting.  
 ```json
 {
     "tokenizer": {

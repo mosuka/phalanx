@@ -25,6 +25,7 @@ POST /v1/indexes/<INDEX_NAME>/_search
     "sort_by": <SORT_BY>,
     "fields": <FIELDS>,
     "aggregations": <AGGREGATIONS>
+    "highlights": <HIGHLIGHTS>
 }
 ```
 
@@ -50,7 +51,10 @@ If omitted, it will be listed in order of the same score as `-_score`.
 
 
 - `<AGGREGATIONS>`: (Optional, JSON) Default analyuzer to use in the index.  
-See [Aggregations](/aggregations.md) section.  
+See [Aggregations](../aggregations.md) section.  
+
+- `<HIGHLIGHTS>`: (Optional, JSON) Default analyuzer to use in the index.  
+See [Highlights](../highlights.md) section.  
 
 
 ## Response body
@@ -58,6 +62,7 @@ See [Aggregations](/aggregations.md) section.
 ```
 {
   "aggregations": <AGGREGATIONS>,
+  "highlights": <HIGHLIGHTS>,
   "documents": <DOCUMENTS>,
   "hits": <NUM_HITS>,
   "index_name": <INDEX_NAME>
@@ -66,6 +71,7 @@ See [Aggregations](/aggregations.md) section.
 
 - `<AGGREGATIONS>`: (Optional, JSON) Aggregation response.  
 
+- `<HIGHLIGHTS>`: (Optional, JSON) Highlight response.  
 
 - `<DOCUMENTS>`: (array of JSON) List of retrieved documents.  
 The JSON of the document is in the following format:

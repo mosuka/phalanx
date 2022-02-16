@@ -1,6 +1,6 @@
 # Char Filters
 
-Character filters are used to preprocess the stream of characters before it is passed to the [tokenizer](/analyzer/tokenizers.md).  
+Character filters are used to preprocess the stream of characters before it is passed to the [tokenizer](./analyzer/tokenizers.md).  
 
 The format of the char filter definition is as follows:
 ```
