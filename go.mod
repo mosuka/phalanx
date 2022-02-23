@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.4.1
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.3.1
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.13.0
-	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.7.0
+	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.11.0
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.23.0
 	github.com/blugelabs/bluge v0.1.9
 	github.com/blugelabs/bluge_segment_api v0.2.0
