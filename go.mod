@@ -42,7 +42,7 @@ require (
 	github.com/spf13/viper v1.10.1
 	github.com/thanhpk/randstr v1.0.4
 	go.etcd.io/etcd/client/v3 v3.5.2
-	go.uber.org/zap v1.19.1
+	go.uber.org/zap v1.21.0
 	golang.org/x/sync v0.0.0-20210220032951-036812b2e83c
 	golang.org/x/text v0.3.7
 	google.golang.org/grpc v1.43.0
