@@ -29,7 +29,7 @@ require (
 	github.com/ikawaha/kagome-dict v1.0.4
 	github.com/ikawaha/kagome-dict/ipa v1.0.4
 	github.com/ikawaha/kagome-dict/uni v1.1.3
-	github.com/jinzhu/copier v0.3.4
+	github.com/jinzhu/copier v0.3.5
 	github.com/joho/godotenv v1.4.0
 	github.com/minio/minio-go/v7 v7.0.23
 	github.com/mitchellh/go-homedir v1.1.0
