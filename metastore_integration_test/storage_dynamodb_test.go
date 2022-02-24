@@ -3,6 +3,7 @@
 package metastore_integration_test
 
 import (
+	"context"
 	"fmt"
 	"net/url"
 	"os"
@@ -51,17 +52,19 @@ func TestDynamodbStorageGet(t *testing.T) {
 	}
 	defer dynamodbStorage.Close()
 
-	_, err = dynamodbStorage.Get("/wikipedia_en.json")
+	ctx := context.Background()
+
+	_, err = dynamodbStorage.Get(ctx, "/wikipedia_en.json")
 	if err != metastore.ErrRecordNotFound {
 		t.Fatalf("unexpected value. %v\n", err)
 	}
 
-	err = dynamodbStorage.Put("/wikipedia_en.json", []byte("{}"))
+	err = dynamodbStorage.Put(ctx, "/wikipedia_en.json", []byte("{}"))
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
 
-	content, err := dynamodbStorage.Get("/wikipedia_en.json")
+	content, err := dynamodbStorage.Get(ctx, "/wikipedia_en.json")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -87,7 +90,9 @@ func TestDynamodbStoragePut(t *testing.T) {
 	}
 	defer dynamodbStorage.Close()
 
-	err = dynamodbStorage.Put("/wikipedia_en.json", []byte("{}"))
+	ctx := context.Background()
+
+	err = dynamodbStorage.Put(ctx, "/wikipedia_en.json", []byte("{}"))
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -109,12 +114,14 @@ func TestDynamodbStorageDelete(t *testing.T) {
 	}
 	defer dynamodbStorage.Close()
 
-	dynamodbStorage.Put("/wikipedia_en.json", []byte("{}"))
+	ctx := context.Background()
+
+	dynamodbStorage.Put(ctx, "/wikipedia_en.json", []byte("{}"))
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
 
-	dynamodbStorage.Delete("/wikipedia_en.json")
+	dynamodbStorage.Delete(ctx, "/wikipedia_en.json")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -136,7 +143,9 @@ func TestDynamodbStorageExists(t *testing.T) {
 	}
 	defer dynamodbStorage.Close()
 
-	exists, err := dynamodbStorage.Exists("/wikipedia_en.json")
+	ctx := context.Background()
+
+	exists, err := dynamodbStorage.Exists(ctx, "/wikipedia_en.json")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -145,12 +154,12 @@ func TestDynamodbStorageExists(t *testing.T) {
 		t.Fatalf("unexpected value. %v\n", exists)
 	}
 
-	dynamodbStorage.Put("/wikipedia_en.json", []byte("{}"))
+	dynamodbStorage.Put(ctx, "/wikipedia_en.json", []byte("{}"))
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
 
-	exists, err = dynamodbStorage.Exists("/wikipedia_en.json")
+	exists, err = dynamodbStorage.Exists(ctx, "/wikipedia_en.json")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -176,10 +185,12 @@ func TestDynamodbStorageList(t *testing.T) {
 	}
 	defer dynamodbStorage.Close()
 
-	dynamodbStorage.Put("/hello.txt", []byte("hello"))
-	dynamodbStorage.Put("/world.txt", []byte("world"))
+	ctx := context.Background()
 
-	paths, err := dynamodbStorage.List("/")
+	dynamodbStorage.Put(ctx, "/hello.txt", []byte("hello"))
+	dynamodbStorage.Put(ctx, "/world.txt", []byte("world"))
+
+	paths, err := dynamodbStorage.List(ctx, "/")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}

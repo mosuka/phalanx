@@ -1,6 +1,7 @@
 package metastore
 
 import (
+	"context"
 	"net/url"
 
 	"github.com/mosuka/phalanx/errors"
@@ -68,11 +69,11 @@ type StorageEvent struct {
 }
 
 type Storage interface {
-	Get(key string) ([]byte, error)
-	List(prefix string) ([]string, error)
-	Put(key string, value []byte) error
-	Delete(key string) error
-	Exists(key string) (bool, error)
+	Get(ctx context.Context, key string) ([]byte, error)
+	List(ctx context.Context, prefix string) ([]string, error)
+	Put(ctx context.Context, key string, value []byte) error
+	Delete(ctx context.Context, key string) error
+	Exists(ctx context.Context, key string) (bool, error)
 	Events() <-chan StorageEvent
 	Close() error
 }

@@ -3,6 +3,7 @@
 package metastore_integration_test
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"reflect"
@@ -49,7 +50,9 @@ func TestEtcdStoragePut(t *testing.T) {
 	}
 	defer etcdStorage.Close()
 
-	etcdStorage.Put("/wikipedia_en.json", []byte("{}"))
+	ctx := context.Background()
+
+	etcdStorage.Put(ctx, "/wikipedia_en.json", []byte("{}"))
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -71,9 +74,11 @@ func TestEtcdStorageGet(t *testing.T) {
 	}
 	defer etcdStorage.Close()
 
-	etcdStorage.Put("/wikipedia_en.json", []byte("{}"))
+	ctx := context.Background()
 
-	content, err := etcdStorage.Get("/wikipedia_en.json")
+	etcdStorage.Put(ctx, "/wikipedia_en.json", []byte("{}"))
+
+	content, err := etcdStorage.Get(ctx, "/wikipedia_en.json")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -99,12 +104,14 @@ func TestEtcdStorageDelete(t *testing.T) {
 	}
 	defer etcdStorage.Close()
 
-	etcdStorage.Put("/wikipedia_en.json", []byte("{}"))
+	ctx := context.Background()
+
+	etcdStorage.Put(ctx, "/wikipedia_en.json", []byte("{}"))
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
 
-	etcdStorage.Delete("/wikipedia_en.json")
+	etcdStorage.Delete(ctx, "/wikipedia_en.json")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -126,7 +133,9 @@ func TestEtcdStorageExists(t *testing.T) {
 	}
 	defer etcdStorage.Close()
 
-	exists, err := etcdStorage.Exists("/wikipedia_en.json")
+	ctx := context.Background()
+
+	exists, err := etcdStorage.Exists(ctx, "/wikipedia_en.json")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -135,12 +144,12 @@ func TestEtcdStorageExists(t *testing.T) {
 		t.Fatalf("unexpected value. %v\n", exists)
 	}
 
-	etcdStorage.Put("/wikipedia_en.json", []byte("{}"))
+	etcdStorage.Put(ctx, "/wikipedia_en.json", []byte("{}"))
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
 
-	exists, err = etcdStorage.Exists("/wikipedia_en.json")
+	exists, err = etcdStorage.Exists(ctx, "/wikipedia_en.json")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -166,10 +175,12 @@ func TestEtcdStorageList(t *testing.T) {
 	}
 	defer etcdStorage.Close()
 
-	etcdStorage.Put("/hello.txt", []byte("hello"))
-	etcdStorage.Put("/world.txt", []byte("world"))
+	ctx := context.Background()
 
-	paths, err := etcdStorage.List("/")
+	etcdStorage.Put(ctx, "/hello.txt", []byte("hello"))
+	etcdStorage.Put(ctx, "/world.txt", []byte("world"))
+
+	paths, err := etcdStorage.List(ctx, "/")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -216,8 +227,10 @@ func TestEtcdStorageEvents(t *testing.T) {
 		}
 	}()
 
-	etcdStorage.Put("/hello.txt", []byte("hello"))
-	etcdStorage.Put("/world.txt", []byte("world"))
+	ctx := context.Background()
+
+	etcdStorage.Put(ctx, "/hello.txt", []byte("hello"))
+	etcdStorage.Put(ctx, "/world.txt", []byte("world"))
 
 	// wait for events to be processed
 	time.Sleep(3 * time.Second)

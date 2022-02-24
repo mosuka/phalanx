@@ -1,6 +1,7 @@
 package metastore
 
 import (
+	"context"
 	"fmt"
 	"path/filepath"
 	"strings"
@@ -77,6 +78,7 @@ type Metastore struct {
 	stopWatching     chan bool
 	logger           *zap.Logger
 	mutex            sync.RWMutex
+	ctx              context.Context
 }
 
 func NewMetastoreWithUri(uri string, logger *zap.Logger) (*Metastore, error) {
@@ -90,7 +92,9 @@ func NewMetastoreWithUri(uri string, logger *zap.Logger) (*Metastore, error) {
 }
 
 func NewMetastore(storage Storage, logger *zap.Logger) (*Metastore, error) {
-	paths, err := storage.List(string(filepath.Separator))
+	ctx := context.Background()
+
+	paths, err := storage.List(ctx, string(filepath.Separator))
 	if err != nil {
 		logger.Error(err.Error(), zap.String("prefix", string(filepath.Separator)))
 		return nil, err
@@ -101,7 +105,7 @@ func NewMetastore(storage Storage, logger *zap.Logger) (*Metastore, error) {
 	for _, path := range paths {
 		fileName := filepath.Base(path)
 		if fileName == "index.json" {
-			value, err := storage.Get(path)
+			value, err := storage.Get(ctx, path)
 			if err != nil {
 				logger.Error(err.Error(), zap.String("path", path))
 				return nil, err
@@ -123,7 +127,7 @@ func NewMetastore(storage Storage, logger *zap.Logger) (*Metastore, error) {
 	for _, path := range paths {
 		fileName := filepath.Base(path)
 		if strings.HasPrefix(fileName, shardNamePrefix) && strings.HasSuffix(fileName, ".json") {
-			value, err := storage.Get(path)
+			value, err := storage.Get(ctx, path)
 			if err != nil {
 				logger.Error(err.Error(), zap.String("path", path))
 				return nil, err
@@ -162,6 +166,7 @@ func NewMetastore(storage Storage, logger *zap.Logger) (*Metastore, error) {
 		events:           make(chan MetastoreEvent, metastoreEventSize),
 		logger:           logger,
 		mutex:            sync.RWMutex{},
+		ctx:              ctx,
 	}
 
 	metastore.watch()
@@ -407,7 +412,7 @@ func (m *Metastore) SetIndexMetadata(indexName string, indexMetadata *IndexMetad
 	// Put index metadata
 	indexMetadataPath := makeIndexMetadataPath(indexName)
 	m.logger.Info("put index metadata", zap.String("path", indexMetadataPath))
-	if err := m.storage.Put(indexMetadataPath, value); err != nil {
+	if err := m.storage.Put(m.ctx, indexMetadataPath, value); err != nil {
 		m.logger.Error(err.Error(), zap.String("path", indexMetadataPath))
 		return err
 	}
@@ -422,7 +427,7 @@ func (m *Metastore) SetIndexMetadata(indexName string, indexMetadata *IndexMetad
 		// Put shard metadata
 		shardMetadataPath := makeShardMetadataPath(indexName, shardName)
 		m.logger.Info("put shard metadata", zap.String("path", shardMetadataPath))
-		if err := m.storage.Put(shardMetadataPath, value); err != nil {
+		if err := m.storage.Put(m.ctx, shardMetadataPath, value); err != nil {
 			m.logger.Warn(err.Error(), zap.String("path", shardMetadataPath))
 			continue
 		}
@@ -463,7 +468,7 @@ func (m *Metastore) TouchShardMetadata(indexName string, shardName string) error
 	// Put new shard metadata
 	shardMetadataPath := makeShardMetadataPath(indexName, shardName)
 	m.logger.Info("touch shard metadata", zap.String("path", shardMetadataPath))
-	if err := m.storage.Put(shardMetadataPath, value); err != nil {
+	if err := m.storage.Put(m.ctx, shardMetadataPath, value); err != nil {
 		m.logger.Error(err.Error(), zap.String("path", shardMetadataPath))
 		return err
 	}
@@ -485,7 +490,7 @@ func (m *Metastore) DeleteIndexMetadata(indexName string) error {
 	for shardName := range indexMetadata.ShardMetadataMap {
 		// Delete shard metadata
 		shardMetadataPath := makeShardMetadataPath(indexName, shardName)
-		if err := m.storage.Delete(shardMetadataPath); err != nil {
+		if err := m.storage.Delete(m.ctx, shardMetadataPath); err != nil {
 			m.logger.Warn(err.Error(), zap.String("path", shardMetadataPath))
 			continue
 		}
@@ -493,13 +498,13 @@ func (m *Metastore) DeleteIndexMetadata(indexName string) error {
 
 	// Delete index metadata
 	indexMetadataPath := makeIndexMetadataPath(indexName)
-	if err := m.storage.Delete(indexMetadataPath); err != nil {
+	if err := m.storage.Delete(m.ctx, indexMetadataPath); err != nil {
 		m.logger.Warn(err.Error(), zap.String("index_metadata_path", indexMetadataPath))
 	}
 
 	// Delete index metadata directory
 	indexMetadataDir := filepath.Dir(indexMetadataPath)
-	if err := m.storage.Delete(indexMetadataDir); err != nil {
+	if err := m.storage.Delete(m.ctx, indexMetadataDir); err != nil {
 		m.logger.Warn(err.Error(), zap.String("index_metadata_dir", indexMetadataDir))
 	}
 

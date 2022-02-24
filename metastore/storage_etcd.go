@@ -17,7 +17,6 @@ type EtcdStorage struct {
 	kv             clientv3.KV
 	root           string
 	logger         *zap.Logger
-	ctx            context.Context
 	requestTimeout time.Duration
 	stopWatching   chan bool
 	events         chan StorageEvent
@@ -51,25 +50,24 @@ func NewEtcdStorageWithUri(uri string, logger *zap.Logger) (*EtcdStorage, error)
 		kv:             clientv3.NewKV(client),
 		root:           root,
 		logger:         metastorelogger,
-		ctx:            context.Background(),
 		requestTimeout: 3 * time.Second,
 		stopWatching:   make(chan bool),
 		events:         make(chan StorageEvent, storageEventSize),
 	}
 
-	etcdStorage.watch()
+	etcdStorage.watch(context.Background())
 
 	return etcdStorage, nil
 }
 
-func (m *EtcdStorage) watch() error {
+func (m *EtcdStorage) watch(ctx context.Context) error {
 	// Watch etcd event.
 	go func() {
 		watchPath := m.root + "/"
 		opts := []clientv3.OpOption{
 			clientv3.WithFromKey(),
 		}
-		watchChan := m.client.Watch(m.ctx, watchPath, opts...)
+		watchChan := m.client.Watch(ctx, watchPath, opts...)
 
 		for {
 			select {
@@ -109,10 +107,10 @@ func (m *EtcdStorage) makePath(path string) string {
 	return filepath.ToSlash(filepath.Join(filepath.ToSlash(m.root), filepath.ToSlash(path)))
 }
 
-func (m *EtcdStorage) Get(path string) ([]byte, error) {
+func (m *EtcdStorage) Get(ctx context.Context, path string) ([]byte, error) {
 	fullPath := m.makePath(path)
 
-	ctx, cancel := context.WithTimeout(m.ctx, m.requestTimeout)
+	ctx, cancel := context.WithTimeout(ctx, m.requestTimeout)
 	defer cancel()
 
 	resp, err := m.kv.Get(ctx, fullPath)
@@ -128,10 +126,10 @@ func (m *EtcdStorage) Get(path string) ([]byte, error) {
 	}
 }
 
-func (m *EtcdStorage) List(prefix string) ([]string, error) {
+func (m *EtcdStorage) List(ctx context.Context, prefix string) ([]string, error) {
 	prefixPath := m.makePath(prefix)
 
-	ctx, cancel := context.WithTimeout(m.ctx, m.requestTimeout)
+	ctx, cancel := context.WithTimeout(ctx, m.requestTimeout)
 	defer cancel()
 
 	opts := []clientv3.OpOption{
@@ -156,10 +154,10 @@ func (m *EtcdStorage) List(prefix string) ([]string, error) {
 	return paths, nil
 }
 
-func (m *EtcdStorage) Put(path string, content []byte) error {
+func (m *EtcdStorage) Put(ctx context.Context, path string, content []byte) error {
 	fullPath := m.makePath(path)
 
-	ctx, cancel := context.WithTimeout(m.ctx, m.requestTimeout)
+	ctx, cancel := context.WithTimeout(ctx, m.requestTimeout)
 	defer cancel()
 
 	if _, err := m.kv.Put(ctx, fullPath, string(content)); err != nil {
@@ -170,10 +168,10 @@ func (m *EtcdStorage) Put(path string, content []byte) error {
 	return nil
 }
 
-func (m *EtcdStorage) Delete(path string) error {
+func (m *EtcdStorage) Delete(ctx context.Context, path string) error {
 	fullPath := m.makePath(path)
 
-	ctx, cancel := context.WithTimeout(m.ctx, m.requestTimeout)
+	ctx, cancel := context.WithTimeout(ctx, m.requestTimeout)
 	defer cancel()
 
 	if _, err := m.kv.Delete(ctx, fullPath); err != nil {
@@ -184,10 +182,10 @@ func (m *EtcdStorage) Delete(path string) error {
 	return nil
 }
 
-func (m *EtcdStorage) Exists(path string) (bool, error) {
+func (m *EtcdStorage) Exists(ctx context.Context, path string) (bool, error) {
 	fullPath := m.makePath(path)
 
-	ctx, cancel := context.WithTimeout(m.ctx, m.requestTimeout)
+	ctx, cancel := context.WithTimeout(ctx, m.requestTimeout)
 	defer cancel()
 
 	resp, err := m.kv.Get(ctx, fullPath)
