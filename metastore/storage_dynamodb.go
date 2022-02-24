@@ -16,7 +16,6 @@ import (
 	"github.com/mosuka/phalanx/clients"
 	phalanxerrors "github.com/mosuka/phalanx/errors"
 	"go.uber.org/zap"
-	// "github.com/aws/aws-sdk-go-v2/service/dynamodbstreams"
 )
 
 const (
@@ -41,12 +40,10 @@ type kv struct {
 }
 
 type DynamodbStorage struct {
-	client *dynamodb.Client
-	// stream         *dynamodbstreams.Client
+	client         *dynamodb.Client
 	tableName      string
 	root           string
 	logger         *zap.Logger
-	ctx            context.Context
 	requestTimeout time.Duration
 	stopWatching   chan bool
 	events         chan StorageEvent
@@ -73,30 +70,22 @@ func NewDynamodbStorageWithUri(uri string, logger *zap.Logger) (*DynamodbStorage
 		return nil, err
 	}
 
-	// stream, err := clients.NewDynamoDBStreamsClientWithUri(uri)
-	// if err != nil {
-	// 	logger.Error(err.Error(), zap.String("uri", uri))
-	// 	return nil, err
-	// }
-
 	root := u.Path
 	if root == "" {
 		root = "/"
 	}
 
 	dynamodbStorage := &DynamodbStorage{
-		client: client,
-		// stream:         stream,
+		client:         client,
 		tableName:      u.Host,
 		root:           root,
 		logger:         metastorelogger,
-		ctx:            context.Background(),
 		requestTimeout: 3 * time.Second,
 		stopWatching:   make(chan bool),
 		events:         make(chan StorageEvent, storageEventSize),
 	}
 
-	if err := dynamodbStorage.createTable(); err != nil {
+	if err := dynamodbStorage.createTable(context.Background()); err != nil {
 		return nil, err
 	}
 
@@ -130,10 +119,10 @@ func (m *DynamodbStorage) makePath(path string) string {
 	return filepath.ToSlash(filepath.Join(filepath.ToSlash(m.root), filepath.ToSlash(path)))
 }
 
-func (m *DynamodbStorage) Get(path string) ([]byte, error) {
+func (m *DynamodbStorage) Get(ctx context.Context, path string) ([]byte, error) {
 	fullPath := m.makePath(path)
 
-	res, err := m.client.GetItem(m.ctx, &dynamodb.GetItemInput{
+	res, err := m.client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(m.tableName),
 		Key: map[string]types.AttributeValue{
 			partitionKeyName: &types.AttributeValueMemberS{
@@ -165,7 +154,7 @@ func (m *DynamodbStorage) Get(path string) ([]byte, error) {
 	return base64.RawStdEncoding.DecodeString(rec.Value)
 }
 
-func (m *DynamodbStorage) Put(path string, value []byte) error {
+func (m *DynamodbStorage) Put(ctx context.Context, path string, value []byte) error {
 	fullPath := m.makePath(path)
 
 	rec := &kv{
@@ -181,7 +170,7 @@ func (m *DynamodbStorage) Put(path string, value []byte) error {
 	}
 
 	// A simple PutItem will suffice. There is no need to worry about conditions.
-	_, err = m.client.PutItem(m.ctx, &dynamodb.PutItemInput{
+	_, err = m.client.PutItem(ctx, &dynamodb.PutItemInput{
 		TableName: aws.String(m.tableName),
 		Item:      attr,
 	})
@@ -195,7 +184,7 @@ func (m *DynamodbStorage) Put(path string, value []byte) error {
 	return nil
 }
 
-func (m *DynamodbStorage) List(prefix string) ([]string, error) {
+func (m *DynamodbStorage) List(ctx context.Context, prefix string) ([]string, error) {
 	prefixPath := m.makePath(prefix)
 
 	keyCond := expression.
@@ -208,7 +197,7 @@ func (m *DynamodbStorage) List(prefix string) ([]string, error) {
 		return nil, err
 	}
 
-	res, err := m.client.Query(m.ctx, &dynamodb.QueryInput{
+	res, err := m.client.Query(ctx, &dynamodb.QueryInput{
 		TableName:                 &m.tableName,
 		KeyConditionExpression:    keyExpr.KeyCondition(),
 		ExpressionAttributeNames:  keyExpr.Names(),
@@ -236,10 +225,10 @@ func (m *DynamodbStorage) List(prefix string) ([]string, error) {
 	return paths, nil
 }
 
-func (m *DynamodbStorage) Delete(path string) error {
+func (m *DynamodbStorage) Delete(ctx context.Context, path string) error {
 	fullPath := m.makePath(path)
 
-	_, err := m.client.DeleteItem(m.ctx, &dynamodb.DeleteItemInput{
+	_, err := m.client.DeleteItem(ctx, &dynamodb.DeleteItemInput{
 		TableName: aws.String(m.tableName),
 		Key: map[string]types.AttributeValue{
 			partitionKeyName: &types.AttributeValueMemberS{
@@ -258,10 +247,10 @@ func (m *DynamodbStorage) Delete(path string) error {
 	return nil
 }
 
-func (m *DynamodbStorage) Exists(path string) (bool, error) {
+func (m *DynamodbStorage) Exists(ctx context.Context, path string) (bool, error) {
 	fullPath := m.makePath(path)
 
-	res, err := m.client.GetItem(m.ctx, &dynamodb.GetItemInput{
+	res, err := m.client.GetItem(ctx, &dynamodb.GetItemInput{
 		TableName: aws.String(m.tableName),
 		Key: map[string]types.AttributeValue{
 			partitionKeyName: &types.AttributeValueMemberS{
@@ -295,8 +284,8 @@ func (m *DynamodbStorage) Close() error {
 	return nil
 }
 
-func (m *DynamodbStorage) createTable() error {
-	_, err := m.client.CreateTable(m.ctx, &dynamodb.CreateTableInput{
+func (m *DynamodbStorage) createTable(ctx context.Context) error {
+	_, err := m.client.CreateTable(ctx, &dynamodb.CreateTableInput{
 		TableName: &m.tableName,
 		AttributeDefinitions: []types.AttributeDefinition{
 			{

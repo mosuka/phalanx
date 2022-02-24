@@ -1,6 +1,7 @@
 package metastore_test
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -77,7 +78,7 @@ func TestFileSystemStoragePut(t *testing.T) {
 	}
 	defer fsMetastore.Close()
 
-	if err := fsMetastore.Put("/hello.txt", []byte("world")); err != nil {
+	if err := fsMetastore.Put(context.Background(), "/hello.txt", []byte("world")); err != nil {
 		t.Fatalf("%v\n", err)
 	}
 }
@@ -99,9 +100,11 @@ func TestFileSystemStorageGet(t *testing.T) {
 	}
 	defer fsMetastore.Close()
 
-	fsMetastore.Put("/hello.txt", []byte("hello"))
+	ctx := context.Background()
 
-	content, err := fsMetastore.Get("/hello.txt")
+	fsMetastore.Put(ctx, "/hello.txt", []byte("hello"))
+
+	content, err := fsMetastore.Get(ctx, "/hello.txt")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -128,9 +131,11 @@ func TestFileSystemStorageDelete(t *testing.T) {
 	}
 	defer fsMetastore.Close()
 
-	fsMetastore.Put("/hello.txt", []byte("hello"))
+	ctx := context.Background()
 
-	err = fsMetastore.Delete("/hello.txt")
+	fsMetastore.Put(ctx, "/hello.txt", []byte("hello"))
+
+	err = fsMetastore.Delete(ctx, "/hello.txt")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -153,7 +158,9 @@ func TestFileSystemStorageExists(t *testing.T) {
 	}
 	defer fsMetastore.Close()
 
-	if exists, err := fsMetastore.Exists("/hello.txt"); err != nil {
+	ctx := context.Background()
+
+	if exists, err := fsMetastore.Exists(ctx, "/hello.txt"); err != nil {
 		t.Fatalf("%v\n", err)
 	} else {
 		if exists != false {
@@ -161,9 +168,9 @@ func TestFileSystemStorageExists(t *testing.T) {
 		}
 	}
 
-	fsMetastore.Put("/hello.txt", []byte("hello"))
+	fsMetastore.Put(ctx, "/hello.txt", []byte("hello"))
 
-	if exists, err := fsMetastore.Exists("/hello.txt"); err != nil {
+	if exists, err := fsMetastore.Exists(ctx, "/hello.txt"); err != nil {
 		t.Fatalf("%v\n", err)
 	} else {
 		if !exists {
@@ -189,10 +196,12 @@ func TestFileSystemStorageList(t *testing.T) {
 	}
 	defer fsMetastore.Close()
 
-	fsMetastore.Put("/hello.txt", []byte("hello"))
-	fsMetastore.Put("/world.txt", []byte("world"))
+	ctx := context.Background()
 
-	paths, err := fsMetastore.List("/")
+	fsMetastore.Put(ctx, "/hello.txt", []byte("hello"))
+	fsMetastore.Put(ctx, "/world.txt", []byte("world"))
+
+	paths, err := fsMetastore.List(ctx, "/")
 	if err != nil {
 		t.Fatalf("%v\n", err)
 	}
@@ -240,8 +249,10 @@ func TestFileSystemStorageEvents(t *testing.T) {
 		}
 	}()
 
-	fsMetastore.Put("/hello.txt", []byte("hello"))
-	fsMetastore.Put("/hello2.txt", []byte("hello2"))
+	ctx := context.Background()
+
+	fsMetastore.Put(ctx, "/hello.txt", []byte("hello"))
+	fsMetastore.Put(ctx, "/hello2.txt", []byte("hello2"))
 
 	// wait for events to be processed
 	time.Sleep(5 * time.Second)

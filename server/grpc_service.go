@@ -67,7 +67,7 @@ func (s *GRPCIndexService) Metrics(ctx context.Context, req *proto.MetricsReques
 }
 
 func (s *GRPCIndexService) Cluster(ctx context.Context, req *proto.ClusterRequest) (*proto.ClusterResponse, error) {
-	resp, err := s.indexService.Cluster(req)
+	resp, err := s.indexService.Cluster(ctx, req)
 	if err != nil {
 		s.logger.Error(err.Error())
 		return nil, status.Error(codes.Internal, err.Error())
@@ -77,7 +77,7 @@ func (s *GRPCIndexService) Cluster(ctx context.Context, req *proto.ClusterReques
 }
 
 func (s *GRPCIndexService) CreateIndex(ctx context.Context, req *proto.CreateIndexRequest) (*proto.CreateIndexResponse, error) {
-	resp, err := s.indexService.CreateIndex(req)
+	resp, err := s.indexService.CreateIndex(ctx, req)
 	if err != nil {
 		s.logger.Error(err.Error())
 		return nil, status.Error(codes.Internal, err.Error())
@@ -87,7 +87,7 @@ func (s *GRPCIndexService) CreateIndex(ctx context.Context, req *proto.CreateInd
 }
 
 func (s *GRPCIndexService) DeleteIndex(ctx context.Context, req *proto.DeleteIndexRequest) (*proto.DeleteIndexResponse, error) {
-	resp, err := s.indexService.DeleteIndex(req)
+	resp, err := s.indexService.DeleteIndex(ctx, req)
 	if err != nil {
 		s.logger.Error(err.Error())
 		return nil, status.Error(codes.Internal, err.Error())
@@ -97,7 +97,7 @@ func (s *GRPCIndexService) DeleteIndex(ctx context.Context, req *proto.DeleteInd
 }
 
 func (s *GRPCIndexService) AddDocuments(ctx context.Context, req *proto.AddDocumentsRequest) (*proto.AddDocumentsResponse, error) {
-	resp, err := s.indexService.AddDocuments(req)
+	resp, err := s.indexService.AddDocuments(ctx, req)
 	if err != nil {
 		s.logger.Error(err.Error())
 		return nil, status.Error(codes.Internal, err.Error())
@@ -107,7 +107,7 @@ func (s *GRPCIndexService) AddDocuments(ctx context.Context, req *proto.AddDocum
 }
 
 func (s *GRPCIndexService) DeleteDocuments(ctx context.Context, req *proto.DeleteDocumentsRequest) (*proto.DeleteDocumentsResponse, error) {
-	resp, err := s.indexService.DeleteDocuments(req)
+	resp, err := s.indexService.DeleteDocuments(ctx, req)
 	if err != nil {
 		s.logger.Error(err.Error())
 		return nil, status.Error(codes.Internal, err.Error())
@@ -117,7 +117,7 @@ func (s *GRPCIndexService) DeleteDocuments(ctx context.Context, req *proto.Delet
 }
 
 func (s *GRPCIndexService) Search(ctx context.Context, req *proto.SearchRequest) (*proto.SearchResponse, error) {
-	resp, err := s.indexService.Search(req)
+	resp, err := s.indexService.Search(ctx, req)
 	if err != nil {
 		s.logger.Error(err.Error())
 		return nil, status.Error(codes.Internal, err.Error())

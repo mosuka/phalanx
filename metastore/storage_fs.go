@@ -2,6 +2,7 @@ package metastore
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io/ioutil"
 	"net/url"
@@ -183,7 +184,7 @@ func (m *FileSystemStorage) makePath(path string) string {
 	return filepath.FromSlash(filepath.Join(filepath.FromSlash(m.path), filepath.FromSlash(path)))
 }
 
-func (m *FileSystemStorage) Get(path string) ([]byte, error) {
+func (m *FileSystemStorage) Get(ctx context.Context, path string) ([]byte, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
@@ -204,7 +205,7 @@ func (m *FileSystemStorage) Get(path string) ([]byte, error) {
 	return content, nil
 }
 
-func (m *FileSystemStorage) List(prefix string) ([]string, error) {
+func (m *FileSystemStorage) List(ctx context.Context, prefix string) ([]string, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
@@ -231,7 +232,7 @@ func (m *FileSystemStorage) List(prefix string) ([]string, error) {
 	return paths, nil
 }
 
-func (m *FileSystemStorage) Put(path string, content []byte) error {
+func (m *FileSystemStorage) Put(ctx context.Context, path string, content []byte) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -266,7 +267,7 @@ func (m *FileSystemStorage) Put(path string, content []byte) error {
 	return nil
 }
 
-func (m *FileSystemStorage) Delete(path string) error {
+func (m *FileSystemStorage) Delete(ctx context.Context, path string) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
 
@@ -289,7 +290,7 @@ func (m *FileSystemStorage) Delete(path string) error {
 	return nil
 }
 
-func (m *FileSystemStorage) Exists(path string) (bool, error) {
+func (m *FileSystemStorage) Exists(ctx context.Context, path string) (bool, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 

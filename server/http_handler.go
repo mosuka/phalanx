@@ -29,8 +29,8 @@ func setClient(client *clients.GRPCIndexClient) gin.HandlerFunc {
 	}
 }
 
-func getClient(c *gin.Context) (*clients.GRPCIndexClient, error) {
-	clientIntr, ok := c.Get("client")
+func getClient(ctx *gin.Context) (*clients.GRPCIndexClient, error) {
+	clientIntr, ok := ctx.Get("client")
 	if !ok {
 		return nil, fmt.Errorf("client does not exist")
 	}
@@ -49,8 +49,8 @@ func setMarshaler(marshaler *Marshaler) gin.HandlerFunc {
 	}
 }
 
-func getMarshaler(c *gin.Context) (*Marshaler, error) {
-	marshalerIntr, ok := c.Get("marshaler")
+func getMarshaler(ctx *gin.Context) (*Marshaler, error) {
+	marshalerIntr, ok := ctx.Get("marshaler")
 	if !ok {
 		return nil, fmt.Errorf("marshaler does not exist")
 	}
@@ -62,216 +62,216 @@ func getMarshaler(c *gin.Context) (*Marshaler, error) {
 	return marshaler, nil
 }
 
-func staticHandlerFunc(c *gin.Context) {
+func staticHandlerFunc(ctx *gin.Context) {
 	staticServer := http.FileServer(http.FS(staticFS))
-	staticServer.ServeHTTP(c.Writer, c.Request)
+	staticServer.ServeHTTP(ctx.Writer, ctx.Request)
 }
 
-func livezHandlerFunc(c *gin.Context) {
+func livezHandlerFunc(ctx *gin.Context) {
 	clientCtx, clientCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer clientCancel()
 
-	client, err := getClient(c)
+	client, err := getClient(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	grpcResp, err := client.LivenessCheck(clientCtx, &proto.LivenessCheckRequest{})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	marshaler, err := getMarshaler(c)
+	marshaler, err := getMarshaler(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	respBytes, err := marshaler.Marshal(grpcResp)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Data(http.StatusOK, "application/json", respBytes)
+	ctx.Data(http.StatusOK, "application/json", respBytes)
 }
 
-func readyzHandlerFunc(c *gin.Context) {
+func readyzHandlerFunc(ctx *gin.Context) {
 	clientCtx, clientCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer clientCancel()
 
-	client, err := getClient(c)
+	client, err := getClient(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	grpcResp, err := client.ReadinessCheck(clientCtx, &proto.ReadinessCheckRequest{})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	marshaler, err := getMarshaler(c)
+	marshaler, err := getMarshaler(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	respBytes, err := marshaler.Marshal(grpcResp)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Data(http.StatusOK, "application/json", respBytes)
+	ctx.Data(http.StatusOK, "application/json", respBytes)
 }
 
-func metricsHandlerFunc(c *gin.Context) {
+func metricsHandlerFunc(ctx *gin.Context) {
 	clientCtx, clientCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer clientCancel()
 
-	client, err := getClient(c)
+	client, err := getClient(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	grpcResp, err := client.Metrics(clientCtx, &proto.MetricsRequest{})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Data(http.StatusOK, "text/plain; version=0.0.4", grpcResp.Metrics)
+	ctx.Data(http.StatusOK, "text/plain; version=0.0.4", grpcResp.Metrics)
 }
 
-func clusterHandlerFunc(c *gin.Context) {
+func clusterHandlerFunc(ctx *gin.Context) {
 	clientCtx, clientCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer clientCancel()
 
-	client, err := getClient(c)
+	client, err := getClient(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	grpcResp, err := client.Cluster(clientCtx, &proto.ClusterRequest{})
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	marshaler, err := getMarshaler(c)
+	marshaler, err := getMarshaler(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	respBytes, err := marshaler.Marshal(grpcResp)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Data(http.StatusOK, "application/json", respBytes)
+	ctx.Data(http.StatusOK, "application/json", respBytes)
 }
 
-func createIndexHandlerFunc(c *gin.Context) {
-	body, err := ioutil.ReadAll(c.Request.Body)
+func createIndexHandlerFunc(ctx *gin.Context) {
+	body, err := ioutil.ReadAll(ctx.Request.Body)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	marshaler, err := getMarshaler(c)
+	marshaler, err := getMarshaler(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	req := &proto.CreateIndexRequest{}
 	if err := marshaler.Unmarshal(body, req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	req.IndexName = c.Param("index_name")
+	req.IndexName = ctx.Param("index_name")
 
 	clientCtx, clientCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer clientCancel()
 
-	client, err := getClient(c)
+	client, err := getClient(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	grpcResp, err := client.CreateIndex(clientCtx, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	respBytes, err := marshaler.Marshal(grpcResp)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Data(http.StatusOK, "application/json", respBytes)
+	ctx.Data(http.StatusOK, "application/json", respBytes)
 }
 
-func deleteIndexHandlerFunc(c *gin.Context) {
+func deleteIndexHandlerFunc(ctx *gin.Context) {
 	clientCtx, clientCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer clientCancel()
 
-	client, err := getClient(c)
+	client, err := getClient(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	req := &proto.DeleteIndexRequest{}
-	req.IndexName = c.Param("index_name")
+	req.IndexName = ctx.Param("index_name")
 
 	grpcResp, err := client.DeleteIndex(clientCtx, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	marshaler, err := getMarshaler(c)
+	marshaler, err := getMarshaler(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	respBytes, err := marshaler.Marshal(grpcResp)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Data(http.StatusOK, "application/json", respBytes)
+	ctx.Data(http.StatusOK, "application/json", respBytes)
 }
 
-func addDocumentsHandlerFunc(c *gin.Context) {
+func addDocumentsHandlerFunc(ctx *gin.Context) {
 	clientCtx, clientCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer clientCancel()
 
-	client, err := getClient(c)
+	client, err := getClient(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	req := &proto.AddDocumentsRequest{}
-	req.IndexName = c.Param("index_name")
+	req.IndexName = ctx.Param("index_name")
 	req.Documents = make([]*proto.Document, 0)
 
-	reader := bufio.NewReader(c.Request.Body)
+	reader := bufio.NewReader(ctx.Request.Body)
 	for {
 		finishReading := false
 		// Read a line from the request body
@@ -280,7 +280,7 @@ func addDocumentsHandlerFunc(c *gin.Context) {
 			if err == io.EOF || err == io.ErrClosedPipe {
 				finishReading = true
 			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 		}
@@ -293,14 +293,14 @@ func addDocumentsHandlerFunc(c *gin.Context) {
 			// Deserialize bytes to fields map.
 			fields := make(map[string]interface{})
 			if err := json.Unmarshal(fieldsBytes, &fields); err != nil {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 
 			// Get document ID
 			docID, ok := fields[mapping.IdFieldName].(string)
 			if !ok {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": errors.ErrDocumentIdDoesNotExist.Error()})
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": errors.ErrDocumentIdDoesNotExist.Error()})
 				return
 
 			}
@@ -318,34 +318,34 @@ func addDocumentsHandlerFunc(c *gin.Context) {
 
 	grpcResp, err := client.AddDocuments(clientCtx, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	marshaler, err := getMarshaler(c)
+	marshaler, err := getMarshaler(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	respBytes, err := marshaler.Marshal(grpcResp)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Data(http.StatusOK, "application/json", respBytes)
+	ctx.Data(http.StatusOK, "application/json", respBytes)
 }
 
-func deleteDocumentsHandlerFunc(c *gin.Context) {
+func deleteDocumentsHandlerFunc(ctx *gin.Context) {
 	clientCtx, clientCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer clientCancel()
 
 	req := &proto.DeleteDocumentsRequest{}
-	req.IndexName = c.Param("index_name")
+	req.IndexName = ctx.Param("index_name")
 	req.Ids = make([]string, 0)
 
-	reader := bufio.NewReader(c.Request.Body)
+	reader := bufio.NewReader(ctx.Request.Body)
 	for {
 		finishReading := false
 		docIdBytes, err := reader.ReadBytes('\n')
@@ -353,7 +353,7 @@ func deleteDocumentsHandlerFunc(c *gin.Context) {
 			if err == io.EOF || err == io.ErrClosedPipe {
 				finishReading = true
 			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 		}
@@ -370,75 +370,75 @@ func deleteDocumentsHandlerFunc(c *gin.Context) {
 		}
 	}
 
-	client, err := getClient(c)
+	client, err := getClient(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	grpcResp, err := client.DeleteDocuments(clientCtx, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	marshaler, err := getMarshaler(c)
+	marshaler, err := getMarshaler(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	respBytes, err := marshaler.Marshal(grpcResp)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Data(http.StatusOK, "application/json", respBytes)
+	ctx.Data(http.StatusOK, "application/json", respBytes)
 }
 
-func searchHandlerFunc(c *gin.Context) {
-	body, err := ioutil.ReadAll(c.Request.Body)
+func searchHandlerFunc(ctx *gin.Context) {
+	body, err := ioutil.ReadAll(ctx.Request.Body)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	marshaler, err := getMarshaler(c)
+	marshaler, err := getMarshaler(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	req := &proto.SearchRequest{}
 	if err := marshaler.Unmarshal(body, req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Override with the index name specified by the URI.
-	req.IndexName = c.Param("index_name")
+	req.IndexName = ctx.Param("index_name")
 
 	clientCtx, clientCancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer clientCancel()
 
-	client, err := getClient(c)
+	client, err := getClient(ctx)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	grpcResp, err := client.Search(clientCtx, req)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
 	respBytes, err := marshaler.Marshal(grpcResp)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.Data(http.StatusOK, "application/json", respBytes)
+	ctx.Data(http.StatusOK, "application/json", respBytes)
 }

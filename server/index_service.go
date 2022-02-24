@@ -415,7 +415,7 @@ func (s *IndexService) assignShardsToNode() error {
 	return nil
 }
 
-func (s *IndexService) Cluster(req *proto.ClusterRequest) (*proto.ClusterResponse, error) {
+func (s *IndexService) Cluster(ctx context.Context, req *proto.ClusterRequest) (*proto.ClusterResponse, error) {
 	resp := &proto.ClusterResponse{}
 
 	resp.Nodes = make(map[string]*proto.Node)
@@ -532,7 +532,7 @@ func (s *IndexService) Cluster(req *proto.ClusterRequest) (*proto.ClusterRespons
 	return resp, nil
 }
 
-func (s *IndexService) CreateIndex(req *proto.CreateIndexRequest) (*proto.CreateIndexResponse, error) {
+func (s *IndexService) CreateIndex(ctx context.Context, req *proto.CreateIndexRequest) (*proto.CreateIndexResponse, error) {
 	// Check if the index has already been opened.
 	if s.metastore.IndexMetadataExists(req.IndexName) {
 		err := errors.ErrIndexMetadataAlreadyExists
@@ -617,7 +617,7 @@ func (s *IndexService) CreateIndex(req *proto.CreateIndexRequest) (*proto.Create
 	return &proto.CreateIndexResponse{}, nil
 }
 
-func (s *IndexService) DeleteIndex(req *proto.DeleteIndexRequest) (*proto.DeleteIndexResponse, error) {
+func (s *IndexService) DeleteIndex(ctx context.Context, req *proto.DeleteIndexRequest) (*proto.DeleteIndexResponse, error) {
 	if !s.metastore.IndexMetadataExists(req.IndexName) {
 		err := errors.ErrIndexMetadataDoesNotExist
 		s.logger.Error(err.Error(), zap.String("index_name", req.IndexName))
@@ -654,7 +654,7 @@ func (s *IndexService) DeleteIndex(req *proto.DeleteIndexRequest) (*proto.Delete
 	return &proto.DeleteIndexResponse{}, nil
 }
 
-func (s *IndexService) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddDocumentsResponse, error) {
+func (s *IndexService) AddDocuments(ctx context.Context, req *proto.AddDocumentsRequest) (*proto.AddDocumentsResponse, error) {
 	if !s.metastore.IndexMetadataExists(req.IndexName) {
 		err := errors.ErrIndexMetadataDoesNotExist
 		s.logger.Error(err.Error(), zap.String("index_name", req.IndexName))
@@ -702,7 +702,7 @@ func (s *IndexService) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddD
 
 	responsesChan := make(chan addDocumentsResponse, s.metastore.NumShards(req.IndexName))
 
-	baseCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	baseCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 	eg, ctx := errgroup.WithContext(baseCtx)
 
@@ -855,7 +855,7 @@ func (s *IndexService) AddDocuments(req *proto.AddDocumentsRequest) (*proto.AddD
 	return &proto.AddDocumentsResponse{}, nil
 }
 
-func (s *IndexService) DeleteDocuments(req *proto.DeleteDocumentsRequest) (*proto.DeleteDocumentsResponse, error) {
+func (s *IndexService) DeleteDocuments(ctx context.Context, req *proto.DeleteDocumentsRequest) (*proto.DeleteDocumentsResponse, error) {
 	if !s.metastore.IndexMetadataExists(req.IndexName) {
 		err := errors.ErrIndexMetadataDoesNotExist
 		s.logger.Error(err.Error(), zap.String("index_name", req.IndexName))
@@ -884,7 +884,7 @@ func (s *IndexService) DeleteDocuments(req *proto.DeleteDocumentsRequest) (*prot
 	}
 	responsesChan := make(chan deleteDocumentsResponse, s.metastore.NumShards(req.IndexName))
 
-	baseCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	baseCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 	eg, ctx := errgroup.WithContext(baseCtx)
 
@@ -1017,7 +1017,7 @@ func (s *IndexService) DeleteDocuments(req *proto.DeleteDocumentsRequest) (*prot
 	return &proto.DeleteDocumentsResponse{}, nil
 }
 
-func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, error) {
+func (s *IndexService) Search(ctx context.Context, req *proto.SearchRequest) (*proto.SearchResponse, error) {
 	if !s.metastore.IndexMetadataExists(req.IndexName) {
 		err := errors.ErrIndexMetadataDoesNotExist
 		s.logger.Error(err.Error(), zap.String("index_name", req.IndexName))
@@ -1054,7 +1054,7 @@ func (s *IndexService) Search(req *proto.SearchRequest) (*proto.SearchResponse, 
 	}
 	responsesChan := make(chan searchResponse, len(assignedNodes))
 
-	baseCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	baseCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
 	defer cancel()
 	eg, ctx := errgroup.WithContext(baseCtx)
 
