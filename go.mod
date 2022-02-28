@@ -25,7 +25,7 @@ require (
 	github.com/grpc-ecosystem/go-grpc-prometheus v1.2.0
 	github.com/grpc-ecosystem/grpc-gateway/v2 v2.7.3
 	github.com/hashicorp/memberlist v0.3.1
-	github.com/ikawaha/blugeplugin v1.5.0
+	github.com/ikawaha/blugeplugin v1.5.1
 	github.com/ikawaha/kagome-dict v1.0.4
 	github.com/ikawaha/kagome-dict/ipa v1.0.4
 	github.com/ikawaha/kagome-dict/uni v1.1.3
