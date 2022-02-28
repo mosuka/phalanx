@@ -391,8 +391,8 @@ github.com/hashicorp/serf v0.9.6/go.mod h1:TXZNMjZQijwlDvp+r0b63xZ45H7JmCmgg4gpT
 github.com/iancoleman/strcase v0.2.0/go.mod h1:iwCmte+B7n89clKwxIoIXy/HfoL7AsD47ZCWhYzw7ho=
 github.com/ianlancetaylor/demangle v0.0.0-20181102032728-5e5cf60278f6/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
 github.com/ianlancetaylor/demangle v0.0.0-20200824232613-28f6c0f3b639/go.mod h1:aSSvb/t6k1mPoxDqO4vJh6VOCGPwU4O0C2/Eqndh1Sc=
-github.com/ikawaha/blugeplugin v1.5.0 h1:HF5MMPA/l8GrrKRP45sKHd3Kl918Wd8EugENsX4ZVJ8=
-github.com/ikawaha/blugeplugin v1.5.0/go.mod h1:nNiQVxWXz7Zh/y6QbkNrLhJDnRFlio07PPYrbc044Jc=
+github.com/ikawaha/blugeplugin v1.5.1 h1:Njol4hz1rViP5hLw40VTKDg6RYA8eDPBUR9LtB9ukEo=
+github.com/ikawaha/blugeplugin v1.5.1/go.mod h1:72Gn++pxZ9xCTvzLA2kogEWfnE8I34gYc639nW1J+A0=
 github.com/ikawaha/kagome-dict v1.0.3/go.mod h1:8Ma5E21J2kyaak6KumYLWGLKxm1kaAkCCWKWnrc5o/o=
 github.com/ikawaha/kagome-dict v1.0.4 h1:sxRKBqQ5FiJKeQwhvUmtumFqCm+GvCYiKRVgA08OQ+w=
 github.com/ikawaha/kagome-dict v1.0.4/go.mod h1:s6LsRECNl13K4miPTTG3/n6Pt7v3ClQfohMbK7qitzo=
