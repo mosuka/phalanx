@@ -151,50 +151,7 @@ func (s *IndexService) Stop() error {
 	return nil
 }
 
-func (s *IndexService) assignShardsToNode() error {
-	searchReplicationFactor := 3
-	indexerAssignment := make(map[string]map[string]string)    // index/shard/node
-	searcherAssignment := make(map[string]map[string][]string) // index/shard/nodes
-
-	// Assign shards to indexers and searchers.
-	for _, indexName := range s.metastore.GetIndexNames() {
-		for _, shardName := range s.metastore.GetShardNames(indexName) {
-			// Assign indexer.
-			if _, ok := indexerAssignment[indexName]; !ok {
-				indexerAssignment[indexName] = make(map[string]string)
-			}
-			indexerAssignment[indexName][shardName] = s.cluster.LookupIndexer(shardName)
-
-			// Assign searchers.
-			if _, ok := searcherAssignment[indexName]; !ok {
-				searcherAssignment[indexName] = make(map[string][]string)
-			}
-			searcherAssignment[indexName][shardName] = s.cluster.LookupSearchers(shardName, searchReplicationFactor)
-		}
-	}
-
-	s.indexerAssignment = indexerAssignment
-	s.searcherAssignment = searcherAssignment
-
-	// fmt.Println("indexer:")
-	// for indexName, shards := range s.indexerAssignment {
-	// 	fmt.Println("  index:", indexName)
-	// 	for shardName, nodeName := range shards {
-	// 		fmt.Println("    shard:", shardName)
-	// 		fmt.Println("      node:", nodeName)
-	// 	}
-	// }
-	// fmt.Println("searcher:")
-	// for indexName, shards := range s.searcherAssignment {
-	// 	fmt.Println("  index:", indexName)
-	// 	for shardName, nodes := range shards {
-	// 		fmt.Println("    shard:", shardName)
-	// 		for _, nodeName := range nodes {
-	// 			fmt.Println("      node:", nodeName)
-	// 		}
-	// 	}
-	// }
-
+func (s *IndexService) openAndCloseWriters() {
 	// Open the index writers for assigned shards.
 	s.logger.Info("opening index writers")
 	for assignedIndexName, shardAssignment := range s.indexerAssignment {
@@ -202,14 +159,16 @@ func (s *IndexService) assignShardsToNode() error {
 			isAssigned := assignedNodeName == s.cluster.LocalNodeName()
 			if isAssigned {
 				if !s.indexWriters.Contains(assignedIndexName, assignedShardName) {
-					indexMetadata, err := s.metastore.GetIndexMetadata(assignedIndexName)
-					if err != nil {
+					indexMetadata := s.metastore.GetIndexMetadata(assignedIndexName)
+					if indexMetadata == nil {
+						err := errors.ErrIndexMetadataDoesNotExist
 						s.logger.Warn(err.Error(), zap.String("index_name", assignedIndexName))
 						continue
 					}
 
-					shardMetadata, err := s.metastore.GetShardMetadata(assignedIndexName, assignedShardName)
-					if err != nil {
+					shardMetadata := indexMetadata.GetShardMetadata(assignedShardName)
+					if shardMetadata == nil {
+						err := errors.ErrShardMetadataDoesNotExist
 						s.logger.Warn(err.Error(), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 						continue
 					}
@@ -257,7 +216,9 @@ func (s *IndexService) assignShardsToNode() error {
 			}
 		}
 	}
+}
 
+func (s *IndexService) openAndCloseSearchers() {
 	// open searchers
 	for assignedIndexName, shardAssignment := range s.searcherAssignment {
 		for assignedShardName, assignedNodeNames := range shardAssignment {
@@ -269,19 +230,16 @@ func (s *IndexService) assignShardsToNode() error {
 				}
 			}
 			if isAssigned {
-				indexMetadata, err := s.metastore.GetIndexMetadata(assignedIndexName)
-				if err != nil {
+				indexMetadata := s.metastore.GetIndexMetadata(assignedIndexName)
+				if indexMetadata == nil {
+					err := errors.ErrIndexMetadataDoesNotExist
 					s.logger.Warn(err.Error(), zap.String("index_name", assignedIndexName))
 					continue
 				}
 
-				shardMetadata, err := s.metastore.GetShardMetadata(assignedIndexName, assignedShardName)
-				if err != nil {
-					s.logger.Warn(err.Error(), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
-					continue
-				}
+				shardMetadata := indexMetadata.GetShardMetadata(assignedShardName)
 				if shardMetadata == nil {
-					err := fmt.Errorf("shard metadta already gone")
+					err := errors.ErrShardMetadataDoesNotExist
 					s.logger.Warn(err.Error(), zap.String("index_name", assignedIndexName), zap.String("shard_name", assignedShardName))
 					continue
 				}
@@ -348,7 +306,9 @@ func (s *IndexService) assignShardsToNode() error {
 			}
 		}
 	}
+}
 
+func (s *IndexService) openAndCloseClients() {
 	// open clients
 	for _, nodeName := range s.cluster.Nodes() {
 		if nodeName != s.cluster.LocalNodeName() {
@@ -411,6 +371,63 @@ func (s *IndexService) assignShardsToNode() error {
 			}
 		}
 	}
+}
+
+func (s *IndexService) assignShardsToNode() error {
+	searchReplicationFactor := 3
+	indexerAssignment := make(map[string]map[string]string)    // index/shard/node
+	searcherAssignment := make(map[string]map[string][]string) // index/shard/nodes
+
+	// Assign shards to indexers and searchers.
+	for item := range s.metastore.IndexMetadataIter() {
+		indexName := item.Key
+
+		if indexMetadata, ok := item.Val.(*phalanxmetastore.IndexMetadata); ok {
+			for shardItem := range indexMetadata.ShardMetadataIter() {
+				shardName := shardItem.Key
+
+				// Assign indexer.
+				if _, ok := indexerAssignment[indexName]; !ok {
+					indexerAssignment[indexName] = make(map[string]string)
+				}
+				indexerAssignment[indexName][shardName] = s.cluster.LookupIndexer(shardName)
+
+				// Assign searchers.
+				if _, ok := searcherAssignment[indexName]; !ok {
+					searcherAssignment[indexName] = make(map[string][]string)
+				}
+				searcherAssignment[indexName][shardName] = s.cluster.LookupSearchers(shardName, searchReplicationFactor)
+			}
+		} else {
+			s.logger.Warn("index metadata type error", zap.Any("index_name", indexName))
+		}
+	}
+
+	s.indexerAssignment = indexerAssignment
+	s.searcherAssignment = searcherAssignment
+
+	// fmt.Println("indexer:")
+	// for indexName, shards := range s.indexerAssignment {
+	// 	fmt.Println("  index:", indexName)
+	// 	for shardName, nodeName := range shards {
+	// 		fmt.Println("    shard:", shardName)
+	// 		fmt.Println("      node:", nodeName)
+	// 	}
+	// }
+	// fmt.Println("searcher:")
+	// for indexName, shards := range s.searcherAssignment {
+	// 	fmt.Println("  index:", indexName)
+	// 	for shardName, nodes := range shards {
+	// 		fmt.Println("    shard:", shardName)
+	// 		for _, nodeName := range nodes {
+	// 			fmt.Println("      node:", nodeName)
+	// 		}
+	// 	}
+	// }
+
+	s.openAndCloseWriters()
+	s.openAndCloseSearchers()
+	s.openAndCloseClients()
 
 	return nil
 }
@@ -479,40 +496,36 @@ func (s *IndexService) Cluster(ctx context.Context, req *proto.ClusterRequest) (
 	}
 
 	resp.Indexes = make(map[string]*proto.IndexMetadata)
-	for _, indexName := range s.metastore.GetIndexNames() {
-		indexMetadata, err := s.metastore.GetIndexMetadata(indexName)
-		if err != nil {
-			s.logger.Warn(err.Error(), zap.String("index_name", indexName))
-			continue
-		}
-
-		indexMappingBytes, err := indexMetadata.IndexMapping.Marshal()
-		if err != nil {
-			s.logger.Warn(err.Error(), zap.String("index_name", indexName))
-			indexMappingBytes = []byte("{}") // Set empty JSON
-		}
-
-		indexMeta := &proto.IndexMetadata{
-			IndexUri:     indexMetadata.IndexUri,
-			IndexLockUri: indexMetadata.IndexLockUri,
-			IndexMapping: indexMappingBytes,
-			Shards:       make(map[string]*proto.ShardMetadata),
-		}
-
-		for _, shardName := range s.metastore.GetShardNames(indexName) {
-			shardMetadata, err := s.metastore.GetShardMetadata(indexName, shardName)
+	for indexMetadataItem := range s.metastore.IndexMetadataIter() {
+		indexName := indexMetadataItem.Key
+		if indexMetadata, ok := indexMetadataItem.Val.(*phalanxmetastore.IndexMetadata); ok {
+			indexMappingBytes, err := indexMetadata.IndexMapping.Marshal()
 			if err != nil {
-				s.logger.Warn(err.Error(), zap.String("index_name", indexName), zap.String("shard_name", shardName))
-				continue
+				s.logger.Warn(err.Error(), zap.String("index_name", indexName))
+				indexMappingBytes = []byte("{}") // Set empty JSON
 			}
 
-			indexMeta.Shards[shardName] = &proto.ShardMetadata{
-				ShardUri:     shardMetadata.ShardUri,
-				ShardLockUri: shardMetadata.ShardLockUri,
+			indexMeta := &proto.IndexMetadata{
+				IndexUri:     indexMetadata.IndexUri,
+				IndexLockUri: indexMetadata.IndexLockUri,
+				IndexMapping: indexMappingBytes,
+				Shards:       make(map[string]*proto.ShardMetadata),
 			}
+
+			for shardMetadataItem := range indexMetadata.ShardMetadataIter() {
+				shardName := shardMetadataItem.Key
+				if shardMetadata, ok := shardMetadataItem.Val.(*phalanxmetastore.ShardMetadata); ok {
+					indexMeta.Shards[shardName] = &proto.ShardMetadata{
+						ShardUri:     shardMetadata.ShardUri,
+						ShardLockUri: shardMetadata.ShardLockUri,
+					}
+				} else {
+					s.logger.Warn("shard metadata type error", zap.Any("index_name", indexName), zap.Any("shard_name", shardName))
+				}
+			}
+		} else {
+			s.logger.Warn("index metadata type error", zap.Any("index_name", indexName))
 		}
-
-		resp.Indexes[indexName] = indexMeta
 	}
 
 	// indexer assignment
@@ -559,16 +572,14 @@ func (s *IndexService) CreateIndex(ctx context.Context, req *proto.CreateIndexRe
 	}
 
 	// Make the index metadata.
-	indexMetadata := &phalanxmetastore.IndexMetadata{
-		IndexName:           req.IndexName,
-		IndexUri:            req.IndexUri,
-		IndexLockUri:        req.LockUri,
-		IndexMapping:        indexMapping,
-		IndexMappingVersion: time.Now().UTC().UnixNano(),
-		DefaultSearchField:  req.DefaultSearchField,
-		DefaultAnalyzer:     defaultAnalyzer,
-		ShardMetadataMap:    make(map[string]*phalanxmetastore.ShardMetadata),
-	}
+	indexMetadata := phalanxmetastore.NewIndexMetadata()
+	indexMetadata.IndexName = req.IndexName
+	indexMetadata.IndexUri = req.IndexUri
+	indexMetadata.IndexLockUri = req.LockUri
+	indexMetadata.IndexMapping = indexMapping
+	indexMetadata.IndexMappingVersion = time.Now().UTC().UnixNano()
+	indexMetadata.DefaultSearchField = req.DefaultSearchField
+	indexMetadata.DefaultAnalyzer = defaultAnalyzer
 
 	// Make shards
 	numShards := req.NumShards
@@ -606,7 +617,7 @@ func (s *IndexService) CreateIndex(ctx context.Context, req *proto.CreateIndexRe
 		}
 
 		// Set the shard metadata to the index metadata.
-		indexMetadata.ShardMetadataMap[shardName] = shardMetadata
+		indexMetadata.SetShardMetadata(shardName, shardMetadata)
 	}
 
 	if err := s.metastore.SetIndexMetadata(req.IndexName, indexMetadata); err != nil {
@@ -624,27 +635,34 @@ func (s *IndexService) DeleteIndex(ctx context.Context, req *proto.DeleteIndexRe
 		return nil, err
 	}
 
-	indexMetadata, err := s.metastore.GetIndexMetadata(req.IndexName)
-	if err != nil {
+	indexMetadata := s.metastore.GetIndexMetadata(req.IndexName)
+	if indexMetadata == nil {
+		err := errors.ErrIndexMetadataDoesNotExist
 		s.logger.Error(err.Error(), zap.String("index_name", req.IndexName))
 		return nil, err
 	}
-	for _, shardMetadata := range indexMetadata.ShardMetadataMap {
-		// Check shard directory existence.
-		if exists, err := directory.DirectoryExists(shardMetadata.ShardUri); err != nil {
-			s.logger.Warn(err.Error(), zap.String("shard_uri", shardMetadata.ShardUri))
-		} else {
-			if exists {
-				// Delete shard directory.
-				if err := directory.DeleteDirectory(shardMetadata.ShardUri); err != nil {
+
+	for shardMetadataItem := range indexMetadata.ShardMetadataIter() {
+		if shardMetadata, ok := shardMetadataItem.Val.(*phalanxmetastore.ShardMetadata); ok {
+			// Check shard directory existence.
+			if exists, err := directory.DirectoryExists(shardMetadata.ShardUri); err != nil {
+				s.logger.Warn(err.Error(), zap.String("shard_uri", shardMetadata.ShardUri))
+			} else {
+				if exists {
+					// Delete shard directory.
+					if err := directory.DeleteDirectory(shardMetadata.ShardUri); err != nil {
+						s.logger.Warn(err.Error(), zap.String("shard_uri", shardMetadata.ShardUri))
+					}
+				} else {
+					err := errors.ErrIndexDirectoryDoesNotExist
 					s.logger.Warn(err.Error(), zap.String("shard_uri", shardMetadata.ShardUri))
 				}
-			} else {
-				err := errors.ErrIndexDirectoryDoesNotExist
-				s.logger.Warn(err.Error(), zap.String("shard_uri", shardMetadata.ShardUri))
 			}
+		} else {
+			s.logger.Warn("shard metadata type error", zap.Any("index_name", req.IndexName), zap.Any("shard_name", shardMetadataItem.Key))
 		}
 	}
+
 	// Delete index metadata.
 	if err := s.metastore.DeleteIndexMetadata(req.IndexName); err != nil {
 		s.logger.Error(err.Error(), zap.String("index_name", req.IndexName))
