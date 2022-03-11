@@ -8,10 +8,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jinzhu/copier"
 	"github.com/mosuka/phalanx/errors"
 	"github.com/mosuka/phalanx/mapping"
 	"github.com/mosuka/rendezvous"
+	cmap "github.com/orcaman/concurrent-map"
 	"go.uber.org/zap"
 )
 
@@ -72,7 +72,7 @@ func makeShardMetadataPath(indexName string, shardName string) string {
 
 type Metastore struct {
 	storage          Storage
-	indexMetadataMap map[string]*IndexMetadata
+	indexMetadataMap cmap.ConcurrentMap
 	ringMap          map[string]*rendezvous.Ring
 	events           chan MetastoreEvent
 	stopWatching     chan bool
@@ -100,8 +100,9 @@ func NewMetastore(storage Storage, logger *zap.Logger) (*Metastore, error) {
 		return nil, err
 	}
 
-	indexMetadataMap := make(map[string]*IndexMetadata)
+	indexMetadataMap := cmap.New()
 	ringMap := make(map[string]*rendezvous.Ring)
+
 	for _, path := range paths {
 		fileName := filepath.Base(path)
 		if fileName == "index.json" {
@@ -119,7 +120,7 @@ func NewMetastore(storage Storage, logger *zap.Logger) (*Metastore, error) {
 
 			indexName := filepath.Base(filepath.Dir(path))
 
-			indexMetadataMap[indexName] = indexMetadata
+			indexMetadataMap.Set(indexName, indexMetadata)
 			ringMap[indexName] = rendezvous.New()
 		}
 	}
@@ -143,8 +144,12 @@ func NewMetastore(storage Storage, logger *zap.Logger) (*Metastore, error) {
 			shardName := strings.TrimSuffix(filepath.Base(path), ".json")
 
 			// Update shard metadata
-			if indexMetadata, ok := indexMetadataMap[indexName]; ok {
-				indexMetadata.ShardMetadataMap[shardName] = shardMetadata
+			if tmpIndexMetadata, ok := indexMetadataMap.Get(indexName); ok {
+				if indexMetadata, ok := tmpIndexMetadata.(*IndexMetadata); ok {
+					indexMetadata.SetShardMetadata(shardName, shardMetadata)
+				} else {
+					logger.Warn("type unexpected", zap.String("index_name", indexName))
+				}
 			} else {
 				logger.Warn("index metadata do not found", zap.String("index_name", indexName))
 			}
@@ -174,6 +179,122 @@ func NewMetastore(storage Storage, logger *zap.Logger) (*Metastore, error) {
 	return metastore, nil
 }
 
+func (m *Metastore) IndexMetadataIter() <-chan cmap.Tuple {
+	return m.indexMetadataMap.IterBuffered()
+}
+
+func (m *Metastore) indexMetadataExists(indexName string) bool {
+	_, ok := m.indexMetadataMap.Get(indexName)
+	return ok
+}
+
+func (m *Metastore) IndexMetadataExists(indexName string) bool {
+	return m.indexMetadataExists(indexName)
+}
+
+func (m *Metastore) getIndexMetadata(indexName string) *IndexMetadata {
+	if tmpIndexMetadata, ok := m.indexMetadataMap.Get(indexName); ok {
+		if indexMetadata, ok := tmpIndexMetadata.(*IndexMetadata); ok {
+			return indexMetadata
+		} else {
+			return nil
+		}
+	} else {
+		return nil
+	}
+}
+
+func (m *Metastore) GetIndexMetadata(indexName string) *IndexMetadata {
+	return m.getIndexMetadata(indexName)
+}
+
+func (m *Metastore) setIndexMetadata(indexName string, indexMetadata *IndexMetadata) {
+	m.indexMetadataMap.Set(indexName, indexMetadata)
+}
+
+func (m *Metastore) SetIndexMetadata(indexName string, indexMetadata *IndexMetadata) error {
+	// Serialize index metadata
+	value, err := indexMetadata.Marshal()
+	if err != nil {
+		m.logger.Error(err.Error())
+		return err
+	}
+
+	// Put index metadata
+	indexMetadataPath := makeIndexMetadataPath(indexName)
+	m.logger.Info("put index metadata", zap.String("path", indexMetadataPath))
+	if err := m.storage.Put(m.ctx, indexMetadataPath, value); err != nil {
+		m.logger.Error(err.Error(), zap.String("path", indexMetadataPath))
+		return err
+	}
+
+	for item := range indexMetadata.ShardMetadataIter() {
+		shardName := item.Key
+
+		if shardMetadata, ok := item.Val.(*ShardMetadata); ok {
+			// Serialize shard metadata
+			value, err := shardMetadata.Marshal()
+			if err != nil {
+				m.logger.Error(err.Error())
+				return err
+			}
+
+			// Put shard metadata
+			shardMetadataPath := makeShardMetadataPath(indexName, shardName)
+			m.logger.Info("put shard metadata", zap.String("path", shardMetadataPath))
+			if err := m.storage.Put(m.ctx, shardMetadataPath, value); err != nil {
+				m.logger.Warn(err.Error(), zap.String("path", shardMetadataPath))
+				continue
+			}
+		} else {
+			m.logger.Warn("shard metadata type error", zap.String("shard_name", shardName))
+			continue
+		}
+
+	}
+
+	return nil
+}
+
+func (m *Metastore) deleteIndexMetadata(indexName string) {
+	m.indexMetadataMap.Remove(indexName)
+}
+
+func (m *Metastore) DeleteIndexMetadata(indexName string) error {
+	if !m.IndexMetadataExists(indexName) {
+		err := errors.ErrIndexMetadataDoesNotExist
+		m.logger.Error(err.Error(), zap.String("index_name", indexName))
+		return err
+	}
+
+	indexMetadata := m.GetIndexMetadata(indexName)
+
+	for item := range indexMetadata.ShardMetadataIter() {
+		shardName := item.Key
+
+		// Delete shard metadata
+		shardMetadataPath := makeShardMetadataPath(indexName, shardName)
+		if err := m.storage.Delete(m.ctx, shardMetadataPath); err != nil {
+			m.logger.Warn(err.Error(), zap.String("path", shardMetadataPath))
+			continue
+		}
+	}
+
+	// Delete index metadata
+	indexMetadataPath := makeIndexMetadataPath(indexName)
+	if err := m.storage.Delete(m.ctx, indexMetadataPath); err != nil {
+		m.logger.Warn(err.Error(), zap.String("index_metadata_path", indexMetadataPath))
+	}
+
+	// Delete index metadata directory
+	indexMetadataDir := filepath.Dir(indexMetadataPath)
+	if err := m.storage.Delete(m.ctx, indexMetadataDir); err != nil {
+		m.logger.Warn(err.Error(), zap.String("index_metadata_dir", indexMetadataDir))
+	}
+
+	return nil
+}
+
 func (m *Metastore) handleStorageEvent(event StorageEvent) error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -191,11 +312,21 @@ func (m *Metastore) handleStorageEvent(event StorageEvent) error {
 				return err
 			}
 
-			if _, ok := m.indexMetadataMap[indexName]; ok {
-				// Copy shard metadata map
-				copier.Copy(indexMetadata.ShardMetadataMap, m.indexMetadataMap[indexName].ShardMetadataMap)
+			if m.indexMetadataExists(indexName) {
+				// Copy existing shard metadata to new index metadata
+				existingIndexMetadata := m.getIndexMetadata(indexName)
+
+				for items := range existingIndexMetadata.ShardMetadataIter() {
+					shardName := items.Key
+					if shardMetadata, ok := items.Val.(*ShardMetadata); ok {
+						indexMetadata.SetShardMetadata(shardName, shardMetadata)
+					} else {
+						m.logger.Warn("shard metadata type error", zap.String("index_name", indexName), zap.String("shard_name", shardName))
+						continue
+					}
+				}
 			}
-			m.indexMetadataMap[indexName] = indexMetadata
+			m.setIndexMetadata(indexName, indexMetadata)
 
 			if _, ok := m.ringMap[indexName]; !ok {
 				m.ringMap[indexName] = rendezvous.New()
@@ -218,8 +349,8 @@ func (m *Metastore) handleStorageEvent(event StorageEvent) error {
 				return err
 			}
 
-			if _, ok := m.indexMetadataMap[indexName]; ok {
-				m.indexMetadataMap[indexName].ShardMetadataMap[shardName] = shardMetadata
+			if m.indexMetadataExists(indexName) {
+				m.getIndexMetadata(indexName).SetShardMetadata(shardName, shardMetadata)
 			} else {
 				err := errors.ErrIndexMetadataDoesNotExist
 				m.logger.Warn(err.Error(), zap.String("index_name", indexName))
@@ -247,7 +378,7 @@ func (m *Metastore) handleStorageEvent(event StorageEvent) error {
 
 			delete(m.ringMap, indexName)
 
-			delete(m.indexMetadataMap, indexName)
+			m.deleteIndexMetadata(indexName)
 
 			// Send delete index event
 			m.events <- MetastoreEvent{
@@ -259,8 +390,8 @@ func (m *Metastore) handleStorageEvent(event StorageEvent) error {
 			indexName := filepath.Base(filepath.Dir(event.Path))
 			shardName := strings.TrimSuffix(filepath.Base(event.Path), ".json")
 
-			if _, ok := m.indexMetadataMap[indexName]; ok {
-				delete(m.indexMetadataMap[indexName].ShardMetadataMap, shardName)
+			if m.indexMetadataExists(indexName) {
+				m.getIndexMetadata(indexName).DeleteShardMetadata(shardName)
 			} else {
 				err := errors.ErrIndexMetadataDoesNotExist
 				m.logger.Warn(err.Error(), zap.String("index_name", indexName))
@@ -324,140 +455,28 @@ func (m *Metastore) Events() chan MetastoreEvent {
 	return m.events
 }
 
-func (m *Metastore) IndexMetadataExists(indexName string) bool {
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-
-	_, ok := m.indexMetadataMap[indexName]
-
-	return ok
-}
-
-func (m *Metastore) GetIndexNames() []string {
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-
-	var indexNames []string
-
-	for indexName := range m.indexMetadataMap {
-		indexNames = append(indexNames, indexName)
-	}
-
-	return indexNames
-}
-
-func (m *Metastore) GetShardNames(indexName string) []string {
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-
-	var shardNames []string
-
-	indexMetadata, ok := m.indexMetadataMap[indexName]
-	if !ok {
-		return []string{}
-	}
-	for shardName := range indexMetadata.ShardMetadataMap {
-		shardNames = append(shardNames, shardName)
-	}
-
-	return shardNames
-}
-
-func (m *Metastore) GetIndexMetadata(indexName string) (*IndexMetadata, error) {
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-
-	indexMetadata, ok := m.indexMetadataMap[indexName]
-	if !ok {
-		err := errors.ErrIndexMetadataDoesNotExist
-		m.logger.Error(err.Error(), zap.String("index_name", indexName))
-		return nil, err
-	}
-
-	return indexMetadata, nil
-}
-
-func (m *Metastore) GetShardMetadata(indexName string, shardName string) (*ShardMetadata, error) {
-	m.mutex.RLock()
-	defer m.mutex.RUnlock()
-
-	indexMetadata, ok := m.indexMetadataMap[indexName]
-	if !ok {
-		err := errors.ErrIndexMetadataDoesNotExist
-		m.logger.Error(err.Error(), zap.String("index_name", indexName))
-		return nil, err
-	}
-
-	shardMetadata, ok := indexMetadata.ShardMetadataMap[shardName]
-	if !ok {
-		err := errors.ErrShardMetadataDoesNotExist
-		m.logger.Error(err.Error(), zap.String("index_name", indexName), zap.String("shard_name", shardName))
-		return nil, err
-	}
-
-	return shardMetadata, nil
-}
-
-func (m *Metastore) SetIndexMetadata(indexName string, indexMetadata *IndexMetadata) error {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	// Serialize index metadata
-	value, err := indexMetadata.Marshal()
-	if err != nil {
-		m.logger.Error(err.Error())
-		return err
-	}
-
-	// Put index metadata
-	indexMetadataPath := makeIndexMetadataPath(indexName)
-	m.logger.Info("put index metadata", zap.String("path", indexMetadataPath))
-	if err := m.storage.Put(m.ctx, indexMetadataPath, value); err != nil {
-		m.logger.Error(err.Error(), zap.String("path", indexMetadataPath))
-		return err
-	}
-
-	for shardName, shardMetadata := range indexMetadata.ShardMetadataMap {
-		value, err := shardMetadata.Marshal()
-		if err != nil {
-			m.logger.Warn(err.Error())
-			continue
-		}
-
-		// Put shard metadata
-		shardMetadataPath := makeShardMetadataPath(indexName, shardName)
-		m.logger.Info("put shard metadata", zap.String("path", shardMetadataPath))
-		if err := m.storage.Put(m.ctx, shardMetadataPath, value); err != nil {
-			m.logger.Warn(err.Error(), zap.String("path", shardMetadataPath))
-			continue
-		}
-	}
-
-	return nil
-}
-
 func (m *Metastore) TouchShardMetadata(indexName string, shardName string) error {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	indexMetadata, ok := m.indexMetadataMap[indexName]
-	if !ok {
+	indexMetadata := m.getIndexMetadata(indexName)
+	if indexMetadata == nil {
 		err := errors.ErrIndexMetadataDoesNotExist
 		m.logger.Error(err.Error(), zap.String("index_name", indexName))
 		return err
 	}
 
-	shardMetadata, ok := indexMetadata.ShardMetadataMap[shardName]
-	if !ok {
+	shardMetadata := indexMetadata.GetShardMetadata(shardName)
+	if shardMetadata == nil {
 		err := errors.ErrShardMetadataDoesNotExist
 		m.logger.Error(err.Error(), zap.String("index_name", indexName), zap.String("shard_name", shardName))
 		return err
 	}
 
 	// Copy new shard metadata
-	newShardMetadata := &ShardMetadata{}
-	copier.Copy(newShardMetadata, shardMetadata)
-	newShardMetadata.ShardVersion = time.Now().UTC().UnixNano()
+	newShardMetadata := &ShardMetadata{
+		ShardName:    shardMetadata.ShardName,
+		ShardUri:     shardMetadata.ShardUri,
+		ShardLockUri: shardMetadata.ShardLockUri,
+		ShardVersion: time.Now().UTC().UnixNano(),
+	}
 
 	value, err := newShardMetadata.Marshal()
 	if err != nil {
@@ -471,41 +490,6 @@ func (m *Metastore) TouchShardMetadata(indexName string, shardName string) error
 	if err := m.storage.Put(m.ctx, shardMetadataPath, value); err != nil {
 		m.logger.Error(err.Error(), zap.String("path", shardMetadataPath))
 		return err
-	}
-
-	return nil
-}
-
-func (m *Metastore) DeleteIndexMetadata(indexName string) error {
-	m.mutex.Lock()
-	defer m.mutex.Unlock()
-
-	indexMetadata, ok := m.indexMetadataMap[indexName]
-	if !ok {
-		err := errors.ErrIndexMetadataDoesNotExist
-		m.logger.Error(err.Error(), zap.String("index_name", indexName))
-		return err
-	}
-
-	for shardName := range indexMetadata.ShardMetadataMap {
-		// Delete shard metadata
-		shardMetadataPath := makeShardMetadataPath(indexName, shardName)
-		if err := m.storage.Delete(m.ctx, shardMetadataPath); err != nil {
-			m.logger.Warn(err.Error(), zap.String("path", shardMetadataPath))
-			continue
-		}
-	}
-
-	// Delete index metadata
-	indexMetadataPath := makeIndexMetadataPath(indexName)
-	if err := m.storage.Delete(m.ctx, indexMetadataPath); err != nil {
-		m.logger.Warn(err.Error(), zap.String("index_metadata_path", indexMetadataPath))
-	}
-
-	// Delete index metadata directory
-	indexMetadataDir := filepath.Dir(indexMetadataPath)
-	if err := m.storage.Delete(m.ctx, indexMetadataDir); err != nil {
-		m.logger.Warn(err.Error(), zap.String("index_metadata_dir", indexMetadataDir))
 	}
 
 	return nil
@@ -526,22 +510,22 @@ func (m *Metastore) NumShards(indexName string) int {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	indexMetadata, ok := m.indexMetadataMap[indexName]
-	if !ok {
+	indexMetadata := m.getIndexMetadata(indexName)
+	if indexMetadata == nil {
 		err := errors.ErrIndexMetadataDoesNotExist
 		m.logger.Error(err.Error(), zap.String("index_name", indexName))
 		return 0
 	}
 
-	return len(indexMetadata.ShardMetadataMap)
+	return indexMetadata.NumShards()
 }
 
 func (m *Metastore) GetMapping(indexName string) (mapping.IndexMapping, error) {
 	m.mutex.RLock()
 	defer m.mutex.RUnlock()
 
-	indexMetadata, ok := m.indexMetadataMap[indexName]
-	if !ok {
+	indexMetadata := m.getIndexMetadata(indexName)
+	if indexMetadata == nil {
 		err := errors.ErrIndexMetadataDoesNotExist
 		m.logger.Error(err.Error(), zap.String("index_name", indexName))
 		return nil, err
