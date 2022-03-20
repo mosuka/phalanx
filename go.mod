@@ -38,7 +38,7 @@ require (
 	github.com/pemistahl/lingua-go v1.0.5
 	github.com/prometheus/client_golang v1.12.1
 	github.com/prometheus/common v0.32.1
-	github.com/spf13/cobra v1.3.0
+	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.10.1
 	github.com/thanhpk/randstr v1.0.4
 	go.etcd.io/etcd/client/v3 v3.5.2
