@@ -37,7 +37,7 @@ require (
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/pemistahl/lingua-go v1.0.5
 	github.com/prometheus/client_golang v1.12.1
-	github.com/prometheus/common v0.32.1
+	github.com/prometheus/common v0.33.0
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.10.1
 	github.com/thanhpk/randstr v1.0.4
@@ -131,7 +131,7 @@ require (
 	go.uber.org/atomic v1.7.0 // indirect
 	go.uber.org/multierr v1.6.0 // indirect
 	golang.org/x/crypto v0.0.0-20210817164053-32db794688a5 // indirect
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
+	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
 	golang.org/x/sys v0.0.0-20220114195835-da31bd327af9 // indirect
 	google.golang.org/genproto v0.0.0-20220317150908-0efb43f6373e // indirect
 	gopkg.in/ini.v1 v1.66.2 // indirect
