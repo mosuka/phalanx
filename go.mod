@@ -31,7 +31,7 @@ require (
 	github.com/ikawaha/kagome-dict/uni v1.1.3
 	github.com/jinzhu/copier v0.3.5
 	github.com/joho/godotenv v1.4.0
-	github.com/minio/minio-go/v7 v7.0.23
+	github.com/minio/minio-go/v7 v7.0.24
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mosuka/rendezvous v0.1.7
 	github.com/natefinch/lumberjack v2.0.0+incompatible
