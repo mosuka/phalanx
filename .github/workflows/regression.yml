@@ -3,8 +3,8 @@ name: Regression
 on:
   workflow_dispatch:
     branches: [ main ]
-  schedule:
-    - cron: 0 0 * * SUN
+  #schedule:
+  #  - cron: 0 0 * * SUN
   push:
     branches: [ main ]
   pull_request:
