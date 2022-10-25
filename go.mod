@@ -4,13 +4,13 @@ go 1.17
 
 require (
 	cirello.io/dynamolock/v2 v2.0.0-20220104215233-8a9101dc5323
-	github.com/aws/aws-sdk-go-v2 v1.16.2
+	github.com/aws/aws-sdk-go-v2 v1.17.1
 	github.com/aws/aws-sdk-go-v2/config v1.15.3
 	github.com/aws/aws-sdk-go-v2/credentials v1.11.2
-	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.8.4
+	github.com/aws/aws-sdk-go-v2/feature/dynamodb/attributevalue v1.10.2
 	github.com/aws/aws-sdk-go-v2/feature/dynamodb/expression v1.4.5
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.15.3
-	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.13.3
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.17.3
+	github.com/aws/aws-sdk-go-v2/service/dynamodbstreams v1.13.22
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.26.5
 	github.com/blugelabs/bluge v0.1.9
 	github.com/blugelabs/bluge_segment_api v0.2.0
@@ -60,17 +60,17 @@ require (
 	github.com/armon/go-metrics v0.3.10 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.4.1 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.12.3 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.9 // indirect
-	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.3 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/configsources v1.1.25 // indirect
+	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.4.19 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.3.10 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/accept-encoding v1.9.10 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/checksum v1.1.3 // indirect
-	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.3 // indirect
+	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.7.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.9.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.13.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sso v1.11.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.16.3 // indirect
-	github.com/aws/smithy-go v1.11.2 // indirect
+	github.com/aws/smithy-go v1.13.4 // indirect
 	github.com/axiomhq/hyperloglog v0.0.0-20191112132149-a4c4c47bc57f // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
 	github.com/bits-and-blooms/bitset v1.2.0 // indirect
